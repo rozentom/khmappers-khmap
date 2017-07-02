@@ -1,0 +1,40 @@
+﻿@model IEnumerable<WebApplication2.Models.Reference>
+
+
+<table class="table" id="refTable">
+    <tr>
+        <th>
+            @Html.DisplayNameFor(model => model.Title)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Authors)
+        </th>
+        <th>
+            @Html.DisplayNameFor(model => model.Publication)
+        </th>
+        <th></th>
+    </tr>
+
+@foreach (var item in Model) {
+    <tr>
+        <td>
+            @Html.DisplayFor(modelItem => item.Title)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Authors)
+        </td>
+        <td>
+            @Html.DisplayFor(modelItem => item.Publication)
+        </td>
+        <td>
+            @Html.ActionLink(" ", "Edit", "Reference", new { id = item.Id }, new { @class = "btn btn-xs glyphicon glyphicon-edit" }) |
+            @Html.ActionLink(" ", "Delete", "Reference", new { id = item.Id }, new { @class = "btn btn-xs glyphicon glyphicon-trash" }) |
+        </td>
+    </tr>
+}
+
+</table>
+
+<p>
+    @Html.ActionLink("Create", "Create", "Reference", null, new { @class = "btn btn-primary btn-large" })
+</p>

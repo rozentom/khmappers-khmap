@@ -1,0 +1,1005 @@
+﻿@model WebApplication2.Models.Map
+
+@{
+    ViewBag.Title = "LauchMap";
+    ViewBag.diagramObjects = "";
+}
+
+<h2>LauchMap</h2>
+
+<title>Flowchart</title>
+<!-- Copyright 1998-2015 by Northwoods Software Corporation. -->
+<script src="~/Scripts/go.js"></script>
+<link href="~/Content/goSamples.css" rel="stylesheet" type="text/css" />  <!-- you don't need to use this -->
+<link href="~/Content/mapStyle.css" rel="stylesheet" type="text/css" />
+<script src="~/Scripts/goSamples.js"></script>  <!-- this is only for the GoJS Samples framework -->
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css" />
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
+<link href="~/Scripts/assets/jquery-ui.css" rel="stylesheet" type="text/css" />
+<!-- Spectrum color picker -->
+<link href="~/Scripts/assets/spectrum.css" rel="stylesheet" />
+<script src="~/Scripts/assets/spectrum.js"></script>
+
+<asp:Content ID="Content1" ContentPlaceHolderID="head" runat="server">
+    
+
+    <script id="code">
+
+    function changeContribution(e) {
+
+        var select = document.getElementById("contributionTypes");
+        var label = select.options[select.selectedIndex].innerHTML;
+        //var value = select.options[select.selectedIndex].value;
+
+        var sel = myDiagram.selection;
+        var elem = sel.first();
+        var txtblock = elem.findObject("lineText");
+        txtblock.text = label;
+    }
+
+    function changeLineLabel(e) {
+        var select = document.getElementById("textTypes");
+        var label = select.options[select.selectedIndex].innerHTML;
+        var value = select.options[select.selectedIndex].value;
+        var selectedIndex = select.selectedIndex;
+
+        var info = document.getElementById("myInfo");
+        var sel = myDiagram.selection;
+        var elem = sel.first();
+        var txtblock = elem.findObject("lineText");
+        txtblock.text = label;
+
+        var textLine = elem.findObject("LINE");
+
+        if (textLine != null) {
+            textLine.value = "";
+            textLine.value += "<h3>Selected Line:</h3>";
+
+            textLine.value += "<p>Text: " + txtblock.text + "</p>";
+
+            var str = '<p>Change Text To: <select  id="textTypes" onchange="changeLineLabel(this);">';
+            str += '<option value="' + value + '">' + label + '</option>';
+            for (var i = 0; i < select.childNodes.length; i++) {
+                if (i == selectedIndex)
+                    continue;
+                else
+                    str += '<option value="' + select.options[i].value + '">' + select.options[i].innerHTML + '</option>';
+            }
+            str += '</select></p>';
+            textLine.value += str;
+            var line = elem.findObject("LINE");
+            if (label == "Contribution") {
+                textLine.value += '<p>Change Contribution To: <select autofocus id="contributionTypes" onchange="changeContribution(this);"><option value="change">Change Contribution To:</option><option value="plus">+</option><option value="doublePlus">++</option><option value="minus">-</option><option value="dublieMinus">--</option></select></p></br>'
+
+                line.toArrow = "standard";
+            }
+            else{
+                textLine.value += "<br>";
+                if (select.childNodes.length == 2)
+                    line.toArrow = "line";
+            }
+
+            //textLine.value += '<p>Change Text To: <select autofocus id="textTypes" onchange="changeLineLabel(this);"><option value="acieved">Achieved By</option><option value="association">Association</option><option value="consists">Consists Of</option><option value="contribution">Contribution</option><option value="extended">Extended By</option></select></p>'
+
+            textLine.value += '<select id="lineTypes" onchange="changeLine(this);"><option value="change">Change Line Type To:</option><option value="orthogonal">Orthogonal</option><option value="sLine">Straight Line</option><option value="curve">Curve</option></select>'
+
+        }
+
+        if (textLine != null && textLine.value != "")
+            info.innerHTML = textLine.value;
+    }
+
+    function changeLine(e) {
+        var select = document.getElementById("lineTypes");
+        var type = select.options[select.selectedIndex].innerHTML;
+        var selectedIndex = select.selectedIndex;
+
+        var sel = myDiagram.selection;
+        var elem = sel.first();
+        var link = elem.findObject("LINK");
+        var label = elem.findObject("LABEL");
+
+        if (link != null) {
+            if (type == "Orthogonal") {
+                link.routing = go.Link.Orthogonal;
+                link.curve = go.Link.AvoidsNodes;
+                //label.segmentIndex = 2;
+            }
+
+            else if (type == "Curve") {
+                link.curve = go.Link.Bezier;
+                link.routing = go.Link.AvoidsNodes;
+                //label.segmentIndex = 2;
+            }
+
+            else if (type == "Straight Line") {
+                link.curve = go.Link.Bezier;
+                link.routing = go.Link.None;
+                //label.segmentIndex = 1;
+            }
+        }
+    }
+    function checkName(newstr, first) {
+        for (var i = 0; i < myDiagram.model.nodeDataArray.length; i++) {
+            if (myDiagram.model.nodeDataArray[i].text == newstr) {
+                if (first)
+                    alert("The name of the first node should be unique", "");
+                else
+                    alert("The name of the second node should be unique", "");
+                return false;
+            }
+        }
+        return true;
+    }
+
+    function init() {
+
+        var lineText = "";
+        //  if (window.goSamples) goSamples();  // init for these samples -- you don't need to call this
+        //var $ = go.GraphObject.make;  // for conciseness in defining templates
+        var GO = go.GraphObject.make;
+        myDiagram =
+          GO(go.Diagram, "myDiagram",  // must name or refer to the DIV HTML element
+            {
+                //initialContentAlignment: go.Spot.Center,
+                allowDrop: true,  // must be true to accept drops from the Palette
+                // have mouse wheel events zoom in and out instead of scroll up and down
+                "toolManager.mouseWheelBehavior": go.ToolManager.WheelZoom,
+                "LinkDrawn": showLinkLabel,  // this DiagramEvent listener is defined below
+                "LinkRelinked": showLinkLabel,
+                // start everything in the middle of the viewport
+                initialContentAlignment: go.Spot.Center,
+                "animationManager.duration": 800, // slightly longer than default (600ms) animation
+                "undoManager.isEnabled": true,  // enable undo & redo
+                // support double-click in background creating a new node
+                "clickCreatingTool.archetypeNodeData": { text: "new node" },
+
+            });
+        // when the document is modified, add a "*" to the title and enable the "Save" button
+        myDiagram.addDiagramListener("Modified", function (e) {
+            var button = document.getElementById("SaveButton");
+            if (button) button.disabled = !myDiagram.isModified;
+            var idx = document.title.indexOf("*");
+            if (myDiagram.isModified) {
+                if (idx < 0) document.title += "*";
+            } else {
+                if (idx >= 0) document.title = document.title.substr(0, idx);
+            }
+        });
+        // helper definitions for node templates
+        function nodeStyle() {
+            return [
+              // The Node.location comes from the "loc" property of the node data,
+              // converted by the Point.parse static method.
+              // If the Node.location is changed, it updates the "loc" property of the node data,
+              // converting back using the Point.stringify static method.
+              new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+              {
+                  // the Node.location is at the center of each node
+                  locationSpot: go.Spot.Center,
+                  //isShadowed: true,
+                  //shadowColor: "#888",
+                  // handle mouse enter/leave events to show/hide the ports
+                  mouseEnter: function (e, obj) { showPorts(obj.part, true); },
+                  mouseLeave: function (e, obj) { showPorts(obj.part, false); }
+              }
+            ];
+        }
+        // Define a function for creating a "port" that is normally transparent.
+        // The "name" is used as the GraphObject.portId, the "spot" is used to control how links connect
+        // and where the port is positioned on the node, and the boolean "output" and "input" arguments
+        // control whether the user can draw links from or to the port.
+        function makePort(name, spot, output, input, figure, fill, stroke) {
+            //var GO = go.GraphObject.make;
+            //var grad = GO(go.Brush, go.Brush.Linear, { 0: "rgb(115,220,241)", 0.5: "rgb(105,210,231)", 1: "rgb(75,180,201)" });
+            //var brush = "rgb(65,180,181)";
+            // the port is basically just a small circle that has a white stroke when it is made visible
+            return GO(go.Shape, figure, new go.Binding("text", "text").makeTwoWay(),
+                     {
+                         fill: fill,
+                         stroke: stroke,  // this is changed to "white" in the showPorts function
+                         desiredSize: new go.Size(8, 8),
+                         alignment: spot, alignmentFocus: spot,  // align the port on the main Shape
+                         portId: name,  // declare this object to be a "port"
+                         fromSpot: spot, toSpot: spot,  // declare where links may connect at this port
+                         fromLinkable: output, toLinkable: input,  // declare whether the user may draw links to/from here
+                         cursor: "pointer",  // show a different cursor to indicate potential link point
+                         name: "SHAPE"+ name
+                     });
+        }
+
+        function checkName(textblock, oldstr, newstr) {
+            for (var i = 0; i < myDiagram.model.nodeDataArray.length; i++) {
+                if (myDiagram.model.nodeDataArray[i].text != oldstr && myDiagram.model.nodeDataArray[i].text == newstr) {
+                    textblock.text = oldstr;
+                    alert("The name should be unique", "");
+                    return false;
+                }
+            }
+            textblock.text = newstr;
+            return true;
+        }
+        // define the Node templates for regular nodes
+        var lightText = 'whitesmoke';
+        var grad = GO(go.Brush, go.Brush.Linear, { 0: "rgb(115,220,241)", 0.5: "rgb(105,210,231)", 1: "rgb(75,180,201)" });
+        var brush = "rgb(65,180,181)";
+        myDiagram.nodeTemplateMap.add("regular",  // the default category
+         GO(go.Node, "Spot", nodeStyle(),
+            {
+                locationSpot: go.Spot.Center,   // the location is the center of the Shape
+                selectionAdorned: false,  // no selection handle when selected
+                resizable: true,   // user can resize the Shape
+                rotatable: true, // user can rotate the Shape without rotating the label
+                layoutConditions: go.Part.LayoutStandard & ~go.Part.LayoutNodeSized  // don't re-layout when node changes size
+            },
+            // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
+            GO(go.Panel, "Auto",
+              GO(go.Shape, "Rectangle",
+                { fill: grad, strokeWidth: 2, stroke: brush, name: "picShape" },
+                new go.Binding("figure", "figure"),
+                new go.Binding("element", "element")),
+              GO(go.TextBlock,
+                {
+                    font: "bold 8pt Helvetica, Arial, sans-serif",
+                    stroke: lightText,
+                    margin: 6,
+                    maxSize: new go.Size(120, NaN),
+                    wrap: go.TextBlock.WrapFit,
+                    name: "TEXT",
+                    editable: true,
+                    textValidation: checkName
+                },
+                new go.Binding("text", "text").makeTwoWay()),
+                new go.Binding("text", "key").makeTwoWay()
+            ),
+            // four named ports, one on each side:
+            makePort("T", go.Spot.Top, false, true, "Rectangle", grad, brush),
+            makePort("L", go.Spot.Left, true, true, "Rectangle", grad, brush),
+            makePort("R", go.Spot.Right, true, true, "Rectangle", grad, brush),
+            makePort("B", go.Spot.Bottom, true, false, "Rectangle", grad, brush)
+          ));
+
+        myDiagram.nodeTemplateMap.add("",  // the default category
+      GO(go.Node, "Spot", nodeStyle(),
+            {
+                locationSpot: go.Spot.Center,   // the location is the center of the Shape
+                selectionAdorned: false,  // no selection handle when selected
+                resizable: true,  // user can resize the Shape
+                rotatable: true, // user can rotate the Shape without rotating the label
+                layoutConditions: go.Part.LayoutStandard & ~go.Part.LayoutNodeSized  // don't re-layout when node changes size
+            },
+        // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
+        GO(go.Panel, "Auto",
+          GO(go.Shape, "Ellipse",
+            { fill: grad, strokeWidth: 2, stroke: brush, name:"picShape" },
+            new go.Binding("figure", "figure"),
+            new go.Binding("element", "element")),
+          GO(go.TextBlock,
+            {
+                font: "bold 8pt Helvetica, Arial, sans-serif",
+                stroke: lightText,
+                margin: 6,
+                maxSize: new go.Size(120, NaN),
+                wrap: go.TextBlock.WrapFit,
+                name: "TEXT",
+                editable: true,
+                textValidation: checkName
+            },
+            new go.Binding("text", "text").makeTwoWay()),
+            new go.Binding("text", "key").makeTwoWay()
+        ),
+        // four named ports, one on each side:
+        makePort("T", go.Spot.Top, false, true, "Ellipse", grad, brush),
+        makePort("L", go.Spot.Left, true, true, "Ellipse", grad, brush),
+        makePort("R", go.Spot.Right, true, true, "Ellipse", grad, brush),
+        makePort("B", go.Spot.Bottom, true, false, "Ellipse", grad, brush)
+      ));
+
+        myDiagram.nodeTemplateMap.add("Comment",
+         GO(go.Node, "Auto", nodeStyle(),
+            {
+                locationSpot: go.Spot.Center,   // the location is the center of the Shape
+                selectionAdorned: false,  // no selection handle when selected
+                resizable: true,   // user can resize the Shape
+                rotatable: true, // user can rotate the Shape without rotating the label
+                layoutConditions: go.Part.LayoutStandard & ~go.Part.LayoutNodeSized  // don't re-layout when node changes size
+            },
+            GO(go.Shape, "File",
+              { fill: "#EFFAB4", stroke: brush, name: "COMMENT" }),
+            GO(go.TextBlock,
+              {
+                  margin: 5,
+                  maxSize: new go.Size(200, NaN),
+                  wrap: go.TextBlock.WrapFit,
+                  textAlign: "center",
+                  editable: true,
+                  font: "bold 8pt Helvetica, Arial, sans-serif",
+                  stroke: '#454545',
+                  name: "TEXT",
+                  textValidation: checkName
+              },
+              new go.Binding("text", "text").makeTwoWay()),
+              new go.Binding("text", "key").makeTwoWay()
+            // no ports, because no links are allowed to connect with a comment
+          ));
+
+        // Make link labels visible if coming out of a "conditional" node.
+        // This listener is called by the "LinkDrawn" and "LinkRelinked" DiagramEvents.
+        function showLinkLabel(e) {
+            var info = document.getElementById("myInfo");
+            var sel = e.diagram.selection;
+            var elem = sel.first();
+            var label = elem.findObject("LABEL");
+            if (label !== null) {
+                var textLine = elem.findObject("LINE");
+                if (textLine != null) {
+                    textLine.value = "";
+                    textLine.value += "<h3>Selected Line:</h3>";
+                    txtblock = elem.findObject("lineText");
+                }
+                label.visible = true;
+                //task to quality or quality to task or quality to quality
+                if (elem.fromNode.data.figure == "Rectangle" && elem.toNode.data.figure == "Ellipse"
+                    || elem.fromNode.data.figure == "Ellipse" && elem.toNode.data.figure == "Rectangle"
+                    || elem.fromNode.data.figure == "Ellipse" && elem.toNode.data.figure == "Ellipse") {
+
+                    /*
+                    if (e.subject.fromNode.data.figure == "Ellipse" && e.subject.toNode.data.figure == "Rectangle") {
+                        var from = e.subject.fromNode;
+                        var to = e.subject.toNode;
+
+                        e.subject.fromNode = to;
+                        //e.subject.fromNode.fromSpot = to.fromSpot;
+                        e.subject.fromNode.toSpot = from.toSpot;
+
+                        e.subject.toNode = from;
+                       // e.subject.toNode.fromSpot = to.fromSpot;
+                        e.subject.toNode.toSpot = to.toSpot;
+
+                    }
+                    */
+                    var line = elem.findObject("LINE");
+                    if (txtblock.text == "Achieved By")
+                        txtblock.text = "Association";
+                    textLine.value += "<p>Text: " + txtblock.text + "</p>";
+                    if (txtblock.text == "Association")
+                        line.toArrow = "line";
+                    textLine.value += '<p>Change Text To: <select  id="textTypes" onchange="changeLineLabel(this);"><option value="association">Association</option><option value="contribution">Contribution</option></select></p>' + "</br>";
+                    textLine.value += '<select id="lineTypes" onchange="changeLine(this);"><option value="change">Change Line Type To:</option><option value="orthogonal">Orthogonal</option><option value="sLine">Straight Line</option><option value="curve">Curve</option></select>'
+
+                }
+                    //task to task
+                else {
+
+                    var line = elem.findObject("LINE");
+                    line.toArrow = "standard";
+
+                    textLine.value += "<p>Text: " + txtblock.text + "</p>";
+                    textLine.value += '<p>Change Text To: <select  id="textTypes" onchange="changeLineLabel(this);"><option value="acieved">Achieved By</option><option value="association">Association</option><option value="consists">Consists Of</option><option value="contribution">Contribution</option><option value="extended">Extended By</option></select></p>' + "</br>";
+                    textLine.value += '<select id="lineTypes" onchange="changeLine(this);"><option value="change">Change Line Type To:</option><option value="orthogonal">Orthogonal</option><option value="sLine">Straight Line</option><option value="curve">Curve</option></select>'
+
+                }
+                if (textLine != null && textLine.value != "") {
+                    info.innerHTML = textLine.value;
+
+                }
+
+            }
+        }
+
+
+
+        // temporary links used by LinkingTool and RelinkingTool are also orthogonal:
+        //myDiagram.toolManager.linkingTool.temporaryLink.routing = go.Link.Orthogonal;
+        //myDiagram.toolManager.relinkingTool.temporaryLink.routing = go.Link.Orthogonal;
+        @if (Model.Model.ToString() != "")
+        {
+            <text>
+            document.getElementById("mySavedModel").value = @ViewBag.mapString
+            myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+            </text>
+            /*
+            for (i = 0; i < myDiagram.model.linkDataArray.length; i++) {
+                //if (myDiagram.model.linkDataArray[i].Yb != null) {
+                if (myDiagram.model.linkDataArray[i].curve.Yb == "Bezier") {
+                    var data = myDiagram.model.linkDataArray[i];
+                    data.curve = go.Link.JumpOver;
+                    data.routing= go.Link.None;
+                    data.segmentIndex= 2;
+                    /*
+                    myDiagram.selection = myDiagram.model.linkDataArray[i];
+                    var sel = myDiagram.selection;
+                    var elem = sel.first();
+                    var link = elem.findObject("LINK");
+                    link.curve = go.Link.Bezier;
+                    link.routing = go.Link.AvoidsNodes;
+                    link.segmentIndex = 2;
+                     *
+                }
+              //  }
+            }
+            */
+        }
+
+        load();  // load an initial diagram from some JSON text
+
+        function setSearchReferenceMap(mapRefText) {
+           var ans = "";
+            if (mapRefText.length == 0) {
+                ans += "<p>Add Map Reference:<input id='addMapRefText' type='text' /><input id='addMapRefButton' type='button' value='Add'/></p>";
+                return ans;
+            }
+            ans += "<p>Change Map Reference:<input id='changeMapRefText' type='text' /><input id='changeMapRefButton' type='button' value='Change'/></p>";
+            return ans;
+        }
+
+        myPalette =
+          GO(go.Palette, "myPalette",  // must name or refer to the DIV HTML element
+            {
+                "animationManager.duration": 800, // slightly longer than default (600ms) animation
+                nodeTemplateMap: myDiagram.nodeTemplateMap,  // share the templates used by myDiagram
+                model: new go.GraphLinksModel([  // specify the contents of the Palette
+                  { text: "Quality",  figure: "Ellipse", element: "Quality" },
+                  { text: "Task", figure: "Rectangle", element: "Task" },
+                  { text: "Reference", figure: "Ellipse", name: "Quality Reference", element: "Quality", mapRef: "", elemRef: "" },
+                  { text: "Reference", figure: "Rectangle", name: "Task Reference", element: "Task", mapRef: "", elemRef: "" },
+                  { category: "Comment", text: "Comment", figure: "RoundedRectangle" }
+                ])
+            });
+        myPalette.addDiagramListener("InitialLayoutCompleted", function (diagramEvent) {
+            var pdrag = document.getElementById("paletteDraggable");
+            var palette = diagramEvent.diagram;
+            var paddingHorizontal = palette.padding.left + palette.padding.right;
+            var paddingVertical = palette.padding.top + palette.padding.bottom;
+            pdrag.style.width = palette.documentBounds.width + 20 + "px";
+            pdrag.style.height = palette.documentBounds.height + 70 + "px";
+        });
+        var info = document.getElementById("myInfo");
+        myDiagram.addDiagramListener("ChangedSelection", function (e) {
+            var sel = e.diagram.selection;
+            var str = "";
+            var refStr = "";
+            if (sel.count === 0) {
+                str = "Selecting nodes in the main Diagram will display information here.";
+                info.innerHTML = str;
+                return;
+            } else if (sel.count > 1) {
+                str = sel.count + " objects selected.";
+                info.innerHTML = str;
+                return;
+            }
+            // One object selected, display some information
+            var elem = sel.first();
+            var shape = elem.findObject("picShape");
+            var line = elem.findObject("LINE");
+            var comment = elem.findObject("COMMENT");
+            var txtblock = elem.findObject("TEXT");
+
+            if (shape != null &&  txtblock != null && txtblock.text.indexOf("Reference") == -1) {
+                str += "<h3>Selected Node:</h3>";
+                str += "<p>Figure: " + elem.data.figure + "</p>";
+                str += "<p>Element: " + elem.data.element + "</p>";
+
+                if (txtblock.text == elem.data.element) {
+                    var len = myDiagram.model.nodeDataArray.length;
+                    txtblock.text = txtblock.text + len;
+                }
+
+                str += "<p>Text: " + txtblock.text + "</p>";
+                //info.innerHTML = str;
+                str += '<p style="float: left; margin-right: 10px;">Color: <input type="text" id="custom" /></p>';
+                info.innerHTML = str;
+                //var pic = elem.findObject("picShape");
+                var strokeColor = shape.stroke;
+                // Initialize color picker
+                $("#custom").spectrum({
+                    color: strokeColor,
+                    // Change colors by constructing a gradient
+                    change: function (color) {
+                        var c = color.toRgb();
+                        var r, g, b;
+                        var grad1 = new go.Brush(go.Brush.Linear);
+                        r = Math.min(c.r + 10, 255);
+                        g = Math.min(c.g + 10, 255);
+                        b = Math.min(c.b + 10, 255);
+                        grad1.addColorStop(0, "rgb(" + r + "," + g + "," + b + ")");
+                        grad1.addColorStop(0.5, color.toRgbString());
+                        r = Math.max(c.r - 30, 0);
+                        g = Math.max(c.g - 30, 0);
+                        b = Math.max(c.b - 30, 0);
+                        grad1.addColorStop(1, "rgb(" + r + "," + g + "," + b + ")");
+                        shape.fill = grad1;
+                        shape.stroke = "rgb(" + r + "," + g + "," + b + ")";
+                        txtblock.stroke = (r < 100 && g < 100 && b < 100) ? "white" : "black";
+
+                        var port = elem.findObject("SHAPE" + "T");
+                        port.fill = grad1;
+                        port.stroke = port.stroke;
+                        port = elem.findObject("SHAPE" + "L");
+                        port.fill = grad1;
+                        port.stroke = port.stroke;
+                        port = elem.findObject("SHAPE" + "R");
+                        port.fill = grad1;
+                        port.stroke = port.stroke;
+                        port = elem.findObject("SHAPE" + "B");
+                        port.fill = grad1;
+                        port.stroke = port.stroke;
+                    }
+                });
+
+            }
+            if (shape != null && txtblock != null && txtblock.text.indexOf("Reference") != -1) {
+                //info.innerHTML = "<h3>Select Reference Map:</h3> <br> <p></p>";
+                refStr += "<h3>Selected Reference Node:</h3>";
+                refStr += "<p>Element: " + elem.data.element + "</p>";
+                refStr += "<p>Figure: " + elem.data.figure + "</p>";
+                //elem.data.mapRef = "111";
+                if (elem.data.mapRef != "") {
+                    refStr += "<p>Map Reference: " + elem.data.mapRef;
+                    refStr += setSearchReferenceMap(elem.data.mapRef);
+                    refStr += "<p>Element Reference: " + elem.data.elemRef + "</p>";
+                }
+                else {
+                    refStr += setSearchReferenceMap(elem.data.mapRef);
+                }
+                info.innerHTML = refStr;
+                if (txtblock.text == "Reference") {
+                    var len = myDiagram.model.nodeDataArray.length;
+                    txtblock.text = txtblock.text + len;
+                }
+            }
+            if (line != null) {
+                if (line.value != "") {
+                    showLinkLabel(e);
+                    info.innerHTML = line.value;
+                }
+            }
+            if (comment != null) {
+                str += "<h3>Selected Node:</h3>";
+                str += "<p>Text: " + txtblock.text + "</p>";
+                info.innerHTML = str;
+            }
+
+        });
+        $(function () {
+            $("#paletteDraggable").draggable({ handle: "#paletteDraggableHandle" }).resizable({
+                // After resizing, perform another layout to fit everything in the palette's viewport
+                stop: function () { myPalette.layoutDiagram(true); }
+            });
+            $("#infoDraggable").draggable({ handle: "#infoDraggableHandle" });
+        });
+
+        // replace the default Link template in the linkTemplateMap
+        myDiagram.linkTemplate =
+          GO(go.Link, // the whole link panel
+            {
+                name: "LINK",
+                routing: go.Link.AvoidsNodes,
+                curve: go.Link.JumpOver,
+                corner: 5, toShortLength: 4,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                adjusting: go.Link.Stretch,
+            },
+            //new go.Binding("routing").makeTwoWay(),
+            //new go.Binding("routing", "rout", go.Link).makeTwoWay(go.Link.stringify),
+            //new go.Binding("curve").makeTwoWay(),
+            //new go.Binding("routing").makeTwoWay(),
+            new go.Binding("points").makeTwoWay(),
+            GO(go.Shape,  // the link path shape
+              { isPanelMain: true, stroke: "gray", strokeWidth: 2 }),
+            GO(go.Shape,  // the arrowhead
+              { toArrow: "standard", name: "LINE", stroke: "black", fill: "gray" }, new go.Binding("value", "value").makeTwoWay()),
+            GO(go.Panel, "Auto",  // the link label, normally not visible
+              { visible: true, name: "LABEL", segmentIndex: 2, segmentFraction: 0.5 },
+              new go.Binding("visible", "visible").makeTwoWay(),
+              GO(go.Shape, "RoundedRectangle",  // the label shape
+                { fill: "#F8F8F8", stroke: null }),
+              GO(go.TextBlock, "Achieved By",  // the label
+                {
+                    textAlign: "center",
+                    font: "10pt helvetica, arial, sans-serif",
+                    stroke: "#333333",
+                    editable: false,
+                    name: "lineText"
+                },
+                new go.Binding("text", "text").makeTwoWay())
+            )
+          );
+
+    }
+    // Make all ports on a node visible when the mouse is over the node
+    function showPorts(node, show) {
+        var diagram = node.diagram;
+        if (!diagram || diagram.isReadOnly || !diagram.allowLink) return;
+        node.ports.each(function (port) {
+            port.stroke = (show ? "white" : null);
+        });
+    }
+
+        /*
+    function setMapName() {
+        if (document.getElementById('<%= mapName.ClientID %>').value != "") {
+            $(function () {
+              document.getElementById('dialog-confirm').style.visibility = "visible";
+
+                $("#dialog-confirm").dialog({
+                    resizable: false,
+                    height: 160,
+                    modal: true,
+                    buttons: {
+                        "Yes": function () {
+                            document.getElementById('<%= mapName.ClientID %>').value = prompt("Please enter your map name", "");
+                            $(this).dialog("close");
+                            document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+                            document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+                            document.getElementById('<%= ButtonSavePost.ClientID %>').click();
+                        },
+                        "No": function () {
+                            $(this).dialog("close");
+                            document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+                            document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+                            document.getElementById('<%= ButtonSavePost.ClientID %>').click();
+                        }
+                    }
+                });
+            });
+        }
+        else {
+            document.getElementById('<%= mapName.ClientID %>').value = prompt("Please enter your map name", "");
+            document.getElementById('<%= ButtonSavePost.ClientID %>').click();
+        }
+    }
+    */
+
+    // Show the diagram's model in JSON format that the user may edit
+    function save() {
+        document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+        document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+        myDiagram.isModified = false;
+        if (document.getElementById('<%= mapName.ClientID %>').value == "")
+            document.getElementById('<%= mapName.ClientID %>').value = prompt("Please enter map name", "");
+        //setMapName();
+        document.getElementById('<%= ButtonSavePost.ClientID %>').click();
+    }
+    function saveAs() {
+        document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+        document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+        myDiagram.isModified = false;
+        document.getElementById('<%= mapName.ClientID %>').value = prompt("Please enter map name", "");
+        document.getElementById('<%= ButtonSavePost.ClientID %>').click();
+    }
+    function getParameterByName(name) {
+        name = name.replace(/[\[]/, "\\[").replace(/[\]]/, "\\]");
+        var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"),
+            results = regex.exec(location.search);
+        return results === null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+    }
+    function load() {
+        myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+        if (document.getElementById(@ViewBag.diagramObjects).value != "") {
+            var obj = document.getElementById('<%= diagramObjects.ClientID %>').value;
+            var res = obj.split(",");
+            for (var i = 0; i < res.length; i = i + 7) {
+                /*
+                var firstFigure = getParameterByName("firstFigure");
+                var secondFigure = getParameterByName("secondFigure");
+                var firstText = getParameterByName("firstText");
+                var secondText = getParameterByName("secondText");
+                var text2 = getParameterByName("text");
+                var fKey = getParameterByName("fKey");
+                var sKey = getParameterByName("sKey");
+                */
+                if (res[i] == "" || res[i] == ",")
+                    continue;
+
+                var firstFigure = res[i];
+                var secondFigure = res[i + 1];
+                var firstText = res[i + 2];
+                var secondText = res[i + 3];
+                var text2 = res[i + 4];
+                var fKey = res[i + 5];
+                var sKey = res[i + 6];
+                if (firstFigure != "" && secondFigure != "" && firstText != "" && secondText != "" && fKey != "" && sKey != "") {
+
+                    var xRand = Math.floor(Math.random() * -400) + 400;
+                    var yRand = Math.floor(Math.random() * -400) + 400;
+
+                    myDiagram.startTransaction("make new node");
+                    myDiagram.model.addNodeData({ text: firstText, figure: firstFigure, loc: xRand + " " + yRand, key: fKey });
+                    myDiagram.commitTransaction("make new node");
+
+                    xRand = Math.floor(Math.random() * -400) + 400;
+                    yRand = Math.floor(Math.random() * -400) + 400;
+
+                    myDiagram.startTransaction("make new node");
+                    myDiagram.model.addNodeData({ text: secondText, figure: secondFigure, loc: xRand + " " + yRand, key: sKey });
+                    myDiagram.commitTransaction("make new node");
+                    //myDiagram.commitTransaction("make new node");
+                }
+
+                if (text2 != "") {
+                    myDiagram.startTransaction("make new link");
+                    myDiagram.model.addLinkData({ from: fKey, to: sKey, text: text2 });
+                    myDiagram.commitTransaction("make new link");
+                }
+                document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+                document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+            }
+        }
+        document.getElementById('<%= diagramObjects.ClientID %>').value = "";
+    }
+    function loadUser() {
+        //document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+        //document.getElementById('<%= input.ClientID %>').value = document.getElementById("mySavedModel").value;
+        //document.getElementById('<%= ButtonLoadPost.ClientID %>').click();
+            var lines = document.getElementById('<%= userTextArea.ClientID %>').value.split("\n");
+            var key = 0, key2 = 0;
+
+            for (var i=0; i<lines.length; i++)
+            {
+                var line = lines[i];
+                if (line.indexOf('(') != -1)
+                {
+                    var text = line.substring(0, line.indexOf('(')).trim();
+                    text = text.trim();
+
+                    var firstFigure = "";
+                    var secondFigure = "";
+
+                    if ((line[line.indexOf('(') + 1]).toLowerCase() == 't')
+                        firstFigure = "Rectangle";
+                    else
+                        firstFigure = "Ellipse";
+
+                    if ((line[line.indexOf(',') + 2]).toLowerCase() == 't')
+                        secondFigure = "Rectangle";
+                    else
+                        secondFigure = "Ellipse";
+
+                    var firstText, secondText = "";
+                    if (firstFigure[0] == 'R')
+                        firstText = line.substr(line.indexOf('(') + 6, line.indexOf(',') - (line.indexOf('(') + 6)).trim();
+                    else
+                        firstText = line.substr(line.indexOf('(') + 8, line.indexOf(',') - (line.indexOf('(') + 8)).trim();
+                    firstText = firstText.trim();
+
+                    //check if this name is already exist
+                    if (!checkName(firstText, true))
+                        return;
+
+                    if (secondFigure[0] == 'R')
+                        secondText = line.substr(line.indexOf(',') + 6, line.indexOf(')') - (line.indexOf(',') + 6)).trim();
+                    else
+                        secondText = line.substr(line.indexOf(',') + 8, line.indexOf(')') - (line.indexOf(',') + 8)).trim();
+                    secondText = secondText.trim();
+
+                    //check if this name is already exist
+                    if (!checkName(secondText, false))
+                        return;
+
+                    if (key == 0 && key2 == 0)
+                    {
+                        var obj = JSON.parse(myDiagram.model.toJson());
+                        var nodes = obj.nodeDataArray;
+                        if (nodes.length > 0)
+                        {
+                            var v = nodes[nodes.length - 1];
+                            key = v.key;
+                            if (key < 0)
+                            {
+                                key = key - 1;
+                                key2 = key - 1;
+                            }
+                            else
+                            {
+                                key = key + 1;
+                                key2 = key + 1;
+                            }
+                        }
+                        else
+                        {
+                            key = 0;
+                            key2 = 1;
+                        }
+                    }
+                    else
+                    {
+                        if (key < 0)
+                        {
+                            key = key2 - 1;
+                            key2 = key - 1;
+                        }
+                        else
+                        {
+                            key = key2 + 1;
+                            key2 = key + 1;
+                        }
+                    }
+                    document.getElementById('<%= diagramObjects.ClientID %>').value += firstFigure + "," + secondFigure + "," + firstText + "," + secondText + "," + text + "," + key + "," + key2 + ",";
+
+                }
+            }
+        load();
+    }
+    function selectClickClient() {
+        var nodesOptions = [];
+        var linksOptions = [];
+        var elements = document.getElementsByName('filter');
+        for (var i = 0; i < elements.length; i++) {
+            if (elements[i].checked) {
+                var label = document.getElementById(elements[i].id + "Label").innerHTML;
+                if (label == "Quality" || label == "Task")
+                    nodesOptions.push(label);
+                else
+                    linksOptions.push(label);
+            }
+        }
+        var obj = JSON.parse(myDiagram.model.toJson());
+        if (linksOptions.length > 0) {
+
+            var links = obj.linkDataArray;
+            obj.linkDataArray = "";
+
+            var jArray = [];
+            for (var i = 0; i < links.length; i++) {
+                var v = links[i];
+                var text = v.text;
+                if ((text != null && linksOptions.indexOf(text) != -1 || (text == null && linksOptions.indexOf("Achieved By") != -1))) {
+                    var fromPort = v.fromPort;
+                    var toPort = v.toPort;
+                    var points = v.points;
+                    var fromKey = v.from;
+                    var toKey = v.to;
+
+                    var jsonObject = {
+                        "from": fromKey, "to": toKey, "fromPort": fromPort, "toPort": toPort,
+                        "points": points, "text": text
+                    };
+                    jArray.push(jsonObject);
+
+                    obj.linkDataArray = jArray;
+                }
+            }
+            document.getElementById('<%= input.ClientID %>').value = JSON.stringify(obj);
+            document.getElementById("mySavedModel").value = document.getElementById('<%= input.ClientID %>').value;
+            myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+        }
+        if (nodesOptions.length > 0) {
+            var nodes = obj.nodeDataArray;
+            obj.nodeDataArray = "";
+
+            var jArray = [];
+            for (var i = 0; i < nodes.length; i++) {
+                var v = nodes[i];
+                var elem = v.element;
+                if ((elem != null && nodesOptions.indexOf(elem)) != -1) {
+                    var key = v.key;
+                    var loc = v.loc;
+                    var text = v.text;
+                    var figure = v.figure;
+                    var element = v.element;
+
+                    var jsonObject = {
+                        "key": key, "loc": loc, "text": text, "figure": figure, "element": element
+                    };
+                    jArray.push(jsonObject);
+
+                    obj.nodeDataArray = jArray;
+                }
+            }
+            document.getElementById('<%= input.ClientID %>').value = JSON.stringify(obj);
+            document.getElementById("mySavedModel").value = document.getElementById('<%= input.ClientID %>').value;
+            myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+        }
+
+    }
+    // add an SVG rendering of the diagram at the end of this page
+    /*
+    function makeSVG() {
+        var svg = myDiagram.makeSvg({
+            scale: 0.5
+        });
+        svg.style.border = "1px solid black";
+        obj = document.getElementById("SVGArea");
+        obj.appendChild(svg);
+        if (obj.children.length > 0)
+            obj.replaceChild(svg, obj.children[0]);
+    }
+    */
+    </script>
+
+</asp:Content>
+
+
+<asp:Content ID="Content2" ContentPlaceHolderID="ContentPlaceHolder1" runat="server">
+
+
+    <body onload="init(false)">
+        <div id="sample">
+            <div style="width:100%; white-space:nowrap;">
+                <div id="paletteDraggable" class="draggable" style="height: 600px; margin-left:0px;">
+                    <div id="paletteDraggableHandle" class="handle">Palette</div>
+                    <div id="paletteContainer">
+                        <div id="myPalette" style="border: solid 1px gray; height: 250px"></div>
+                        <asp:fieldset id="Fieldset2" style="color:orange" runat="server">
+                            <asp:legend runat="server" id="legItems">Search Filtering</asp:legend>
+                            <b><asp:Label runat="server" id="filter" ForeColor="Black">Filter By: </asp:Label></b><br /><br />
+                            <div id="CheckboxList" style="width:120px; color:orange;">
+                                <b><input type="checkbox" id="QU" name="filter" /><label id="QULabel" for="QU">Quality</label><br /></b>
+                                <b><input type="checkbox" id="TA" name="filter" /><label id="TALabel" for="TA">Task</label><br /></b>
+                                <b><input type="checkbox" id="AB" name="filter" /><label id="ABLabel" for="AB">Achieved By</label><br /></b>
+                                <b><input type="checkbox" id="Ass" name="filter" /><label id="AssLabel" for="Ass">Association</label><br /></b>
+                                <b><input type="checkbox" id="CONS" name="filter" /><label id="CONSLabel" for="CONS">Consists Of</label><br /></b>
+                                <b><input type="checkbox" id="CONT" name="filter" /><label id="CONTLabel" for="CONT">Contribution</label><br /></b>
+                                <b><input type="checkbox" id="EX" name="filter" /><label id="EXLabel" for="EX">Extended By</label><br /><br /></b>
+                                <asp:button runat="server" Height="30px" class="Shopbutton addStyle" OnClientClick="selectClickClient(); return false;" id="filterButton" Text="Filter"></asp:button>
+                            </div>
+                        </asp:fieldset>
+                    </div>
+                </div>
+
+                <span style="display: inline-block; vertical-align: top; padding: 5px; width:80%">
+                    <div id="myDiagram" style="border: solid 1px gray; height: 600px; width: 1350px"></div>
+                </span>
+            </div>
+            <div id="infoDraggable" class="draggable">
+                <div id="infoDraggableHandle" class="handle">Information</div>
+                <div id="myInfo">Selecting nodes in the main Diagram will display information here</div>
+
+                <div id="infoDraggableHandleRefMap" class="handle" style="visibility:hidden">Information</div>
+                <div id="myInfo2" style="visibility:hidden">Choose reference map</div>
+
+
+            </div>
+
+
+
+
+            <div style="margin-left:129px; font-size:medium">
+
+                <b>
+                    Please fill bellow if you want to map by texting.<br />
+                    The format is for example: <br />
+                    Achieved By (task x, task y) -> task with text x arrow to task with text y.<br />
+                    To see your new map, press the Load button.<br />
+                    To save, press the Save or Save As buttons.
+                    <br /><br />
+                </b>
+                <asp:textarea runat="server" id="userTextArea" style="width:50%;height:300px"></asp:textarea>
+            </div>
+
+            <div style="float:left;margin-left:129px">
+                <asp:button runat="server" class="Shopbutton addStyle" OnClientClick="save(); return false;" id="SaveButton" Text="Save"></asp:button>
+                <asp:button runat="server" class="Shopbutton addStyle" OnClientClick="saveAs(); return false;" id="SaveAsButton" Text="Save As"></asp:button>
+                <asp:button runat="server" class="Shopbutton addStyle" OnClientClick="loadUser(); return false;" id="LoadButton" Text="Load"></asp:button>
+                <asp:button runat="server" OnClick="ButtonLoadPost_Click" id="ButtonLoadPost"></asp:button>
+                <asp:button runat="server" OnClick="ButtonSavePost_Click" id="ButtonSavePost"></asp:button>
+                <asp:input runat="server" style="display:none" id="input" />
+                <asp:input runat="server" style="display:none" id="mapName" />
+                <asp:input runat="server" style="display:none" id="diagramObjects" />
+            </div>
+
+            <div id="dialog-confirm" title="Changing map name?" style="visibility:hidden">
+                <p><span id="rename" class="ui-icon ui-icon-alert" style="float:left; margin:0 7px 20px 0;"></span>Do you want to rename your map?</p>
+            </div>
+
+            <textarea id="mySavedModel" style="width:100%;height:300px;visibility:hidden">
+                { "class": "go.GraphLinksModel",
+                "linkFromPortIdProperty": "fromPort",
+                "linkToPortIdProperty": "toPort",
+                "nodeDataArray": [
+
+                ],
+                "linkDataArray": [
+                ]}
+            </textarea>
+
+        </div>
+    </body>
+</asp:Content>
+

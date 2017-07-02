@@ -1,0 +1,104 @@
+﻿@model khmap.Models.RegisterViewModel
+@{
+    ViewBag.Title = "Register";
+}
+
+<div class="well">
+    <h3><b>@ViewBag.Title</b></h3>
+    <h4>Create a new account</h4>
+    <hr />
+
+    @using (Html.BeginForm("Register", "Account", FormMethod.Post, new { @class = "form-horizontal", role = "form" }))
+    {
+        @Html.AntiForgeryToken()
+        @Html.ValidationSummary("", new { @class = "text-danger" })
+        <div class="form-group">
+            @Html.LabelFor(m => m.Email, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.TextBoxFor(m => m.Email, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.Password, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.PasswordFor(m => m.Password, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.ConfirmPassword, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.PasswordFor(m => m.ConfirmPassword, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.FirstName, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.TextBoxFor(m => m.FirstName, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.LastName, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.TextBoxFor(m => m.LastName, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.City, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.TextBoxFor(m => m.City, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            @Html.LabelFor(m => m.Country, new { @class = "col-md-3 control-label" })
+            <div class="col-md-9">
+                @Html.TextBoxFor(m => m.Country, new { @class = "form-control" })
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-3 col-md-9">
+                <input type="submit" class="btn btn-default" value="Register" />
+            </div>
+        </div>
+    }
+</div>
+
+
+<script>
+    //$(document).ready(function () {
+    //    //console.log('country');
+    //    //$('#Country').on("click", function () {
+    //    //    console.log('lal');
+    //    //}),
+    //    $("#Country").typeahead({
+    //        hint: true,
+    //        source: function (query, process) {
+    //            var users = [];
+    //            map = {};
+
+    //            // This is going to make an HTTP post request to the controller
+    //            return $.get('http://api.geonames.org/countryInfoJSON?username=demo', { query: query }, function (data) {
+    //                console.log(data);
+    //                // Loop through and push to the array
+    //                $.each(data, function (i, user) {
+    //                    map[user.Email] = user;
+    //                    users.push(user.Email);
+    //                });
+
+    //                // Process the details
+    //                process(users);
+    //            });
+    //        },
+    //        updater: function (item) {
+    //            var selectedShortCode = map[item].FName;
+
+    //            // Set the text to our selected id
+    //            $("#addUserEmail").text("Selected : " + selectedShortCode);
+    //            return item;
+    //        }
+    //    });
+    //});
+</script>
+
+@section Scripts {
+    @Scripts.Render("~/bundles/jqueryval")
+}

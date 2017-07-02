@@ -1,0 +1,413 @@
+﻿@model khmap.Models.Map
+
+@{
+    ViewBag.Title = "LaunchMap2";
+}
+
+<link href="~/Scripts/assets/spectrum.css" rel="stylesheet" />
+<script src="~/Scripts/assets/spectrum.js"></script>
+<script src="~/Scripts/go.js"></script>
+<link href="~/Content/goSamples.css" rel="stylesheet" type="text/css" />  <!-- you don't need to use this -->
+<!-- <link href="~/Content/mapStyle.css" rel="stylesheet" type="text/css" /> -->
+<script src="~/Scripts/goSamples.js"></script>  <!-- this is only for the GoJS Samples framework -->
+<link rel="stylesheet" href="//code.jquery.com/ui/1.11.3/themes/smoothness/jquery-ui.css" />
+<link href="~/Scripts/assets/jquery-ui.css" rel="stylesheet" type="text/css" />
+<link href="~/Scripts/assets/spectrum.css" rel="stylesheet" />
+<script src="~/Scripts/assets/spectrum.js"></script>
+<script src="//code.jquery.com/jquery-1.10.2.js"></script>
+<script src="//code.jquery.com/ui/1.11.3/jquery-ui.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jquery/1.8.2/jquery.min.js"></script>
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.9.0/jquery-ui.min.js"></script>
+<link href="~/Scripts/assets/jquery-ui.css" rel="stylesheet" type="text/css" />
+
+<script id="code">
+    function init() {
+        //if (window.goSamples) goSamples();  // init for these samples -- you don't need to call this
+        var $ = go.GraphObject.make;  // for conciseness in defining templates
+        myDiagram =
+          $(go.Diagram, "myDiagram",  // must name or refer to the DIV HTML element
+            {
+                initialContentAlignment: go.Spot.Center,
+                allowDrop: true,  // must be true to accept drops from the Palette
+                
+                "draggingTool.dragsLink": true,
+                "draggingTool.isGridSnapEnabled": true,
+                "linkingTool.isUnconnectedLinkValid": true,
+                "linkingTool.portGravity": 100,
+                "relinkingTool.isUnconnectedLinkValid": true,
+                "relinkingTool.portGravity": 100,
+
+                "LinkDrawn": showLinkLabel,  // this DiagramEvent listener is defined below
+                "LinkRelinked": showLinkLabel,
+                "animationManager.duration": 800, // slightly longer than default (600ms) animation
+                "undoManager.isEnabled": true  // enable undo & redo
+            });
+        // when the document is modified, add a "*" to the title and enable the "Save" button
+        myDiagram.addDiagramListener("Modified", function (e) {
+            var button = document.getElementById("SaveButton");
+            if (button) button.disabled = !myDiagram.isModified;
+            var idx = document.title.indexOf("*");
+            if (myDiagram.isModified) {
+                if (idx < 0) document.title += "*";
+            } else {
+                if (idx >= 0) document.title = document.title.substr(0, idx);
+            }
+        });
+        // helper definitions for node templates
+        function nodeStyle() {
+            return [
+              // The Node.location comes from the "loc" property of the node data,
+              // converted by the Point.parse static method.
+              // If the Node.location is changed, it updates the "loc" property of the node data,
+              // converting back using the Point.stringify static method.
+              new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+              {
+                  // the Node.location is at the center of each node
+                  locationSpot: go.Spot.Center,
+                  //isShadowed: true,
+                  //shadowColor: "#888",
+                  // handle mouse enter/leave events to show/hide the ports
+                  mouseEnter: function (e, obj) { showPorts(obj.part, true); },
+                  mouseLeave: function (e, obj) { showPorts(obj.part, false); }
+              }
+            ];
+        }
+        // Define a function for creating a "port" that is normally transparent.
+        // The "name" is used as the GraphObject.portId, the "spot" is used to control how links connect
+        // and where the port is positioned on the node, and the boolean "output" and "input" arguments
+        // control whether the user can draw links from or to the port.
+        function makePort(name, spot, output, input) {
+            // the port is basically just a small circle that has a white stroke when it is made visible
+            return $(go.Shape, "Circle",
+                     {
+                         fill: "transparent",
+                         stroke: null,  // this is changed to "white" in the showPorts function
+                         desiredSize: new go.Size(8, 8),
+                         alignment: spot, alignmentFocus: spot,  // align the port on the main Shape
+                         portId: name,  // declare this object to be a "port"
+                         fromSpot: spot, toSpot: spot,  // declare where links may connect at this port
+                         fromLinkable: output, toLinkable: input,  // declare whether the user may draw links to/from here
+                         cursor: "pointer"  // show a different cursor to indicate potential link point
+                     });
+        }
+        // define the Node templates for regular nodes
+        var lightText = 'whitesmoke';
+        myDiagram.nodeTemplateMap.add("",  // the default category
+          $(go.Node, "Spot", nodeStyle(),
+            // the main object is a Panel that surrounds a TextBlock with a rectangular Shape
+            $(go.Panel, "Auto",
+              $(go.Shape, "Rectangle",
+                { fill: "#00A9C9", stroke: null },
+                new go.Binding("figure", "figure")),
+              $(go.TextBlock,
+                {
+                    font: "bold 11pt Helvetica, Arial, sans-serif",
+                    stroke: lightText,
+                    margin: 8,
+                    maxSize: new go.Size(160, NaN),
+                    wrap: go.TextBlock.WrapFit,
+                    editable: true
+                },
+                new go.Binding("text", "text").makeTwoWay())
+            ),
+            // four named ports, one on each side:
+            makePort("T", go.Spot.Top, false, true),
+            makePort("L", go.Spot.Left, true, true),
+            makePort("R", go.Spot.Right, true, true),
+            makePort("B", go.Spot.Bottom, true, false)
+          ));
+        myDiagram.nodeTemplateMap.add("Start",
+          $(go.Node, "Spot", nodeStyle(),
+            $(go.Panel, "Auto",
+              $(go.Shape, "Circle",
+                { minSize: new go.Size(40, 60), fill: "#79C900", stroke: null }),
+              $(go.TextBlock, "Start",
+                { margin: 5, font: "bold 11pt Helvetica, Arial, sans-serif", stroke: lightText })
+            ),
+            // three named ports, one on each side except the top, all output only:
+            makePort("L", go.Spot.Left, true, false),
+            makePort("R", go.Spot.Right, true, false),
+            makePort("B", go.Spot.Bottom, true, false)
+          ));
+        myDiagram.nodeTemplateMap.add("End",
+          $(go.Node, "Spot", nodeStyle(),
+            $(go.Panel, "Auto",
+              $(go.Shape, "Circle",
+                { minSize: new go.Size(40, 60), fill: "#DC3C00", stroke: null }),
+              $(go.TextBlock, "End",
+                { margin: 5, font: "bold 11pt Helvetica, Arial, sans-serif", stroke: lightText })
+            ),
+            // three named ports, one on each side except the bottom, all input only:
+            makePort("T", go.Spot.Top, false, true),
+            makePort("L", go.Spot.Left, false, true),
+            makePort("R", go.Spot.Right, false, true)
+          ));
+        myDiagram.nodeTemplateMap.add("Comment",
+          $(go.Node, "Auto", nodeStyle(),
+            $(go.Shape, "File",
+              { fill: "#EFFAB4", stroke: null }),
+            $(go.TextBlock,
+              {
+                  margin: 5,
+                  maxSize: new go.Size(200, NaN),
+                  wrap: go.TextBlock.WrapFit,
+                  textAlign: "center",
+                  editable: true,
+                  font: "bold 12pt Helvetica, Arial, sans-serif",
+                  stroke: '#454545'
+              },
+              new go.Binding("text", "text").makeTwoWay())
+            // no ports, because no links are allowed to connect with a comment
+          ));
+        // replace the default Link template in the linkTemplateMap
+        myDiagram.linkTemplate =
+          $(go.Link,  // the whole link panel
+            {
+                //routing: go.Link.AvoidsNodes,
+                curve: go.Link.Bezier,
+                //corner: 5,
+                //toShortLength: 4,
+                resegmentable: true,
+                adjusting: go.Link.Stretch,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                cursor: "pointer"
+                //smoothness: 0.5
+            },
+            new go.Binding("points").makeTwoWay(),
+            //new go.Binding("curviness", "curviness"),
+            $(go.Shape,  // the link path shape
+              { isPanelMain: true, stroke: "gray", strokeWidth: 2 }),
+            $(go.Shape,  // the arrowhead
+              { toArrow: "standard", stroke: null, fill: "gray" }),
+            $(go.Panel, "Auto",  // the link label, normally not visible
+              { visible: false, name: "LABEL", segmentIndex: 2, segmentFraction: 0.5 },
+              new go.Binding("visible", "visible").makeTwoWay(),
+              $(go.Shape, "RoundedRectangle",  // the label shape
+                { fill: "#F8F8F8", stroke: null }),
+              $(go.TextBlock, "Yes",  // the label
+                {
+                    textAlign: "center",
+                    font: "10pt helvetica, arial, sans-serif",
+                    stroke: "#333333",
+                    editable: true
+                },
+                new go.Binding("text", "text").makeTwoWay())
+            )
+          );
+        // Make link labels visible if coming out of a "conditional" node.
+        // This listener is called by the "LinkDrawn" and "LinkRelinked" DiagramEvents.
+        function showLinkLabel(e) {
+            var label = e.subject.findObject("LABEL");
+            if (label !== null) label.visible = (e.subject.fromNode.data.figure === "Diamond");
+        }
+        // temporary links used by LinkingTool and RelinkingTool are also orthogonal:
+        myDiagram.toolManager.linkingTool.temporaryLink.routing = go.Link.Orthogonal;
+        myDiagram.toolManager.relinkingTool.temporaryLink.routing = go.Link.Orthogonal;
+        load();  // load an initial diagram from some JSON text
+        // initialize the Palette that is on the left side of the page
+        myPalette =
+          $(go.Palette, "myPalette",  // must name or refer to the DIV HTML element
+            {
+                "animationManager.duration": 800, // slightly longer than default (600ms) animation
+                nodeTemplateMap: myDiagram.nodeTemplateMap,  // share the templates used by myDiagram
+
+                linkTemplate: // simplify the link template, just in this Palette
+                    $(go.Link,
+                      { // because the GridLayout.alignment is Location and the nodes have locationSpot == Spot.Center,
+                          // to line up the Link in the same manner we have to pretend the Link has the same location spot
+                          locationSpot: go.Spot.Center,
+                          selectionAdornmentTemplate:
+                            $(go.Adornment, "Link",
+                              { locationSpot: go.Spot.Center },
+                              $(go.Shape,
+                                { isPanelMain: true, fill: null, stroke: "deepskyblue", strokeWidth: 0 }),
+                              $(go.Shape,  // the arrowhead
+                                { toArrow: "Standard", stroke: null })
+                            )
+                      },
+                      {
+                          routing: go.Link.AvoidsNodes,
+                          curve: go.Link.JumpOver,
+                          corner: 5,
+                          toShortLength: 4
+                      },
+                      new go.Binding("points"),
+                      $(go.Shape,  // the link path shape
+                        { isPanelMain: true, strokeWidth: 2 }),
+                      $(go.Shape,  // the arrowhead
+                        { toArrow: "Standard", stroke: null })
+                    ),
+
+                model: new go.GraphLinksModel([  // specify the contents of the Palette
+                  { category: "Start", text: "Start" },
+                  { text: "Step" },
+                  { text: "???", figure: "Diamond" },
+                  { category: "End", text: "End" },
+                  { category: "Comment", text: "Comment", figure: "RoundedRectangle" }
+                ], [
+            // the Palette also has a disconnected Link, which the user can drag-and-drop
+            { points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
+                ])
+            });
+    }
+    // Make all ports on a node visible when the mouse is over the node
+    function showPorts(node, show) {
+        var diagram = node.diagram;
+        if (!diagram || diagram.isReadOnly || !diagram.allowLink) return;
+        node.ports.each(function (port) {
+            port.stroke = (show ? "white" : null);
+        });
+    }
+    // Show the diagram's model in JSON format that the user may edit
+    function save() {
+        document.getElementById("mySavedModel").value = myDiagram.model.toJson();
+        myDiagram.isModified = false;
+    }
+    function load() {
+        myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+    }
+    // add an SVG rendering of the diagram at the end of this page
+    function makeSVG() {
+        var svg = myDiagram.makeSvg({
+            scale: 0.5
+        });
+        svg.style.border = "1px solid black";
+        obj = document.getElementById("SVGArea");
+        obj.appendChild(svg);
+        if (obj.children.length > 0)
+            obj.replaceChild(svg, obj.children[0]);
+    }
+</script>
+
+
+
+
+
+<!-- HTML PAGE -->
+
+<div class="container-fluid">
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="btn-toolbar" role="toolbar" aria-label="...">
+                <div class="btn-group" role="group">
+                    <button><i class="glyphicon glyphicon-folder-open"></i></button>
+                    <button><i class="glyphicon glyphicon-floppy-disk"></i></button>
+                    <button><i class="glyphicon glyphicon-refresh"></i></button>
+                </div>
+                <div class="btn-group" role="group">
+                    <button><i class="glyphicon glyphicon-remove"></i></button>
+                    <button><i class="glyphicon glyphicon-floppy-disk"></i></button>
+                    <button><i class="glyphicon glyphicon-refresh"></i></button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-2 column">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Shapes
+                    </h3>
+                </div>
+                <div class="panel-body fixed-panel-left">
+
+                    <div id="myPalette" style="border: solid 1px black; height: 580px"></div>
+
+                </div>
+                <div class="panel-footer">
+                    Panel footer
+                </div>
+            </div>
+        </div>
+        <div class="col-md-10 column">
+            <div class="panel panel-default">
+                <div class="panel-heading">
+                    <h3 class="panel-title">
+                        Panel title
+                    </h3>
+                </div>
+                <div class="panel-body fixed-panel-primary">
+
+                    <div id="myDiagram" style="border: solid 1px black; height: 580px"></div>
+
+                </div>
+                <div class="panel-footer">
+                    <div class="btn-group" role="group" aria-label="...">
+                        <button type="button" class="btn btn-success" onclick="save()">
+                            <span class="btn-label"><i class="glyphicon glyphicon-save"></i></span>&nbsp;Save
+                        </button>
+                        <button type="button" class="btn btn-success">
+                            <span class="btn-label"><i class="glyphicon glyphicon-save"></i></span>&nbsp;Save As
+                        </button>
+                        <button type="button" class="btn btn-warning" onclick="init()">
+                            <span class="btn-label"><i class="glyphicon glyphicon-refresh"></i></span>&nbsp;Load
+                        </button>
+                        <button type="button" class="btn btn-danger">
+                            <span class="btn-label"><i class="glyphicon glyphicon-remove"></i></span>&nbsp;Cancel
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="row clearfix">
+        <div class="col-md-12 column">
+            <div class="tabbable" id="tabs-669421">
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#panel-637089" data-toggle="tab">Section 1</a>
+                    </li>
+                    <li>
+                        <a href="#panel-826018" data-toggle="tab">Section 2</a>
+                    </li>
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="panel-637089">
+
+                        <div>
+                            <textarea id="mySavedModel" style="height:150px; width:580px;">
+                                { "class": "go.GraphLinksModel",
+                                "linkFromPortIdProperty": "fromPort",
+                                "linkToPortIdProperty": "toPort",
+                                "nodeDataArray": [
+                     
+                                ],
+                                "linkDataArray": [
+                                
+                                ]}
+                            </textarea>
+                        </div>
+
+                    </div>
+                    <div class="tab-pane" id="panel-826018">
+                        <p>
+                            Howdy, I'm in Section 2.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<style type="text/css">
+    
+    .fixed-panel-primary {
+        min-height: 50%;
+        max-height: 100%;
+        height: 600px;
+        width: 800px;
+    }
+
+    .fixed-panel-left {
+        min-height: 50%;
+        max-height: 100%;
+        height: 600px;
+    }
+
+</style>
+

@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNet.Identity;
+@model IEnumerable<khmap.Models.Group>
+
+@if (Model.Count() == 0)
+{
+    <div class="alert alert-info">No groups to display</div>
+}
+else
+{
+    <table class="table table-condensed table-responsive table-hover">
+
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="col-md-1">
+                    @*<span class="glyphicon glyphicon-th"></span>*@
+                    <i class="fa fa-users"></i>
+                </td>
+                <td class="col-md-9`">
+                    @Html.ActionLink(item.Name, "Index", "Group", new { id = item.Id }, new { @title = item.Name + "'s Details" })
+                </td>
+
+                <td class="col-md-2">
+                    @Html.ActionLink(" ", "Index", "Group", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
+                    @if (item.Creator.ToString() == User.Identity.GetUserId())
+                    {
+                        @Html.ActionLink(" ", "Delete", "Group", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                    }
+                </td>
+            </tr>
+        }
+
+    </table>
+}

@@ -1,0 +1,131 @@
+﻿
+
+@using Microsoft.AspNet.Identity
+
+@if (Request.IsAuthenticated)
+{
+    
+    //var name = Html.Action("GetUserNameById", "User", new { id = User.Identity.GetUserId() });
+
+    
+    @*using (Html.BeginForm("LogOff", "Account", FormMethod.Post, new { id = "logoutForm", @class = "navbar-right" }))
+    {
+    @Html.AntiForgeryToken()
+
+    <ul class="nav navbar-nav navbar-right">
+        <li>
+            @Html.ActionLink("Hello " + User.Identity.GetUserName() + "!", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage" })
+        </li>
+        <li><a href="javascript:document.getElementById('logoutForm').submit()">Log off</a></li>
+    </ul>
+    }*@
+
+    var fName = Html.Action("GetUserFirstNameById", "User", new { id = User.Identity.GetUserId() });
+    var lName = Html.Action("GetUserLastNameById", "User", new { id = User.Identity.GetUserId() });
+    var email = User.Identity.GetUserName();
+    
+    
+    @*<div class="btn-group pull-right toAlign">
+        <button type="button" class="btn dropdown-toggle" data-toggle="dropdown">
+            <span class="glyphicon glyphicon-user"></span>
+            @{
+    //var name = Html.Action("GetUserNameById", "User", new { id = User.Identity.GetUserId() });
+                <text> @fName </text>
+            }
+            <span class="caret"></span>
+        </button>
+        <ul class="dropdown-menu">
+            <li>
+                @Html.ActionLink("Profile", "Profile2", "User", new { id = User.Identity.GetUserId() }, new { @title = "View Profile" })
+            </li>
+            <li>
+                @Html.ActionLink("Manage", "Manage", "Account", routeValues: null, htmlAttributes: new { title = "Manage" })
+            </li>
+            <li class="divider"></li>
+            <li>@Html.ActionLink("Log Out", "LogOut", "Account")</li>
+        </ul>
+    </div>*@
+
+
+    <ul class="nav navbar-nav navbar-right">
+        <li class="dropdown">
+            <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+                <span class="glyphicon glyphicon-user"></span>
+                <strong><text> @fName </text></strong>
+                <span class="fa fa-caret-down fa-lg"></span>
+            </a>
+            <ul class="dropdown-menu">
+                <li>
+                    <div class="navbar-login">
+                        <div class="row">
+                            <div class="col-md-4">
+                                <p class="text-center">
+                                    <span class="glyphicon glyphicon-user icon-size"></span>
+                                </p>
+                            </div>
+                            <div class="col-md-8">
+                                <p class="text-left"><strong><text> @fName @lName</text></strong></p>
+                                <p class="text-left small"><text> @email</text></p>
+                                <div class="row no-gutter">
+                                    <div class="text-left col-md-5">
+                                        @Html.ActionLink("Profile", "Profile2", "User", new { id = User.Identity.GetUserId() }, new { @class = "btn btn-primary btn-sm btn-block", title = "View Profile" })
+                                    </div>
+                                    <div class="text-left col-md-5">
+                                        @Html.ActionLink("Account", "Manage", "Account", routeValues: null, htmlAttributes: new { @class = "btn btn-primary btn-sm btn-block", title = "Account" })
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+                <li class="divider"></li>
+                <li>
+                    <div class="navbar-login navbar-login-session">
+                        <div class="row">
+                            <div class="col-lg-12">
+                                <p>
+                                    @Html.ActionLink("Log Out", "LogOut", "Account", null, new { @class = "btn btn-danger btn-block", title = "Log Out" })
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </li>
+            </ul>
+        </li>
+    </ul>
+
+}
+else
+{
+    <ul class="nav navbar-nav navbar-right">
+        <li>@Html.ActionLink("Register", "Register", "Account", routeValues: null, htmlAttributes: new { id = "registerLink" })</li>
+        <li>@Html.ActionLink("Log in", "Login", "Account", routeValues: null, htmlAttributes: new { id = "loginLink" })</li>
+    </ul>
+}
+
+
+<style>
+    .navbar-login
+{
+    width: 305px;
+    padding: 10px;
+    padding-bottom: 0px;
+}
+
+.navbar-login-session
+{
+    padding: 10px;
+    padding-bottom: 0px;
+    padding-top: 0px;
+}
+
+.icon-size
+{
+    font-size: 87px;
+}
+
+.no-gutter > [class*='col-'] {
+    padding-right:8px;
+    padding-left:8px;
+}
+</style>

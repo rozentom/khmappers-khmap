@@ -1,0 +1,48 @@
+﻿@using Microsoft.AspNet.Identity;
+
+@{
+    ViewBag.Title = "Home Page";
+    var name = Html.Action("GetUserFirstNameById", "User", new { id = User.Identity.GetUserId() });
+}
+
+
+<div class="well">
+    <h2> @name's Home Page</h2>
+</div>
+
+<div class="col-md-6">
+    <div class="span12 well" style="height:320px;padding-top:5px;" role="tabpanel">
+        <h4>Maps</h4>
+        <div class="pull-right">
+            @Html.ActionLink(" New Map", "LaunchMap5", "Map", null, new { @class = "btn btn-primary" })
+        </div>
+        <ul class="nav nav-tabs" id="MapTab">
+            <li role="presentation" class="active"><a href="#MyMaps" aria-controls="MyMaps" role="tab" data-toggle="tab">My Maps</a></li>
+            <li role="presentation"><a href="#SharedMaps" aria-controls="SharedMaps" role="tab" data-toggle="tab">Shared Maps</a></li>
+        </ul>
+        <div class="tab-content" style="max-height:220px;overflow-y:auto;">
+            <div role="tabpanel" class="tab-pane active" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
+            <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
+        </div>
+    </div>
+</div>
+
+<div class="col-md-6">
+    <div class="span12 well" style="height:320px;padding-top:5px;" role="tabpanel">
+        <h4>Groups</h4>
+        <div class="pull-right">
+            @Html.ActionLink("New Group", "Create", "Group", null, new { @class = "btn btn-primary" })
+        </div>
+        <ul class="nav nav-tabs" id="GroupTab">
+            <li role="presentation" class="active"><a href="#MyGroups" aria-controls="MyGroups" role="tab" data-toggle="tab">My Groups</a></li>
+            <li role="presentation"><a href="#MemberGroups" aria-controls="MemberGroups" role="tab" data-toggle="tab">Member Groups</a></li>
+        </ul>
+
+        <div class="tab-content" style="max-height:220px;overflow-y:auto;">
+            <div role="tabpanel" class="tab-pane active" id="MyGroups">@{ Html.RenderAction("MyGroups", "Group"); } </div>
+            <div role="tabpanel" class="tab-pane" id="MemberGroups">@{ Html.RenderAction("MyMemberGroups", "Group"); } </div>
+        </div>
+    </div>
+</div>
+
+

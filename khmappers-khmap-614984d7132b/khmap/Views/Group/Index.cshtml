@@ -1,0 +1,289 @@
+﻿@using Microsoft.AspNet.Identity;
+@model khmap.Models.GroupViewModel
+
+@*@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/bootstrap")*@
+
+
+<div>
+    <div class="well">
+        <div>
+            <div>
+                <h3><b>@Model.Name</b></h3>
+            </div>
+            <div>
+                @if (User.Identity.GetUserId() == Model.CreatorId)
+                {
+                    <div class="btn-group" role="group" aria-label="editGroup">
+                        @Html.ActionLink(" ", "Edit", new { id = Model.Id }, new { @class = "btn btn-xs btn-warning glyphicon glyphicon-edit", title = "Edit" })
+                    </div>
+                    <div class="btn-group" role="group" aria-label="deleteGroup">
+                        @Html.ActionLink(" ", "Delete", new { id = Model.Id }, new { @class = "btn btn-xs btn-danger glyphicon glyphicon-trash", title = "Delete" })
+                    </div>
+                }
+            </div>
+            <hr />
+            <div><small>@Model.Description</small></div>
+            <div><small>Created On @Model.CreationTime By @Model.CreatorEmail</small></div>
+        </div>
+    </div>
+
+    <div id="groupPermissionsList">
+        @{ Html.RenderAction("GetGroupPermissions", "Group", new { groupId = Model.Id }); }
+    </div>
+</div>
+
+
+@*<div id="usersList">
+    <div class="container-fluid fill">
+        <div class="row">
+            <div class="col-md-8">
+                <div class="span12 well">
+                    <div class="row">
+                        <div class="col-md-5">
+                            <div class="input-group">
+                                <input type="text" id="search" class="form-control" placeholder="Search for...">
+                                <span class="input-group-btn">
+                                    <button type="button" id="btnSearch" class="btn btn-default"><i class="glyphicon glyphicon-search"></i></button>
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-md-7">
+                            <button type="button" id="btnAddUser" class="btn btn-primary pull-right">Add New User</button>
+                        </div>
+                    </div>
+                    <br />
+                    <div class="row">
+                        <div class="col-md-12">
+                            <table id="groupUsersGrid" class="table" data-source="@Url.Action("GetGroupUserPermissionsList", "Group", new { groupId = Model.Id.ToString() })"></table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Modal -->
+<div class="modal fade" id="userPermissionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Edit User Permission</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form form-horizontal">
+                    <input type="hidden" id="gid" />
+                    <input type="hidden" id="uid" />
+                    <div class="form-group">
+                        <label for="email" class="control-label col-xs-3">Email</label>
+                        <input type="text" class="form-control col-xs-8" id="email" placeholder="Email" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="name" class="control-label col-xs-3">Name</label>
+                        <input type="text" class="form-control col-xs-8" id="name" placeholder="Name" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="permission" class="control-label col-xs-3">Permission</label>
+                        <div>
+                            <select class="form-control col-xs-8" id="permission">
+                                <option value="1">Manager</option>
+                                <option value="2">Member</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnSave" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add user Modal -->
+<div class="modal fade" id="AddUserPermissionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add User Permission</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form form-horizontal">
+                    <input type="hidden" id="addUserGid" />
+                    <div class="form-group">
+                        <label for="email" class="control-label col-xs-3">Email</label>
+                        <input type="text" class="form-control col-xs-8" id="addUserEmail" placeholder="Email" data-provide="typeahead" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="permission" class="control-label col-xs-3">Permission</label>
+                        <div>
+                            <select class="form-control col-xs-8" id="addUserPermission">
+                                <option value="1">Manager</option>
+                                <option value="2">Member</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnAdd" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script type="text/javascript">
+    var grid;
+    function Add() {
+        var groupId = '@Model.Id';
+        $("#addUserGid").val(groupId);
+        $("#addUserEmail").val("");
+        $("#addUserPermission").val(2);
+        $("#AddUserPermissionModal").modal("show");
+    }
+    function SaveNewUser() {
+        var newUser = {
+            GId: $("#addUserGid").val(),
+            Email: $("#addUserEmail").val(),
+            Permission: $("#addUserPermission").val()
+        };
+        //console.log(newUser);
+        $.ajax({ url: '@Url.Action("AddGroupUserPermission", "Group")', type: "POST", data: { gId: newUser.GId, uEmail: newUser.Email, permission: newUser.Permission } })
+            .done(function () {
+                grid.reload();
+                $("#AddUserPermissionModal").modal("hide");
+            })
+            .fail(function () {
+                alert("Unable to save.");
+                $("#AddUserPermissionModal").modal("hide");
+            });
+    }
+    function Edit(e) {
+        console.log(e.data);
+        $("#gid").val(e.data.record.GroupId);
+        $("#uid").val(e.data.id);
+        $("#email").val(e.data.record.Email);
+        $("#name").val(e.data.record.FirstName + ' ' + e.data.record.LastName);
+        $("#permission").val(e.data.record.Permission);
+        $("#userPermissionModal").modal("show");
+    }
+    function Save() {
+        var user = {
+            GId: $("#gid").val(),
+            UId: $("#uid").val(),
+            Permission: $("#permission").val()
+        };
+        console.log(user);
+        $.ajax({ url: '@Url.Action("SaveGroupUserPermission", "Group")', type: "POST", data: { gId: user.GId, uId: user.UId, permission: user.Permission } })
+            .done(function () {
+                grid.reload();
+                $("#userPermissionModal").modal("hide");
+            })
+            .fail(function () {
+                alert("Unable to save.");
+                $("#userPermissionModal").modal("hide");
+            });
+    }
+    function Remove(e) {
+        $.ajax({ url: '@Url.Action("RemoveGroupUserPermission", "Group")', type: "POST", data: { gId: e.data.record.GroupId, uId: e.data.id } })
+            .done(function () {
+                grid.reload();
+            })
+            .fail(function () {
+                alert("Unable to remove.");
+            });
+    }
+    function Search() {
+        grid.reload({ searchString: $("#search").val() });
+    }
+
+    $(document).ready(function () {
+        grid = $("#groupUsersGrid").grid({
+            dataKey: "UserId",
+            uiLibrary: "bootstrap",
+            //width: 200,
+            fontSize: "12px",
+            columns: [
+                { field: "GroupId", hidden: true },
+                { field: "UserId", hidden: true },
+                { field: "Email", title: "Email", sortable: true, width: 180 },
+                { field: "FirstName", title: "First Name", sortable: true },
+                { field: "LastName", title: "Last Name", sortable: true },
+                { field: "Permission", title: "Permission", hidden: true },
+                { title: "Permission", tmpl: "{PermissionString}", sortable: true, width: 90 },
+                { title: "", field: "Edit", width: 40, align: "center", type: "icon", icon: "glyphicon-pencil", tooltip: "Edit", events: { "click": Edit } },
+                { title: "", field: "Delete", width: 40, align: "center", type: "icon", icon: "glyphicon-remove", tooltip: "Delete", events: { "click": Remove } }
+            ],
+            pager: { enable: true, limit: 5, sizes: [5, 10, 25, 50] }
+        });
+        grid.on("cellDataBound", function (e, $wrapper, id, index, record) {
+            if ("Type" === index) {
+                $wrapper.addClass(record.Type.indexOf("U") > -1 ? "userCss" : "groupCss");
+            }
+        });
+        $("#btnAddUser").on("click", Add);
+        $("#btnSave").on("click", Save);
+        $("#btnAdd").on("click", SaveNewUser);
+        $("#btnSearch").on("click", Search);
+    });
+
+    $(document).ready(function () {
+        $("#addUserEmail").typeahead({
+            hint: true,
+            source: function (query, process) {
+                var users = [];
+                map = {};
+
+                // This is going to make an HTTP post request to the controller
+                return $.post('@Url.Action("GetEmailsList", "User")', { query: query }, function (data) {
+
+                    // Loop through and push to the array
+                    $.each(data, function (i, user) {
+                        map[user.Email] = user;
+                        users.push(user.Email);
+                    });
+
+                    // Process the details
+                    process(users);
+                });
+            },
+            updater: function (item) {
+                var selectedShortCode = map[item].FName;
+
+                // Set the text to our selected id
+                $("#addUserEmail").text("Selected : " + selectedShortCode);
+                return item;
+            }
+        });
+    });
+
+
+</script>
+
+
+<style>
+    .form-horizontal .control-label {
+        text-align: left !important;
+    }
+
+    .userCss {
+        background-color: lightblue;
+    }
+
+    .groupCss {
+        background-color: lightseagreen;
+    }
+</style>*@
+

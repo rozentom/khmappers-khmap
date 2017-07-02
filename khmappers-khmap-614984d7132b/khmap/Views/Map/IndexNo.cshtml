@@ -1,0 +1,34 @@
+﻿@using Microsoft.AspNet.Identity;
+@model khmap.Models.MapViewModel
+
+
+<div class="well">
+    <div class="span12">
+        <div>
+            <h4>@Model.Name</h4>
+        </div>
+        <div>
+            @if (User.Identity.GetUserId() == Model.CreatorId.ToString())
+            {
+                @Html.ActionLink(" ", "Edit", new { id = Model.Id }, new { @class = "btn btn-xs glyphicon glyphicon-edit" });
+                @Html.ActionLink(" ", "Delete", new { id = Model.Id }, new { @class = "btn btn-xs glyphicon  glyphicon-trash" });
+            }
+        </div>
+        <hr />
+        <div><small>@Model.Description</small></div>
+        <div><small>Created On @Model.CreationTime By @Model.CreatorEmail</small></div>
+    </div>
+</div>
+
+<div class="span12">
+    <div class="panel panel-default">
+        <div class="panel-heading">
+            <div class="panel-title">
+                <h5>Map Permissions</h5>
+            </div>
+        </div>
+        <div class="panel-body" id="permissionsList">
+            @{ Html.RenderAction("MyPermissions", "MapPermission", new { mapId = Model.Id.ToString() }); }
+        </div>
+    </div>
+</div>

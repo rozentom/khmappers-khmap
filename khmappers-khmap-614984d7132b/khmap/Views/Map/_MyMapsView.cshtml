@@ -1,0 +1,52 @@
+﻿@using Microsoft.AspNet.Identity;
+@model IEnumerable<khmap.Models.Map>
+
+@if (Model.Count() == 0)
+{
+    <div class="alert alert-info">No maps to display</div>
+}
+else
+{
+    <table class="table table-condensed table-responsive table-hover">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="col-md-1">
+                    @*<span class="glyphicon glyphicon-star"></span>*@
+                    <i class="fa fa-sitemap"></i>
+                </td>
+                <td class="col-md-9">
+                    @Html.ActionLink(item.Name, "LaunchMap5", "Map", new { id = item.Id }, new { title = "Load " + item.Name })
+                </td>
+
+                <td class="col-md-2">
+                    @Html.ActionLink(" ", "Index", "Map", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
+                    @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
+                    @if (item.Creator.ToString() == User.Identity.GetUserId())
+                    {
+                        @Html.ActionLink(" ", "Delete", "Map", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                    }
+                </td>
+            </tr>
+        }
+
+    </table>
+}
+
+<style>
+    .table td {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      word-wrap: break-word;
+    }
+
+    .table {
+        table-layout:fixed;
+    }
+
+    table tr {
+        width: auto !important;
+    }
+
+</style>

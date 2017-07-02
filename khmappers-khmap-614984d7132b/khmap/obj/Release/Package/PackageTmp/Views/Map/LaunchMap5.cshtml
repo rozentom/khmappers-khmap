@@ -1,0 +1,3433 @@
+﻿@using WebApplication2.Models;
+@model WebApplication2.Models.Map
+@{
+    Layout = null;
+}
+
+
+@Styles.Render("~/Content/bootstrap.css")
+@Styles.Render("~/css/font-awesome.min.css")
+@Scripts.Render("~/bundles/modernizr")
+@Scripts.Render("~/bundles/jquery")
+@Scripts.Render("~/bundles/jqueryval")
+@Scripts.Render("~/bundles/bootstrap")
+@Styles.Render("~/Content/Map.css")
+@Scripts.Render("~/Scripts/go.js")
+@Styles.Render("~/Content/jq-comment-css")
+@Scripts.Render("~/bundles/jq-comment-js")
+
+
+<!DOCTYPE html>
+
+<html>
+<head>
+    <meta name="viewport" content="width=device-width" />
+
+    <link rel="stylesheet" href="~/Content/themes/base/all.css">
+    <script src="~/Scripts/jquery-ui-1.11.4.min.js"></script>
+
+    @*<link href="~/Scripts/jtable/themes/lightcolor/blue/jtable.css" rel="stylesheet" type="text/css" />*@
+    <link href="~/Scripts/jtable/themes/lightcolor/blue/jtable.min.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/jtable/jquery.jtable.min.js" type="text/javascript"></script>
+
+    <link href="~/Content/spectrum.css" rel="stylesheet" type="text/css" />
+    <script src="~/Scripts/spectrum.js" type="text/javascript"></script>
+    @*<script src="~/Scripts/DrawCommandHandler.js" type="text/javascript"></script>*@
+
+    <title>Map</title>
+
+    <script id="code">
+
+    var isSaved = '@ViewBag.isSaved';
+    var mapNameGlobal = '@Model.Name';
+    var mapIdGlobal = '@Model.Id';
+
+    @*var userPermission = ('@ViewBag.userPermission' == '@MapPermissionType.RW')*@
+
+    function init() {
+
+        var $ = go.GraphObject.make;  // for conciseness in defining templates
+        myDiagram =
+          $(go.Diagram, "myDiagram",  // must name or refer to the DIV HTML element
+            {
+                initialContentAlignment: go.Spot.Center,
+                allowDrop: true,  // must be true to accept drops from the Palette
+                allowLink: false,
+                "draggingTool.dragsLink": true,
+                "draggingTool.isGridSnapEnabled": false,
+                "linkingTool.isUnconnectedLinkValid": true,
+                "linkingTool.portGravity": 10,
+                "relinkingTool.isUnconnectedLinkValid": true,
+                "relinkingTool.portGravity": 10,
+                "relinkingTool.fromHandleArchetype":
+                  $(go.Shape, "Diamond", { segmentIndex: 0, cursor: "pointer", desiredSize: new go.Size(10, 10), fill: "tomato", stroke: "darkred" }),
+                "relinkingTool.toHandleArchetype":
+                  $(go.Shape, "Diamond", { segmentIndex: -1, cursor: "pointer", desiredSize: new go.Size(10, 10), fill: "darkred", stroke: "tomato" }),
+                "linkReshapingTool.handleArchetype":
+                  $(go.Shape, "Diamond", { desiredSize: new go.Size(7, 7), fill: "lightblue", stroke: "deepskyblue" }),
+                rotatingTool: $(TopRotatingTool),  // defined below
+                //"rotatingTool.snapAngleMultiple": 15,
+                //"rotatingTool.snapAngleEpsilon": 15,
+                // don't set some properties until after a new model has been loaded
+                "InitialLayoutCompleted": loadDiagramProperties,  // this DiagramEvent listener is defined below
+                "LinkDrawn": maybeChangeLinkCategory,     // these two DiagramEvents call a
+                "LinkRelinked": maybeChangeLinkCategory,
+                "undoManager.isEnabled": true,
+
+                "linkingTool.linkValidation": validLink2,  // defined below
+                "relinkingTool.linkValidation": validLink2,
+
+                "toolManager.mouseWheelBehavior": go.ToolManager.WheelNone,
+                "panningTool.isEnabled": false,
+                //"isModelReadOnly": true
+
+            });
+        // when the document is modified, add a "*" to the title and enable the "Save" button
+        myDiagram.addDiagramListener("Modified", function (e) {
+            var button = document.getElementById("SaveButton");
+
+            //var myBtn = $('#saveBtn').prop('disabled');
+            //console.log('btn: ' + $('#saveBtn'));
+
+            if (button) button.disabled = !myDiagram.isModified;
+            var idx = document.title.indexOf("*");
+            if (myDiagram.isModified) {
+                if (idx < 0) document.title += "*";
+            } else {
+                if (idx >= 0) document.title = document.title.substr(0, idx);
+            }
+        });
+        // Define a function for creating a "port" that is normally transparent.
+        // The "name" is used as the GraphObject.portId, the "spot" is used to control how links connect
+        // and where the port is positioned on the node, and the boolean "output" and "input" arguments
+        // control whether the user can draw links from or to the port.
+        function makePort(name, spot, output, input) {
+            // the port is basically just a small transparent square
+            return $(go.Shape, "Circle",
+                     {
+                         fill: null,  // not seen, by default; set to a translucent gray by showSmallPorts, defined below
+                         stroke: null,
+                         desiredSize: new go.Size(7, 7),
+                         alignment: spot,  // align the port on the main Shape
+                         alignmentFocus: spot,  // just inside the Shape
+                         portId: name,  // declare this object to be a "port"
+                         fromSpot: spot, toSpot: spot,  // declare where links may connect at this port
+                         fromLinkable: output, toLinkable: input,  // declare whether the user may draw links to/from here
+                         cursor: "pointer"  // show a different cursor to indicate potential link point
+                     });
+        }
+
+
+        var nodeSelectionAdornmentTemplate =
+          $(go.Adornment, "Auto",
+            $(go.Shape, { fill: null, stroke: "deepskyblue", strokeWidth: 1.5, strokeDashArray: [4, 2] }),
+            $(go.Placeholder)
+          );
+
+
+
+        var nodeResizeAdornmentTemplate =
+          $(go.Adornment, "Spot",
+            { locationSpot: go.Spot.Right },
+            $(go.Placeholder),
+            $(go.Shape, { alignment: go.Spot.TopLeft, cursor: "nw-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.Top, cursor: "n-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.TopRight, cursor: "ne-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.Left, cursor: "w-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.Right, cursor: "e-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.BottomLeft, cursor: "se-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.Bottom, cursor: "s-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { alignment: go.Spot.BottomRight, cursor: "sw-resize", desiredSize: new go.Size(6, 6), fill: "lightblue", stroke: "deepskyblue" })
+          );
+
+        var nodeRotateAdornmentTemplate =
+          $(go.Adornment,
+            { locationSpot: go.Spot.Center, locationObjectName: "CIRCLE" },
+            $(go.Shape, "Circle", { name: "CIRCLE", cursor: "pointer", desiredSize: new go.Size(7, 7), fill: "lightblue", stroke: "deepskyblue" }),
+            $(go.Shape, { geometryString: "M3.5 7 L3.5 30", isGeometryPositioned: true, stroke: "deepskyblue", strokeWidth: 1.5, strokeDashArray: [4, 2] })
+          );
+
+        var nodeMenu =
+           $(go.Adornment, "Vertical",
+             //$("ContextMenuButton",
+             //    $(go.TextBlock, "Properties", { margin: 3 }),
+             //    { click: function (e, obj) { nodeProperties(e, obj); } }),
+             $("ContextMenuButton",
+                 $(go.TextBlock, "Properties", { margin: 3 }),
+                 { click: function (e, obj) { showModal(obj); } }));
+
+
+        var contributionLinkMenu =
+           $(go.Adornment, "Vertical",
+             $("ContextMenuButton",
+                 $(go.TextBlock, "+", { margin: 3 }),
+                 { click: function (e, obj) { setContributionValue(obj, "+"); } }),
+             $("ContextMenuButton",
+                 $(go.TextBlock, "++", { margin: 3 }),
+                 { click: function (e, obj) { setContributionValue(obj, "++"); } }),
+             $("ContextMenuButton",
+                 $(go.TextBlock, "-", { margin: 3 }),
+                 { click: function (e, obj) { setContributionValue(obj, "-"); } }),
+             $("ContextMenuButton",
+                 $(go.TextBlock, "--", { margin: 3 }),
+                 { click: function (e, obj) { setContributionValue(obj, "--"); } }),
+             $("ContextMenuButton",
+                 $(go.TextBlock, "Properties", { margin: 3 }),
+                 { click: function (e, obj) { showModal(obj); } }));
+
+        var linkMenu =
+           $(go.Adornment, "Vertical",
+             $("ContextMenuButton",
+                 $(go.TextBlock, "Properties", { margin: 3 }),
+                 { click: function (e, obj) { showLinePropertiesModal(obj); } }));
+
+
+
+        function nodeProperties(e, obj) {
+            var node = obj.part.adornedObject;
+            myDiagram.model.setDataProperty(node.data, "fill", go.Brush.randomColor());
+            var data = node.data;
+            alert('color: ' + data.fill + " strok: " + data.stroke);
+        }
+
+        function linkProperties(e, obj) {
+            //alert("bla");
+            var link = obj.part.adornedPart;
+            //myDiagram.model.setDataProperty(link.data, "text", "lala");
+            //myDiagram.model.setDataProperty(link.data, "curve", go.Link.Orthogonal);
+            //myDiagram.model.setDataProperty(link.data, "color", go.Brush.randomColor());
+            alert(link.data.curve === go.Link.Bezier);
+            //myDiagram.model.setDataProperty(link.data, "visible", false);
+        }
+
+        function setContributionValue(obj, val) {
+            var link = obj.part.adornedPart;
+            setElementText(link, val);
+
+            //link.diagram.startTransaction("setContributionValue");
+            //myDiagram.model.setDataProperty(link.data, "text", val);
+            //myDiagram.model.setDataProperty(link.data, "curve", go.Link.Bezier);
+            //link.diagram.commitTransaction("setContributionValue");
+        }
+
+        function setElementText(obj, val) {
+            obj.diagram.startTransaction("setElementText");
+            myDiagram.model.setDataProperty(obj.data, "text", val);
+            obj.diagram.commitTransaction("setContributionValue");
+        }
+
+        myDiagram.addDiagramListener("ExternalObjectsDropped", function (e) {
+            //console.log(e.diagram.selection.first().data);
+            var node = e.diagram.selection.first();
+
+            node.data.refs = [];
+            node.data.ctxs = [];
+            node.data.comment = null;
+
+
+            //console.log(e.subject);
+            //console.log(myDiagram.currentTool.linkingTool);
+
+            if (node.data.category === "Contribution") {
+                setElementText(node, "?")
+            }
+            if (node.data.category === "Association") {
+                setElementText(node, "")
+            }
+        });
+
+        //myDiagram.nodeTemplate =
+        myDiagram.nodeTemplateMap.add("Task",
+          $(go.Node, "Spot",
+            {
+                locationSpot: go.Spot.Center,
+                locationObjectName: "PANEL",
+                selectionObjectName: "PANEL",
+                selectionAdornmentTemplate: nodeSelectionAdornmentTemplate,
+                contextMenu: nodeMenu
+            },
+
+            //{
+            //    mouseDrop: function (e, node) {
+            //        console.log('mousedrop: ' + e + ' , ' + node);
+            //    }
+            //},
+
+            //{ selectionAdorned: false, contextMenu: activityNodeMenu },
+            new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+            { selectable: true },
+            { resizable: true, resizeObjectName: "PANEL", resizeAdornmentTemplate: nodeResizeAdornmentTemplate },
+            //{ rotatable: true, rotateAdornmentTemplate: nodeRotateAdornmentTemplate },
+            new go.Binding("angle").makeTwoWay(),
+            // the main object is a Panel that surrounds a TextBlock with a Shape
+            $(go.Panel, "Auto",
+              { name: "PANEL" },
+              new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify),
+              $(go.Shape, "Rectangle",  // default figure
+                {
+                    portId: "", // the default port: if no spot on link data, use closest side
+                    fromLinkable: true, toLinkable: true, cursor: "pointer",
+                    fromLinkableSelfNode: false,
+                    toLinkableSelfNode: false,
+                    fill: "white",  // default color
+                    name: "SHAPE"
+                },
+                new go.Binding("figure", "figure").makeTwoWay(),
+                new go.Binding("fill", "fill").makeTwoWay(),
+                new go.Binding("stroke", "stroke").makeTwoWay(),
+                new go.Binding("strokeWidth", "strokeWidth").makeTwoWay()
+              ),
+              $(go.TextBlock,
+                {
+                    font: "bold 10pt Helvetica, Arial, sans-serif",
+                    margin: 8,
+                    //minSize: new go.Size(45, 25),
+                    maxSize: new go.Size(160, NaN),
+                    wrap: go.TextBlock.WrapFit,
+                    editable: true,
+                    textAlign: "center",
+                    name: "TEXT"
+                },
+                new go.Binding("text", "text").makeTwoWay())
+            )
+
+
+            //$(go.Panel, "Auto",
+		    //    { visible: false },
+            //    new go.Binding("itemArray", "items")),
+
+            // four small named ports, one on each side:
+
+            //makePort("T", go.Spot.Top, false, true),
+            //makePort("L", go.Spot.Left, true, true),
+            //makePort("R", go.Spot.Right, true, true),
+            //makePort("B", go.Spot.Bottom, true, false),
+
+            //{ // handle mouse enter/leave events to show/hide the ports
+            //    mouseEnter: function (e, node) { showSmallPorts(node, true); },
+            //    mouseLeave: function (e, node) { showSmallPorts(node, false); }
+            //}
+
+
+          ));
+
+        myDiagram.nodeTemplateMap.add("Quality",
+          $(go.Node, "Spot",
+
+            {
+                locationSpot: go.Spot.Center,
+                locationObjectName: "PANEL",
+                selectionObjectName: "PANEL",
+                selectionAdornmentTemplate: nodeSelectionAdornmentTemplate,
+                contextMenu: nodeMenu
+            },
+
+            { locationSpot: go.Spot.Center },
+            new go.Binding("location", "loc", go.Point.parse).makeTwoWay(go.Point.stringify),
+            { selectable: true, selectionAdornmentTemplate: nodeSelectionAdornmentTemplate },
+            { resizable: true, resizeObjectName: "PANEL", resizeAdornmentTemplate: nodeResizeAdornmentTemplate },
+            //{ rotatable: true, rotateAdornmentTemplate: nodeRotateAdornmentTemplate },
+            new go.Binding("angle").makeTwoWay(),
+            // the main object is a Panel that surrounds a TextBlock with a Shape
+            $(go.Panel, "Auto",
+              { name: "PANEL" },
+              new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify),
+              $(go.Shape, "Ellipse",  // default figure
+                {
+                    portId: "", // the default port: if no spot on link data, use closest side
+                    fromLinkable: true, toLinkable: true, cursor: "pointer",
+                    fill: "white"  // default color
+                },
+                new go.Binding("figure", "figure").makeTwoWay(),
+                new go.Binding("fill", "fill").makeTwoWay(),
+                new go.Binding("stroke", "stroke").makeTwoWay(),
+                new go.Binding("strokeWidth", "strokeWidth").makeTwoWay()
+                ),
+              $(go.TextBlock,
+                {
+                    font: "bold 10pt Helvetica, Arial, sans-serif",
+                    margin: 4,
+                    maxSize: new go.Size(160, NaN),
+                    wrap: go.TextBlock.WrapFit,
+                    textAlign: "center",
+                    name: "TEXT",
+                    editable: true
+                },
+                new go.Binding("text", "text").makeTwoWay())
+            ),
+            // four small named ports, one on each side:
+            /*
+            makePort("T", go.Spot.Top, false, true),
+            makePort("L", go.Spot.Left, true, true),
+            makePort("R", go.Spot.Right, true, true),
+            makePort("B", go.Spot.Bottom, true, false),
+            */
+            { // handle mouse enter/leave events to show/hide the ports
+                mouseEnter: function (e, node) { showSmallPorts(node, true); },
+                mouseLeave: function (e, node) { showSmallPorts(node, false); }
+            }
+          ));
+
+
+        function showSmallPorts(node, show) {
+            node.ports.each(function (port) {
+                if (port.portId !== "") {  // don't change the default port, which is the big shape
+                    port.fill = show ? "rgba(0,0,0,.3)" : null;
+                }
+            });
+        }
+
+
+        var linkSelectionAdornmentTemplate =
+            $(go.Adornment, "Link",
+                $(go.Shape,
+                { isPanelMain: true, fill: null, stroke: "deepskyblue", strokeWidth: 0 })  // use selection object's strokeWidth
+            );
+
+
+
+        myDiagram.linkTemplate =
+        $(go.Link,       // the whole link panel
+            $(go.Shape));
+
+        myDiagram.linkTemplateMap.add("Contribution",
+        $(go.Link, // the whole link panel
+            {
+                routing: go.Link.Normal,
+                curve: go.Link.Bezier,
+                //adjusting: go.Link.None,
+                adjusting: go.Link.Stretch,
+                curviness: 60,
+                selectable: true,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                selectionAdornmentTemplate: linkSelectionAdornmentTemplate,
+                contextMenu: contributionLinkMenu
+            },
+            new go.Binding("category", "category").makeTwoWay().ofObject(),
+            new go.Binding("routing", "routing").makeTwoWay().ofObject(),
+            //new go.Binding("curve", "curve", function (v) { if (v) return v; else return go.Link.Bezier; }).makeTwoWay(go.Link.Bezier.stringify),
+            new go.Binding("curve", "curve").makeTwoWay().ofObject(),
+            new go.Binding("curviness", "curviness").makeTwoWay().ofObject(),
+            //new go.Binding("fromNode", "fromNode"),
+            new go.Binding("points", "points").makeTwoWay(),
+
+          //new go.Binding("points", "points").makeTwoWay(),
+          $(go.Shape,  // the link path shape
+            {
+                isPanelMain: true,
+                strokeWidth: 1,
+                //isLayoutPositioned: false
+            },
+            new go.Binding("stroke", "color"),  // shape.stroke = data.color
+            new go.Binding("strokeWidth", "strokeWidth")  // shape.strokeWidth = data.thick
+           ),
+
+          $(go.Shape,  // the arrowhead
+            { toArrow: "Standard", stroke: null },
+            new go.Binding("stroke", "color"),  // shape.stroke = data.color
+            new go.Binding("strokeWidth", "thick")  // shape.strokeWidth = data.thick
+           ),
+
+          $(go.Panel, "Auto",
+            {
+                visible: true,
+                name: "LABEL",
+            },
+            new go.Binding("visible", "visible").makeTwoWay(),
+            $(go.Shape, "RoundedRectangle",  // the label shape
+              { fill: "white", stroke: null }),
+            $(go.TextBlock,
+              {
+                  textAlign: "center",
+                  font: "9pt helvetica, arial, sans-serif",
+                  stroke: "black",
+                  margin: 1,
+                  minSize: new go.Size(10, NaN),
+                  editable: false,
+              },
+              new go.Binding("text", "text").makeTwoWay())
+          )
+        ));
+
+        myDiagram.linkTemplateMap.add("ConsistsOf",
+        $(go.Link,  // the whole link panel
+            {
+                routing: go.Link.Normal,
+                curve: go.Link.None,
+                //curviness: 'None',
+                selectable: true,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                selectionAdornmentTemplate: linkSelectionAdornmentTemplate,
+                contextMenu: nodeMenu
+            },
+          new go.Binding("routing", "routing").makeTwoWay(),
+          new go.Binding("curve", "curve"),
+          new go.Binding("curviness", "curviness"),
+          new go.Binding("points").makeTwoWay(),
+          $(go.Shape,  // the link path shape
+            { isPanelMain: true, strokeWidth: 1 },
+            new go.Binding("stroke", "color"),  // shape.stroke = data.color
+            new go.Binding("strokeWidth", "strokeWidth")  // shape.strokeWidth = data.thick
+            ),
+          $(go.Shape,  // the arrowhead
+            { toArrow: "Standard", stroke: null },
+            new go.Binding("stroke", "arrowheadColor"),  // shape.stroke = data.color
+            new go.Binding("strokeWidth", "arrowheadStrokeWidth")  // shape.strokeWidth = data.thick
+            ),
+          $(go.Panel, "Auto",
+            new go.Binding("visible", "true").ofObject(),
+            $(go.Shape, "RoundedRectangle",  // the link shape
+              { fill: "white", stroke: null }),
+            $(go.TextBlock,
+              {
+                  textAlign: "center",
+                  font: "9pt helvetica, arial, sans-serif",
+                  stroke: "black",
+                  margin: 1,
+                  minSize: new go.Size(10, NaN),
+                  editable: false,
+              },
+              new go.Binding("text").makeTwoWay())
+          )
+        ));
+
+        myDiagram.linkTemplateMap.add("AchievedBy",
+        $(go.Link,  // the whole link panel
+
+            {
+                routing: go.Link.Normal,
+                curve: go.Link.None,
+                //curviness: 'None',
+                selectable: true,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                selectionAdornmentTemplate: linkSelectionAdornmentTemplate,
+                contextMenu: nodeMenu //linkMenu
+            },
+
+          new go.Binding("routing", "routing"),
+          new go.Binding("curve", "curve"),
+          new go.Binding("curviness", "curviness"),
+          {
+              selectable: true,
+              relinkableFrom: true,
+              relinkableTo: true,
+              reshapable: true,
+              toEndSegmentLength: 80,
+              fromEndSegmentLength: 80
+          },
+          new go.Binding("points").makeTwoWay(),
+          $(go.Shape,  // the link path shape
+            { isPanelMain: true, strokeWidth: 1 }),
+          $(go.Shape,  // the arrowhead
+            { toArrow: "Standard", stroke: null }),
+          $(go.Panel, "Auto",
+            new go.Binding("visible", "true").ofObject(),
+            $(go.Shape, "RoundedRectangle",  // the link shape
+              { fill: "white", stroke: null }),
+            $(go.TextBlock,
+              {
+                  textAlign: "center",
+                  font: "9pt helvetica, arial, sans-serif",
+                  stroke: "black",
+                  margin: 1,
+                  minSize: new go.Size(10, NaN),
+                  editable: false,
+              },
+              new go.Binding("text").makeTwoWay())
+          )
+        ));
+
+        myDiagram.linkTemplateMap.add("ExtendedBy",
+        $(go.Link,  // the whole link panel
+
+            {
+                routing: go.Link.Normal,
+                curve: go.Link.None,
+                //curviness: 'None',
+                selectable: true,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                selectionAdornmentTemplate: linkSelectionAdornmentTemplate,
+                contextMenu: nodeMenu //linkMenu
+            },
+
+            new go.Binding("routing", "routing"),
+          new go.Binding("curve", "curve"),
+          new go.Binding("curviness", "curviness"),
+          { selectable: true, relinkableFrom: true, relinkableTo: true, reshapable: true },
+          new go.Binding("points").makeTwoWay(),
+          $(go.Shape,  // the link path shape
+            { isPanelMain: true, strokeWidth: 1 }),
+          $(go.Shape,  // the arrowhead
+            { toArrow: "Standard", stroke: null }),
+          $(go.Panel, "Auto",
+            new go.Binding("visible", "true").ofObject(),
+            $(go.Shape, "RoundedRectangle",  // the link shape
+              { fill: "white", stroke: null }), //#F8F8F8
+            $(go.TextBlock,
+              {
+                  textAlign: "center",
+                  font: "9pt helvetica, arial, sans-serif",
+                  stroke: "black",
+                  margin: 1,
+                  minSize: new go.Size(10, NaN),
+                  editable: false
+              },
+              new go.Binding("text").makeTwoWay())
+          )
+        ));
+
+        myDiagram.linkTemplateMap.add("Association",
+        $(go.Link,  // the whole link panel
+
+            {
+                routing: go.Link.Normal,
+                curve: go.Link.None,
+                //curviness: 'None',
+                selectable: true,
+                relinkableFrom: true,
+                relinkableTo: true,
+                reshapable: true,
+                selectionAdornmentTemplate: linkSelectionAdornmentTemplate,
+                contextMenu: nodeMenu //linkMenu
+            },
+
+            new go.Binding("routing", "routing"),
+          new go.Binding("curve", "curve"),
+          new go.Binding("curviness", "curviness"),
+          { selectable: true, relinkableFrom: true, relinkableTo: true, reshapable: true },
+          new go.Binding("points").makeTwoWay(),
+          $(go.Shape,  // the link path shape
+            { isPanelMain: true, strokeWidth: 1 })//,
+
+          //$(go.Panel, "Auto",
+          //  new go.Binding("visible", "true").ofObject(),
+          //  $(go.Shape, "RoundedRectangle",  // the link shape
+          //    { fill: "white", stroke: null }),
+          //  $(go.TextBlock,
+          //    {
+          //        textAlign: "center",
+          //        font: "9pt helvetica, arial, sans-serif",
+          //        stroke: "black",
+          //        margin: 1,
+          //        minSize: new go.Size(10, NaN),
+          //        editable: false,
+          //    },
+          //    new go.Binding("text").makeTwoWay())
+          //)
+        ));
+
+
+        myDiagram.addDiagramListener("LinkDrawn",
+          function (e) {
+              console.log('LinkDrawn: ' + e.subject.category);
+          });
+
+        myDiagram.addDiagramListener("LinkRelinked",
+          function (e) {
+              console.log('LinkRelinked: ' + e.subject.category);
+          });
+        myDiagram.addDiagramListener("LinkReshaped",
+          function (e) {
+              console.log('LinkReshaped: ' + e.subject.category);
+          });
+
+        var myOverview =
+            $(go.Overview, "myOverview",
+            { observed: myDiagram, maxScale: 0.5, contentAlignment: go.Spot.Center });
+        // change color of viewport border in Overview
+        myOverview.box.elt(0).stroke = "dodgerblue";
+
+        //myDiagram.toolManager.linkingTool.linkValidation = sameColor;
+        //myDiagram.toolManager.relinkingTool.linkValidation = sameColor;
+
+        load();  // load an initial diagram from some JSON text
+        // initialize the Palette that is on the left side of the page
+
+
+        function maybeChangeLinkCategory(e) {
+            var link = e.subject;
+            //console.log('a: ' + link.category);
+            //var linktolink = (link.fromNode.isLinkLabel || link.toNode.isLinkLabel);
+            //e.myDiagram.model.setCategoryForLinkData(link.data, (linktolink ? "linkToLink" : ""));
+            //alert(e.subject.curve);
+            //alert(e.subject.toNode);
+            //alert(link.data.category);
+        }
+
+
+        function validLink(fromnode, fromport, tonode, toport, link) {
+            //console.log(link instanceof go.Link);
+            if (link === null) {
+                //return false;
+                //myDiagram.currentTool.doCancel();
+            }
+            if (fromnode === null && tonode === null) {
+                //console.log('2 null');
+                return false;
+            }
+            if (fromnode !== null && tonode !== null) {
+                if (link === null) {
+                    //return false;
+                    myDiagram.currentTool.doCancel();
+                    return;
+                }
+                //console.log('0 null');
+                //alert(tonode.category);
+
+                //console.log('first');
+                //console.log(link.category);
+                if (link.category === "ConsistsOf" || link.category === "AchievedBy" || link.category === "ExtendedBy") {
+                    return (fromnode.category === tonode.category && fromnode.category === "Task");
+                }
+
+                //console.log('second');
+                if (link.category === "Association") {
+                    return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Task"));
+                }
+
+                //console.log('third');
+                if (link.category === "Contribution") {
+                    //alert(tonode.category);
+                    return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Quality"));
+                }
+
+                //console.log('four');
+                //alert("bla");
+                return true;
+            }
+            if ((fromnode === null && tonode !== null) || (fromnode !== null && tonode === null)) {
+                //console.log('1 null');
+
+                return true;
+            }
+            //console.log('else');
+            //alert("bla");
+            return true;
+        };
+
+
+        myDiagram.addDiagramListener("SelectionMoved", function (e, o) {
+            console.log('SM: ' + e.subject);
+            console.log('SM: ' + o);
+        });
+        myDiagram.addDiagramListener("SelectionCopied", function (e, o) {
+            console.log('SC: ' + e);
+        });
+        myDiagram.addDiagramListener("ClipboardPasted", function (e) {
+            var offset = new go.Point(10, 10);
+            myDiagram.moveParts(e.subject, offset, true);
+        });
+
+        function validLink2(fromnode, fromport, tonode, toport, link) {
+            console.log('1: ' + fromnode + ' , ' + fromport + ' , ' + tonode + ' , ' + toport + ' , ' + link);
+            //console.log('2: ' + myDiagram.currentTool);
+            //console.log('3: ' + myDiagram.currentTool.currentPart);
+            //console.log('4: ' + myDiagram.currentTool.currentPart.draggedParts);
+
+            //case 1
+            if (link === null) {
+                //draggintool
+                if (myDiagram.currentTool.currentPart) {
+                    var actualLink = myDiagram.currentTool.currentPart;
+                    console.log('actualLink: ' + actualLink.category);
+                    if (fromnode === null && tonode !== null) {
+                        if (actualLink.category === "ConsistsOf" || actualLink.category === "AchievedBy" || actualLink.category === "ExtendedBy") {
+                            console.log('case 1');
+                            return (tonode.category === "Task");
+                        }
+                        else if (actualLink.category === "Association") {
+                            console.log('case 2');
+                            return true;
+                        }
+                        else { // actualLink.category === Contribution
+                            console.log('case 3');
+                            return (tonode.category === "Quality");
+                        }
+                    }
+                    else if (fromnode !== null && tonode === null) {
+                        if (actualLink.category === "ConsistsOf" || actualLink.category === "AchievedBy" || actualLink.category === "ExtendedBy") {
+                            console.log('case 4');
+                            return (fromnode.category === "Task");
+                        }
+                        else if (actualLink.category === "Association") {
+                            console.log('case 5');
+                            return true;
+                        }
+                        else { // actualLink.category === Contribution
+                            console.log('case 6');
+                            return true;
+                        }
+                    }
+                    else if (fromnode !== null && tonode !== null) {
+                        if (actualLink.category === "ConsistsOf" || actualLink.category === "AchievedBy" || actualLink.category === "ExtendedBy") {
+                            console.log('case 7');
+                            return (fromnode.category === tonode.category && fromnode.category === "Task");
+                        }
+                        if (actualLink.category === "Association") {
+                            console.log('case 8');
+                            return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Task"));
+                        }
+                        if (actualLink.category === "Contribution") {
+                            console.log('case 9');
+                            return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Quality"));
+                        }
+                    }
+                    else { // (fromnode === null && tonode === null)
+                        console.log('case 10: ' + myDiagram.currentTool);
+                        return false;
+                    }
+                }
+                else {
+                    //toolmanager: myDiagram.currentTool.currentPart === null
+                    console.log('case 11: ' + myDiagram.currentTool);
+                    //myDiagram.currentTool.replaceTool("", "Dragging");
+                    return false;
+                }
+            }
+
+            else { // link !== null
+                console.log('case 12');
+                if (fromnode === null && tonode !== null) {
+                    if (link.category === "ConsistsOf" || link.category === "AchievedBy" || link.category === "ExtendedBy") {
+                        return (tonode.category === "Task");
+                    }
+                    else if (link.category === "Association") {
+                        return true;
+                    }
+                    else { // link.category === Contribution
+                        return (tonode.category === "Quality");
+                    }
+                }
+
+                else if (fromnode !== null && tonode === null) {
+                    if (link.category === "ConsistsOf" || link.category === "AchievedBy" || link.category === "ExtendedBy") {
+                        return (fromnode.category === "Task");
+                    }
+                    else if (link.category === "Association") {
+                        return true;
+                    }
+                    else { // link.category === Contribution
+                        return true;
+                    }
+                }
+
+                else if (fromnode !== null && tonode !== null) {
+                    if (link.category === "ConsistsOf" || link.category === "AchievedBy" || link.category === "ExtendedBy") {
+                        return (fromnode.category === tonode.category && fromnode.category === "Task");
+                    }
+                    if (link.category === "Association") {
+                        return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Task"));
+                    }
+                    if (link.category === "Contribution") {
+                        return ((fromnode.category === "Task" && tonode.category === "Quality") || (fromnode.category === "Quality" && tonode.category === "Quality"));
+                    }
+                }
+                else { // (fromnode === null && tonode === null)
+                    console.log('(fromnode === null && tonode === null)');
+                    return true;
+                }
+            }
+        };
+
+
+        myPalette =
+          $(go.Palette, "myPalette",  // must name or refer to the DIV HTML element
+            {
+                layout: $(go.GridLayout,
+                    {
+                        alignment: go.GridLayout.Location,
+                        wrappingColumn: 1
+                    }),
+                maxSelectionCount: 1,
+                nodeTemplateMap: myDiagram.nodeTemplateMap,  // share the templates used by myDiagram
+                linkTemplate: // simplify the link template, just in this Palette
+                  $(go.Link,
+                    {
+                        locationSpot: go.Spot.Center,
+
+                        selectionAdornmentTemplate:
+                          $(go.Adornment, "Link",
+                            { locationSpot: go.Spot.Center },
+                            $(go.Shape,
+                              {
+                                  isPanelMain: true,
+                                  fill: null,
+                                  stroke: "deepskyblue",
+                                  strokeWidth: 0
+                              }),
+                            $(go.Shape,  // the arrowhead
+                              { toArrow: "Standard", stroke: null })
+                          )
+                    },
+
+                    new go.Binding("routing", "routing"),
+                    new go.Binding("curve", "curve"),
+                    new go.Binding("curviness", "curviness"),
+                    new go.Binding("adjusting", "adjusting"),
+
+                    {
+                        corner: 5,
+                        //toShortLength: 4
+                    },
+                    new go.Binding("points"),
+                    $(go.Shape,  // the link path shape
+                      { isPanelMain: true, strokeWidth: 1 }),
+                    $(go.Shape,  // the arrowhead
+                      { toArrow: "Standard", stroke: null },
+                      new go.Binding("toArrow", "toArrow")),
+
+                      $(go.TextBlock,
+                        new go.Binding("text", "text"))
+
+
+                    //  $(go.Panel, "Auto",
+                    //    $(go.Shape, "RoundedRectangle",
+                    //    { fill: "#f2f2f2", stroke: null }),
+                    //      $(go.TextBlock,
+                    //{
+                    //    margin: 0
+                    //},
+                    //          new go.Binding("text", "text")))
+                  ),
+
+                model: new go.GraphLinksModel([  // specify the contents of the Palette
+                  { category: "Task", text: "Task", fill: "#ffffff", stroke: "#000000", strokeWidth: 1 },
+                  { category: "Quality", text: "Quality", fill: "#ffffff", stroke: "#000000", strokeWidth: 1 },
+                ], [
+                  // the Palette also has a disconnected Link, which the user can drag-and-drop
+                  { category: "AchievedBy", text: "achieved by", routing: go.Link.Normal, points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) },
+                  { category: "ConsistsOf", text: "consists of", routing: go.Link.Normal, points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) },
+                  { category: "ExtendedBy", text: "extended by", routing: go.Link.Normal, points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) },
+                  { category: "Association", text: "association", toArrow: "", routing: go.Link.Normal, points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) },
+                  { category: "Contribution", text: "contribution", routing: go.Link.Normal, curve: go.Link.Bezier, curviness: 60, points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
+                  //{ category: "Contribution", text: "contribution", points: new go.List(go.Point).addAll([new go.Point(0, 0), new go.Point(30, 0), new go.Point(30, 40), new go.Point(60, 40)]) }
+
+                ])
+            });
+    }
+
+    function TopRotatingTool() {
+        go.RotatingTool.call(this);
+    }
+    go.Diagram.inherit(TopRotatingTool, go.RotatingTool);
+    TopRotatingTool.prototype.updateAdornments = function (part) {
+        go.RotatingTool.prototype.updateAdornments.call(this, part);
+        var adornment = part.findAdornment("Rotating");
+        if (adornment !== null) {
+            adornment.location = part.rotateObject.getDocumentPoint(new go.Spot(0.5, 0, 0, -30));  // above middle top
+        }
+    };
+    TopRotatingTool.prototype.rotate = function (newangle) {
+        go.RotatingTool.prototype.rotate.call(this, newangle + 90);
+    };
+
+    // Show the diagram's model in JSON format that the user may edit
+    function save() {
+        saveDiagramProperties();  // do this first, before writing to JSON
+        var currentModel = myDiagram.model.toJson();
+        //$('#mySavedModel').val(currentModel);
+        myDiagram.isModified = false;
+
+        if (isSaved == 'False') {
+            $('#saveMapModal').modal('show');
+            $('#saveNewMap').find('input#Model').val(currentModel);
+        }
+        else {
+            var mapId = mapIdGlobal;
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("UpdateMap", "Map")',
+                //dataType: "json",
+                data: { mapId: mapId, mapModel: currentModel },
+                success: function (res) {
+                    isSaved = 'True';
+                    myDiagram.isModified = false;
+                    $('#mySavedModel').val(currentModel);
+                    console.log('res: ' + JSON.stringify(res));
+                },
+                error: function (r) {
+                    alert(r.status + " " + r.statusText);
+                },
+                async: false
+            });
+        }
+
+        //alert(mModel);
+    }
+
+
+    function saveAsImg(type, ext) {
+        var imgType = type;
+        var imgExt = ext;
+        var fileName = '@Model.Name';
+        var dataImage = generateImage(imgType);
+        //console.log(dataImage);
+        download(fileName + imgExt, dataImage)
+    }
+
+    function saveAsSVG(type, ext) {
+        //var imgType = type;
+        var imgExt = ext;
+        var fileName = '@Model.Name';
+        var dataImage = myDiagram.makeSvg();
+        //console.log(dataImage);
+        downloadSVG(fileName + imgExt, dataImage)
+    }
+
+    function saveAsJSON(type, ext) {
+        //var imgType = type;
+        var imgExt = ext;
+        var fileName = '@Model.Name';
+        var data = myDiagram.model.toJson();
+        //console.log(data);
+        downloadJSON(fileName + imgExt, data)
+    }
+
+    @*function saveAsTest()
+    {
+        //var imgType = ".jpg"; //"image/jpeg"
+        var imgExt = ".png";
+        var fileName = '@Model.Name';
+        var dataImage = myDiagram.makeImage();
+        //console.log(dataImage);
+        download(fileName + imgExt, dataImage)
+
+        function download(filename, content) {
+        var a = document.createElement('a');
+        linkDownload(a, filename, content);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+      }
+
+        function linkDownload(a, filename, content) {
+        var imgData = content.src.replace(/^data:image\/[^;]/, "data:application/octet-stream");
+        //contentType =  '';
+        //uriContent = contentType + encodeURIComponent(r);
+        //alert(uriContent);
+        a.setAttribute('href', imgData);
+        a.setAttribute('download', filename);
+    }
+    }*@
+
+    function printMap() {
+        var img = myDiagram.makeSvg();
+        $('#printableDiv').append(img);
+        var mapName = '@Model.Name';
+        var data = img;
+        var mywindow = window.open('', 'printMap', 'height=600,width=800');
+        mywindow.document.write('<html><head><title>' + mapName + '</title>');
+        mywindow.document.write('</head><body >');
+        mywindow.document.writeln($('#printableDiv').html());
+        mywindow.document.write('</body></html>');
+        mywindow.document.close(); // necessary for IE >= 10
+        mywindow.focus(); // necessary for IE >= 10
+        mywindow.print();
+        mywindow.close();
+        $('#printableDiv').html("");
+        return true;
+    }
+
+
+    function load() {
+        if (isSaved == 'True') {
+            var mapName = '@Model.Name';
+            @*var myMap = '@Html.Raw(ViewBag.myMap)';*@
+            var myMap = @Html.Raw(Json.Encode(ViewBag.myMap));
+
+            //console.log('myMap: ' + myMap);
+
+            //alert(myMap);
+
+            document.getElementById("mySavedModel").value = myMap;
+            myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+            $('#currentFile').text(mapName);
+        }
+        else {
+            var mapName = '@Model.Name';
+            @*var myMap = '@Html.Raw(ViewBag.myMap)';*@
+            var myMap = @Html.Raw(Json.Encode(ViewBag.myMap));
+
+            //console.log('myMap: ' + myMap);
+
+            document.getElementById("mySavedModel").value = myMap;
+            myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+            $('#currentFile').text(mapName);
+        }
+    }
+
+    function saveDiagramProperties() {
+        myDiagram.model.modelData.position = go.Point.stringify(myDiagram.position);
+    }
+    // Called by "InitialLayoutCompleted" DiagramEvent listener, NOT directly by load()!
+    function loadDiagramProperties(e) {
+        var pos = myDiagram.model.modelData.position;
+        if (pos) myDiagram.position = go.Point.parse(pos);
+        myDiagram.model.position = go.Spot.Center;
+
+        @if (ViewBag.userPermission == MapPermissionType.RW)
+        {
+            <text>setRWPermission();</text>
+        }
+        else
+        {
+            <text>setROPermission();</text>
+        }
+    }
+
+
+    // permissions
+    //myDiagram.model.isReadOnly = true;
+    function setROPermission() {
+        //console.log('RO PER');
+        myDiagram.model.isReadOnly = true;
+        myDiagram.allowCopy = false;
+        myDiagram.allowClipboard = false;
+        myDiagram.allowTextEdit = false;
+        myDiagram.allowDelete = false;
+        myDiagram.toolManager.draggingTool.dragsLink = false;
+
+        //$('#saveBtn').prop('disabled', true);
+        $('.rwPermissionBtn').prop('disabled', true);
+        $('.rwPermissionLink').removeAttr('onClick');
+        $('.rwPermissionLink').css('color', 'lightgray');
+        $('.rwPermissionLink').closest("li").addClass("disabled");
+
+        $('.searchAllElements *').prop('disabled', true);
+        $('.searchAllElements').hide();
+        $('#notificationMsg').text('(Read-Only)');
+    }
+
+    function setRWPermission() {
+        myDiagram.model.isReadOnly = false;
+        $('#notificationMsg').text('(Read-and-Write)');
+
+        //$(function () {
+        //    myDiagram.addDiagramListener("Modified", function (e) {
+        //        //var button = document.getElementById("saveBtn");
+
+        //        var saveBtn = $('#saveBtn');
+        //        //console.log('btn: ' + myBtn);
+
+        //        console.log(saveBtn.prop('disabled'));
+
+        //        if (saveBtn) {
+        //            saveBtn.prop('disabled', !myDiagram.isModified);
+        //        }
+        //        //var idx = document.title.indexOf("*");
+        //        //if (myDiagram.isModified) {
+        //        //    if (idx < 0) document.title += "*";
+        //        //} else {
+        //        //    if (idx >= 0) document.title = document.title.substr(0, idx);
+        //        //}
+        //    });
+        //})
+
+    }
+
+    $(function () {
+        $(".modal-draggable .modal-dialog").draggable({
+            handle: ".modal-header"
+        })
+    });
+
+
+    var refsOfObject;
+    var activeObject;
+    var selectedObject;
+
+    function showModal(obj) {
+        var node = obj.part.adornedObject;
+
+        activeObject = node.data;
+        selectedObject = node;
+        refsOfObject = node.data.items;
+        setInitialObjectStyle(node.data);
+
+        $('#refsList').css({ width: '570px' });
+        $('#allRefsList').css({ width: '570px' });
+        $('#ctxsList').css({ width: '570px' });
+        $('#allCtxsList').css({ width: '570px' });
+
+        $('#refModal').modal('show');
+
+        // test
+        //Re-load records when user click 'load records' button.
+        $("#LoadRefsButton").on('click', function (e) {
+            //console.log('in LoadRecordsButton');
+            e.preventDefault();
+            $('.ReferenceTableContainer').jtable('load', {
+                filterText: $('#refFilterText').val(),
+                categoryId: $('#refCategoryId').val()
+            });
+        });
+        $("#LoadAllRefsButton").on('click', function (e) {
+            //console.log('in LoadRecordsButton');
+            e.preventDefault();
+            $('.SearchReferenceTableContainer').jtable('load', {
+                filterText: $('#allRefFilterText').val(),
+                categoryId: $('#allRefCategoryId').val()
+            });
+        });
+        $('.ReferenceTableContainer').jtable('load');
+        $('.SearchReferenceTableContainer').jtable('load');
+
+
+        $("#LoadCtxsButton").on('click', function (e) {
+            //console.log('in LoadRecordsButton');
+            e.preventDefault();
+            $('.ContextTableContainer').jtable('load', {
+                filterText: $('#ctxFilterText').val(),
+                categoryId: $('#ctxCategoryId').val()
+            });
+        });
+        $("#LoadAllCtxsButton").on('click', function (e) {
+            //console.log('in LoadRecordsButton');
+            e.preventDefault();
+            $('.SearchContextTableContainer').jtable('load', {
+                filterText: $('#allCtxFilterText').val(),
+                categoryId: $('#allCtxCategoryId').val()
+            });
+        });
+        $('.ContextTableContainer').jtable('load');
+        $('.SearchContextTableContainer').jtable('load');
+
+        loadComments();
+    }
+
+
+    function setInitialObjectStyle(node) {
+        // details
+        //var object = myDiagram.findPartForData(node);
+        $('#textFeature').val(node.text);
+        node.key ? $("#textFeature").prop('disabled', false) : $("#textFeature").prop('disabled', true);
+        $('#refFeature').text('FALSE');
+        //$('#categoryFeature').text(node.category);
+        //var type = object instanceof go.Node ? 'Node' : 'Link';
+        //$('#typeFeature').text(type);
+        //$('#mapFeature').text(mapNameGlobal);
+
+        // style
+        $("#colorFill").spectrum("set", node.fill);
+        $("#colorStroke").spectrum("set", node.stroke);
+        //$("#x_coordinate").val(go.Point.parse(node.loc).x);
+        //$("#y_coordinate").val(go.Point.parse(node.loc).y);
+        //console.log(go.Size.parse(selectedObject.desiredSize));
+        //$("#objectHeight").val(go.Size.parse(node.size).height);
+        //$("#objectHeight").val(go.Size.parse(node.size).height);
+    }
+
+    function setInitialLinkObjectStyle(node) {
+        //console.log(node.fill);
+        //console.log(node.stroke);
+        $("#linkColorStroke").val(node.stroke);
+    }
+
+    function showLinePropertiesModal(obj) {
+        //console.log("showLinePropertiesModal");
+        var link = obj.part.adornedObject;
+        activeObject = link.data;
+        refsOfObject = link.data.items;
+        $('#linePropertiesModal').modal('show');
+        $('.ReferenceTableContainer').jtable('load');
+    }
+
+
+    //"stroke", "color"),  // shape.stroke = data.color
+    //        new go.Binding("strokeWidth", "strokeWidth")  /
+
+    //$('#zoomIn').on('click', function (e) {
+    //    alert("bla");
+    //    myDiagram.commandHandler.increaseZoom(2);
+    //})
+
+
+    $(function () {
+        $('[data-toggle="tooltip"]').tooltip();
+    });
+
+
+    $(document).ready(function () {
+        $("#colorFill").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            togglePaletteMoreText: 'more',
+            togglePaletteLessText: 'less',
+            color: 'blanchedalmond',
+            palette: [
+                ["#000", "#444", "#666", "#999", "#ccc", "#eee", "#f3f3f3", "#fff"],
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+        $("#colorStroke").spectrum({
+            showPaletteOnly: true,
+            togglePaletteOnly: true,
+            togglePaletteMoreText: 'more',
+            togglePaletteLessText: 'less',
+            color: 'blanchedalmond',
+            palette: [
+                ["#000", "#444", "#666", "#999", "#ccc", "#eee", "#f3f3f3", "#fff"],
+                ["#f00", "#f90", "#ff0", "#0f0", "#0ff", "#00f", "#90f", "#f0f"],
+                ["#f4cccc", "#fce5cd", "#fff2cc", "#d9ead3", "#d0e0e3", "#cfe2f3", "#d9d2e9", "#ead1dc"],
+                ["#ea9999", "#f9cb9c", "#ffe599", "#b6d7a8", "#a2c4c9", "#9fc5e8", "#b4a7d6", "#d5a6bd"],
+                ["#e06666", "#f6b26b", "#ffd966", "#93c47d", "#76a5af", "#6fa8dc", "#8e7cc3", "#c27ba0"],
+                ["#c00", "#e69138", "#f1c232", "#6aa84f", "#45818e", "#3d85c6", "#674ea7", "#a64d79"],
+                ["#900", "#b45f06", "#bf9000", "#38761d", "#134f5c", "#0b5394", "#351c75", "#741b47"],
+                ["#600", "#783f04", "#7f6000", "#274e13", "#0c343d", "#073763", "#20124d", "#4c1130"]
+            ]
+        });
+    });
+
+
+    $(function () {
+        $("#saveNewMap").on("submit", function (event) {
+            event.preventDefault();
+            var $form = $(this);
+            if ($form.valid()) {
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("CreateMap", "Map")',
+                    data: $form.serialize(),
+                    success: function (res) {
+                        isSaved = 'True';
+                        window.history.pushState('state', 'Title', '/map/LaunchMap5/' + res.mapId);
+                        $('#mySavedModel').val(myDiagram.model.toJson());
+                        $('#currentFile').text(res.mapName);
+                        mapNameGlobal = res.mapName;
+                        mapIdGlobal = res.mapId;
+                        $("#saveMapModal").modal('hide');
+                    },
+                    error: function () {
+                        $("#saveMapModal").modal('hide');
+                        alert("Save Failed!");
+                    }
+                });
+            }
+        });
+    });
+
+
+    // Generating Image from Map
+    function linkDownload(a, filename, content) {
+        var imgData = content.src.replace(/^data:image\/[^;]/, "data:application/octet-stream");
+        //contentType =  '';
+        //uriContent = contentType + encodeURIComponent(r);
+        //alert(uriContent);
+        a.setAttribute('href', imgData);
+        a.setAttribute('download', filename);
+    }
+
+    function download(filename, content) {
+        var a = document.createElement('a');
+        linkDownload(a, filename, content);
+        document.body.appendChild(a);
+        //console.log(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function downloadJSON(filename, content) {
+        var a = document.createElement('a');
+        var data = 'data:text/json;charset=utf8,' + encodeURIComponent(content);
+        a.setAttribute('href', data);
+        a.setAttribute('download', filename);
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function downloadSVG(filename, content) {
+        //var imgsrc = 'data:image/svg+xml;base64,' + btoa(content);
+        //var img = '<img src="' + imgsrc + '">';
+        var img = new Image();
+        img.src = "data:image/svg+xml;base64," + encodeURIComponent(myDiagram.makeSvg());
+        var mySrc = 'data:image/svg+xml;base64,' + btoa(myDiagram.makeSvg());
+        //console.log(img);
+        var img3 = '<img src="' + mySrc + '">';
+
+        var img2 = new Image();
+        img2.src = mySrc;
+        //console.log(img2);
+        //var canvas = document.getElementById("myCanvas");
+        //$('#myCanvas').drawImage(img);
+        //var image = canvas.toDataURL("image/png").replace("image/png", "image/octet-stream"); //Convert image to 'octet-stream' (Just a download, really)
+        //window.location.href = image;
+
+        var a = document.createElement('a');
+        //var imgSrc = 'data:image/svg+xml;base64,' + Canvas.toDataURL(content);
+        //var img = '<img src="' + imgSrc + '">';
+        ////var imgData = content.src.replace(/^data:image\/[^;]/, "application/svg+xml");
+        //console.log(img);
+        a.setAttribute('href', mySrc); //encodeURIComponent(content)
+        a.setAttribute('download', filename);
+        document.body.appendChild(a);
+        //console.log(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function generateImage(imgType) {
+        var img = myDiagram.makeImage({
+            scale: 1,
+            background: "white",
+            type: imgType,
+            details: 1
+        });
+        return img;
+    }
+
+    //jQuery('#colorinput').on('change', function () {
+    //    jQuery('#main').css('background-color', jQuery(this).val());
+    //});
+
+    jQuery(function ($) {
+        $("#colorFill").on('change', function () {
+            //console.log($(this).val());
+            changeNodeFill(activeObject, $(this).val());
+            //$("h1").css('background', $(this).val());
+        })
+    });
+
+    //jQuery(function ($) {
+    //    $("#colorFill2").on('change', function () {
+    //        //console.log($(this).val());
+    //        changeNodeFill(activeObject, $(this).val());
+    //        //$("h1").css('background', $(this).val());
+    //    })
+    //});
+
+    jQuery(function ($) {
+        $("#colorStroke").on('change', function () {
+            //console.log($(this).val());
+            changeNodeStroke(activeObject, $(this).val());
+            //$("h1").css('background', $(this).val());
+        })
+    });
+
+    jQuery(function ($) {
+        $("#x_coordinate").on('keypress', function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                var currLoc = go.Point.parse(activeObject.loc);
+                var x_coor = $(this).val();
+                //console.log('lala');
+                myDiagram.model.setDataProperty(activeObject, "loc", go.Point.stringify(new go.Point(x_coor, currLoc.y)));
+            }
+        })
+    });
+    jQuery(function ($) {
+        $("#y_coordinate").on('keypress', function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                var currLoc = go.Point.parse(activeObject.loc);
+                var y_coor = $(this).val();
+                //console.log('lala');
+                myDiagram.model.setDataProperty(activeObject, "loc", go.Point.stringify(new go.Point(currLoc.x, y_coor)));
+            }
+        })
+    });
+
+    jQuery(function ($) {
+        $("#objectHeight").on('keypress', function (e) {
+            if (e.which == 13) {
+                e.preventDefault();
+                var currSize = go.Size.parse(activeObject.size);
+                var height = $(this).val();
+                //console.log('lala');
+                myDiagram.model.setDataProperty(activeObject, "size", go.Size.stringify(new go.Size(currSize.width, height)));
+                //new go.Binding("desiredSize", "size", go.Size.parse).makeTwoWay(go.Size.stringify),
+            }
+        })
+    });
+
+    //jQuery(function ($) {
+    //    $("#textFeature").on('keypress', function (e) {
+    //        if (e.which == 13) {
+    //            e.preventDefault();
+    //            var newText = $(this).val();
+    //            myDiagram.model.setDataProperty(activeObject, "text", newText);
+    //        }
+    //    })
+    //});
+
+    jQuery(function ($) {
+        $("#textFeature").on('focusout', function (e) {
+            var newText = $(this).val();
+            myDiagram.model.setDataProperty(activeObject, "text", newText);
+        })
+    });
+
+
+    function changeNodeFill(node, color) {
+        //node.diagram.startTransaction("changeColor");
+        myDiagram.model.setDataProperty(node, "fill", color);
+        //node.diagram.startTransaction("changeColor");
+    }
+
+    function changeNodeStroke(node, color) {
+        //node.diagram.startTransaction("changeColor");
+        myDiagram.model.setDataProperty(node, "stroke", color);
+        //node.diagram.startTransaction("changeColor");
+    }
+
+    function changeStrokeWidth(node, strokeWidth) {
+        myDiagram.model.setDataProperty(node, "strokeWidth", strokeWidth);
+    }
+
+    function changeLinkRouting(linkData, routingType) {
+        //console.log("changeLinkRouting");
+
+        myDiagram.model.setDataProperty(linkData, "routing", routingType);
+        return;
+
+        //if (routingType == "Normal") {
+        //    myDiagram.model.setDataProperty(linkData, "routing", go.Link.Normal);
+        //}
+        //else if (routingType == "Orthogonal") {
+        //    myDiagram.model.setDataProperty(linkData, "routing", go.Link.Orthogonal);
+        //}
+        //else {
+        //    myDiagram.model.setDataProperty(linkData, "routing", go.Link.AvoidsNodes);
+        //}
+    }
+
+
+    function changeLinkCurve(linkData, curveType) {
+        //console.log("changeLinkCurve");
+
+        myDiagram.model.setDataProperty(linkData, "curve", curveType);
+        return;
+    }
+
+
+    jQuery(function ($) {
+        $("#linkColorStroke").on('change', function () {
+            //console.log($(this).val());
+            changeLinktroke(activeObject, $(this).val());
+            //$("h1").css('background', $(this).val());
+        })
+    });
+
+    function changeLinktroke(link, color) {
+        //node.diagram.startTransaction("changeColor");
+        myDiagram.model.setDataProperty(link, "color", color);
+        //node.diagram.startTransaction("changeColor");
+    }
+
+
+    jQuery(function ($) {
+        $("#linkArrowheadColor").on('change', function () {
+            //console.log($(this).val());
+            changeLinkArrowheadColor(activeObject, $(this).val());
+            //$("h1").css('background', $(this).val());
+        })
+    });
+
+    function changeLinkArrowheadColor(link, color) {
+        //node.diagram.startTransaction("changeColor");
+        myDiagram.model.setDataProperty(link, "arrowheadColor", color);
+        //node.diagram.startTransaction("changeColor");
+    }
+
+    function changeArrowheadStrokeWidth(link, strokeWidth) {
+        myDiagram.model.setDataProperty(link, "arrowheadStrokeWidth", strokeWidth);
+    }
+
+
+
+
+    //changeArrowheadStrokeWidth
+
+    //new go.Binding("routing", "routing").makeTwoWay().ofObject(),
+    //new go.Binding("curve", "curve", function (v) { if (v) return v; else return go.Link.Bezier; }).makeTwoWay(go.Link.Bezier.stringify),
+    //new go.Binding("curve", "curve").makeTwoWay().ofObject(),
+    //new go.Binding("curviness", "curviness").makeTwoWay().ofObject(),
+
+
+    //$(document).ready(function () {
+    //    $("#refModal").draggable({
+    //        handle: ".modal-header"
+    //    })
+    //});
+
+
+
+
+    //jQuery(function ($) {
+    //    $('form[data-async]').on('submit', function (event) {
+    //        alert('bla');
+    //        var $form = $(this);
+    //        var $target = $($form.attr('data-target'));
+
+    //        $.ajax({
+    //            type: $form.attr('method'),
+    //            url: $form.attr('action'),
+    //            data: $form.serialize(),
+
+    //            success: function (data, status) {
+    //                $target.html(data);
+    //            }
+    //        });
+
+    //        event.preventDefault();
+    //    });
+    //});
+
+
+    @*$(document).ready(function () {
+        $('#saveNewMap').submit(function () {
+            alert('snm');
+            var that = this;
+            var myMapModel = myDiagram.model.toJson();
+            $('#response').html("<b>Loading response...</b>");
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("CreateMap", "Map")',
+                data: $(that).serialize()
+            })
+                .done(function (data) {
+                    $('#response').html(data);
+
+                })
+                .fail(function () {
+                    alert("Posting failed.");
+
+                });
+            return false;
+
+        });
+    });*@
+
+    @*var mName = "bla2";
+    var mDescription = "bla3";
+
+    $.ajax({
+        type: 'POST',
+        url: '@Url.Action("CreateMap", "Map")',
+        //traditional: true,
+        //contentType: "application/json; charset=utf-8",
+        dataType: "json",
+        data: { mapModel: mModel, mapName: mName, mapDescription: mDescription },
+        success: function (r) {
+            alert('ooooooo' + r);
+            isSaved = 'True';
+            window.history.pushState('state', 'Title', '/map/LaunchMap4/' + r);
+
+        },
+        error: function (r) {
+            alert(r.status + " " + r.statusText);
+        },
+        async: false
+    });*@
+
+
+    //jQuery(function ($) {
+    //    $('myModal').on('submit', function (event) {
+    //        alert('bla');
+    //        var $form = $(this);
+    //        var $target = $($form.attr('data-target'));
+
+    //        $.ajax({
+    //            type: $form.attr('method'),
+    //            url: $form.attr('action'),
+    //            data: $form.serialize(),
+
+    //            success: function (data, status) {
+    //                $target.modal('hide');
+    //            }
+    //        });
+
+    //        event.preventDefault();
+    //    });
+    //});
+
+
+    function loadReferences() {
+        //console.log("tab2");
+        var dataArr = refsOfObject;
+        var arrdata = JSON.stringify(dataArr);
+        //console.log(dataArr);
+
+        $.ajax({
+            type: 'POST',
+            //traditional: true,
+            url: '@Url.Action("MyRefs", "Reference")',
+            data: { refs: arrdata },
+            dataType: 'html',
+            success: function (d) {
+                //console.log("bla: " + d);
+                $('#refsList').html(d);
+                addReference();
+            }
+        });
+        return false;
+    };
+
+    function addReference() {
+        $.ajax({
+            type: 'GET',
+            //traditional: true,
+            url: '@Url.Action("CreateRef", "Reference")',
+            dataType: 'html',
+            success: function (d) {
+                //console.log("bla: " + d);
+                $('#refAdd').html(d);
+            }
+        });
+    }
+
+    function addReferenceToObject(record) {
+        //console.log('add ref');
+        var node = myDiagram.selection.first();
+        var refsArray = node.data.refs;
+        if (refsArray.indexOf(record.Id) == -1) {
+            refsArray.push(record.Id);
+        }
+    }
+
+    function getReferencesIdsOfObject() {
+        //console.log('lala');
+        var node = myDiagram.selection.first();
+        var refs = node.data.refs.slice();
+        //console.log('refs: ' + refs);
+        return refs;
+    }
+
+    function removeReferenceFromObject(data) {
+        //console.log('addReferenceToObject: ' + JSON.stringify(data));
+        //console.log(data.RefIdToRemove);
+        var node = myDiagram.selection.first();
+        var refsArr = node.data.refs;
+        var indexToRemove = refsArr.indexOf(data.RefIdToRemove);
+        if (indexToRemove > -1) {
+            refsArr.splice(indexToRemove, 1);
+        }
+    }
+
+    function addContextToObject(record) {
+        //console.log('addReferenceToObject: ' + JSON.stringify(data));
+        //console.log(data.Record.Id);
+        var node = myDiagram.selection.first();
+        var ctxsArray = node.data.ctxs;
+        if (ctxsArray.indexOf(record.Id) == -1) {
+            ctxsArray.push(record.Id);
+        }
+        //node.data.ctxs.push(record.Id);
+    }
+
+    function getContextsIdsOfObject() {
+        //console.log('lala');
+        var node = myDiagram.selection.first();
+        var ctxs = node.data.ctxs.slice();
+        //console.log('ctxs: ' + ctxs);
+        return ctxs;
+    }
+
+    function removeContextFromObject(data) {
+        //console.log('addReferenceToObject: ' + JSON.stringify(data));
+        //console.log(data.CtxIdToRemove);
+        var node = myDiagram.selection.first();
+        var ctxsArr = node.data.ctxs;
+        var indexToRemove = ctxsArr.indexOf(data.CtxIdToRemove);
+        if (indexToRemove > -1) {
+            ctxsArr.splice(indexToRemove, 1);
+        }
+    }
+
+
+    // Reference
+    $(document).ready(function () {
+        $('.ReferenceTableContainer').jtable({
+            title: 'Table of references',
+            paging: true, //Enable paging
+            pageSize: 10, //Set page size (default: 10)
+            sorting: true, //Enable sorting
+            defaultSorting: 'Title ASC', //Sort by Name by default
+            //useBootstrap: true,
+            actions: {
+                listAction: function (postData, jtParams) {
+                    //console.log("Loading from custom function...");
+                    return $.Deferred(function ($dfd) {
+
+                        var refList = JSON.stringify(getReferencesIdsOfObject());
+
+                        //console.log('pd:' + JSON.stringify(postData));
+
+                        $.ajax({
+                            url: '@Url.Action("ReferenceList", "Reference")',
+                            //url: '/Reference/ReferenceList?jtStartIndex=' + jtParams.jtStartIndex + '&jtPageSize=' + jtParams.jtPageSize + '&jtSorting=' + jtParams.jtSorting,
+                            type: 'POST',
+                            //traditional: true,
+                            dataType: 'json',
+                            data: { refList: refList, postData: JSON.stringify(postData), jtStartIndex: jtParams.jtStartIndex, jtPageSize: jtParams.jtPageSize, jtSorting: jtParams.jtSorting },
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+
+                @*createAction: '@Url.Action("CreateReference", "Reference")',*@
+
+                createAction: function (postData) {
+                    //console.log("creating from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            //url: '/Reference/CreateReference',
+                            url: '@Url.Action("CreateReference", "Reference")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                                addReferenceToObject(data.Record);
+                                $('.ReferenceTableContainer').jtable('load');
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+                updateAction: '@Url.Action("UpdateReference", "Reference")',
+
+                @*deleteAction: '@Url.Action("DeleteReference", "Reference")'*@
+
+                deleteAction: function (postData) {
+                    //console.log("deleting from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteReference", "Reference")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                                removeReferenceFromObject(data);
+
+                                setTimeout(function () {
+                                    $('.SearchReferenceTableContainer').jtable('load');
+                                }, 500);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+            },
+            fields: {
+                Id: {
+                    key: true,
+                    create: false,
+                    edit: false,
+                    list: false
+                },
+                Title: {
+                    title: 'Title',
+                    width: '40%'
+                },
+                Authors: {
+                    title: 'Authors',
+                    list: false,
+                    sorting: false
+                },
+                Publication: {
+                    title: 'Publication',
+                    width: '30%'
+                },
+                Description: {
+                    title: 'Description',
+                    type: 'textarea',
+                    list: false,
+                    sorting: false
+                },
+                Link: {
+                    title: 'Link',
+                    width: '20%',
+                    sorting: false
+                },
+                Creator: {
+                    title: 'Creator',
+                    list: false,
+                    create: false,
+                    edit: false
+                },
+                CreationTime: {
+                    title: 'Record date',
+                    width: '10%',
+                    type: 'date',
+                    create: false,
+                    edit: false
+                }
+            },
+            recordsLoaded: function (event, data) {
+                checkTablePermissions();
+            }
+        });
+        //$('#ReferenceTableContainer').jtable('load');
+    });
+
+
+    // Search Reference
+    $(document).ready(function () {
+        $('.SearchReferenceTableContainer').jtable({
+            title: 'Search for references',
+            paging: true, //Enable paging
+            pageSize: 10, //Set page size (default: 10)
+            sorting: true, //Enable sorting
+            selecting: true, //Enable selecting
+            multiselect: true, //Allow multiple selecting
+            selectingCheckboxes: true,
+            defaultSorting: 'Title ASC', //Sort by Name by default
+
+            actions: {
+                listAction: function (postData, jtParams) {
+                    //console.log("Loading from custom function...");
+                    return $.Deferred(function ($dfd) {
+
+                        var refList = JSON.stringify(getReferencesIdsOfObject());
+
+                        $.ajax({
+                            url: '@Url.Action("GetAllOtherReferences", "Reference")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: { refList: refList, postData: JSON.stringify(postData), jtStartIndex: jtParams.jtStartIndex, jtPageSize: jtParams.jtPageSize, jtSorting: jtParams.jtSorting },
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+                deleteAction: function (postData) {
+                    //console.log("deleting from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteReference", "Reference")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+            },
+            fields: {
+                Id: {
+                    key: true,
+                    create: false,
+                    edit: false,
+                    list: false
+                },
+                Title: {
+                    title: 'Title',
+                    width: '40%'
+                },
+                Authors: {
+                    title: 'Authors',
+                    list: false
+                },
+                Publication: {
+                    title: 'Publication',
+                    width: '30%'
+                },
+                Description: {
+                    title: 'Description',
+                    type: 'textarea',
+                    list: false,
+                    sorting: false
+                },
+                Link: {
+                    title: 'Link',
+                    width: '20%',
+                    sorting: false
+                },
+                Creator: {
+                    title: 'Creator',
+                    list: false,
+                    create: false,
+                    edit: false
+                },
+                CreationTime: {
+                    title: 'Record date',
+                    width: '10%',
+                    type: 'date',
+                    create: false,
+                    edit: false
+                }
+            },
+            rowInserted: function (event, data) {
+                data.row.find('.jtable-delete-command-button').hide();
+
+            }
+        });
+
+        $("#ReferenceAddSelection").on('click', function () {
+            var $selectedRows = $('.SearchReferenceTableContainer').jtable('selectedRows');
+            $selectedRows.each(function () {
+                var record = $(this).data('record');
+                $('.ReferenceTableContainer').jtable('addRecord', { record: record });
+
+            });
+
+            setTimeout(function () {
+                $('.SearchReferenceTableContainer').jtable('deleteRows', $selectedRows);
+            }, 300);
+
+        });
+
+        $("#ReferenceClearSelection").on('click', function () {
+            $('.jtable-row-selected').removeClass('jtable-row-selected');
+            $(".SearchReferenceTableContainer").find(".jtable-selecting-column > input").prop("checked", false);
+        });
+
+    });
+
+
+    // Context
+    $(document).ready(function () {
+        $('.ContextTableContainer').jtable({
+            title: 'Table of contexts',
+            paging: true, //Enable paging
+            pageSize: 10, //Set page size (default: 10)
+            sorting: true, //Enable sorting
+            defaultSorting: 'Title ASC',
+            //useBootstrap: true,
+
+            actions: {
+                listAction: function (postData, jtParams) {
+                    //console.log("Loading from custom function...");
+                    return $.Deferred(function ($dfd) {
+
+                        var ctxList = JSON.stringify(getContextsIdsOfObject());
+
+                        $.ajax({
+                            url: '@Url.Action("ContextList", "Context")',
+                            //url: '/Reference/ReferenceList?jtStartIndex=' + jtParams.jtStartIndex + '&jtPageSize=' + jtParams.jtPageSize + '&jtSorting=' + jtParams.jtSorting,
+                            type: 'POST',
+                            //traditional: true,
+                            dataType: 'json',
+                            data: { ctxsList: ctxList, postData: JSON.stringify(postData), jtStartIndex: jtParams.jtStartIndex, jtPageSize: jtParams.jtPageSize, jtSorting: jtParams.jtSorting },
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+                createAction: function (postData) {
+                    //console.log("creating from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            //url: '/Reference/CreateReference',
+                            url: '@Url.Action("CreateContext", "Context")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                                addContextToObject(data.Record);
+                                $('.ContextTableContainer').jtable('load');
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+                updateAction: '@Url.Action("UpdateContext", "Context")',
+
+                deleteAction: function (postData) {
+                    //console.log("deleting from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteContext", "Context")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                                removeContextFromObject(data);
+
+                                setTimeout(function () {
+                                    $('.SearchContextTableContainer').jtable('load');
+                                }, 500);
+
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+
+            },
+            fields: {
+                Id: {
+                    key: true,
+                    create: false,
+                    edit: false,
+                    list: false
+                },
+                Title: {
+                    title: 'Title',
+                    width: '80%'
+                },
+                Creator: {
+                    title: 'Creator',
+                    list: false,
+                    create: false,
+                    edit: false
+                },
+                CreationTime: {
+                    title: 'Record date',
+                    width: '20%',
+                    type: 'date',
+                    create: false,
+                    edit: false
+                }
+            },
+            recordsLoaded: function (event, data) {
+                checkTablePermissions();
+            }
+        });
+        //$('#ReferenceTableContainer').jtable('load');
+    });
+
+
+    // Search Context
+    $(document).ready(function () {
+        //Prepare jtable plugin
+        $('.SearchContextTableContainer').jtable({
+            title: 'Search for context',
+            paging: true,
+            pageSize: 10,
+            sorting: true,
+            selecting: true, //Enable selecting
+            multiselect: true, //Allow multiple selecting
+            selectingCheckboxes: true, //Show checkboxes on first column
+            defaultSorting: 'Title ASC',
+
+            actions: {
+                listAction: function (postData, jtParams) {
+                    return $.Deferred(function ($dfd) {
+
+                        var ctxList = JSON.stringify(getContextsIdsOfObject());
+
+                        $.ajax({
+                            url: '@Url.Action("GetAllOtherContexts", "Context")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: { ctxsList: ctxList, postData: JSON.stringify(postData), jtStartIndex: jtParams.jtStartIndex, jtPageSize: jtParams.jtPageSize, jtSorting: jtParams.jtSorting },
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+                deleteAction: function (postData) {
+                    //console.log("deleting from custom function...");
+                    return $.Deferred(function ($dfd) {
+                        $.ajax({
+                            url: '@Url.Action("DeleteContext", "Context")',
+                            type: 'POST',
+                            dataType: 'json',
+                            data: postData,
+                            success: function (data) {
+                                $dfd.resolve(data);
+                            },
+                            error: function () {
+                                $dfd.reject();
+                            }
+                        });
+                    });
+                },
+            },
+            fields: {
+                Id: {
+                    key: true,
+                    create: false,
+                    edit: false,
+                    list: false
+                },
+                Title: {
+                    title: 'Title',
+                    width: '80%'
+                },
+                Creator: {
+                    title: 'Creator',
+                    list: false,
+                    create: false,
+                    edit: false
+                },
+                CreationTime: {
+                    title: 'Record date',
+                    width: '20%',
+                    type: 'date',
+                    create: false,
+                    edit: false
+                }
+            },
+            //recordsLoaded: function (event, data) {
+            //   checkTablePermissions();
+            //console.log(JSON.stringify(data));
+            //},
+            rowInserted: function (event, data) {
+                data.row.find('.jtable-delete-command-button').hide();
+            }
+        });
+
+        $("#ContextAddSelection").on('click', function () {
+            var $selectedRows = $('.SearchContextTableContainer').jtable('selectedRows');
+            $selectedRows.each(function () {
+                var record = $(this).data('record');
+                $('.ContextTableContainer').jtable('addRecord', { record: record });
+            });
+
+            setTimeout(function () {
+                $('.SearchContextTableContainer').jtable('deleteRows', $selectedRows);
+            }, 300);
+
+        });
+
+        $("#ContextClearSelection").on('click', function () {
+            $('.jtable-row-selected').removeClass('jtable-row-selected');
+            $(".SearchContextTableContainer").find(".jtable-selecting-column > input").prop("checked", false);
+        });
+
+    });
+
+    //$(function () {
+    //    $('#SearchReferenceTable').on('hide.bs.collapse', function () {
+    //        $('#showAllRefs').html('<span class="glyphicon glyphicon-collapse-down"></span> Show All');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '45%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#refsList').removeClass("col-md-6");
+    //        $('#refsList').addClass("col-md-12");
+    //    }),
+
+    //    $('#SearchReferenceTable').on('show.bs.collapse', function () {
+    //        $('#showAllRefs').html('<span class="glyphicon glyphicon-collapse-up"></span> Hide');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '80%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#refsList').removeClass("col-md-12");
+    //        $('#refsList').addClass("col-md-6");
+    //        //console.log('show');
+    //    }),
+
+    //    $('#SearchContextTable').on('hide.bs.collapse', function () {
+    //        $('#showAllCtxs').html('<span class="glyphicon glyphicon-collapse-down"></span> Show All');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '45%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#ctxsList').removeClass("col-md-6");
+    //        $('#ctxsList').addClass("col-md-12");
+    //    }),
+    //    $('#SearchContextTable').on('show.bs.collapse', function () {
+    //        $('#showAllCtxs').html('<span class="glyphicon glyphicon-collapse-up"></span> Hide');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '80%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#ctxsList').removeClass("col-md-12");
+    //        $('#ctxsList').addClass("col-md-6");
+    //    }),
+
+    //    $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+    //        e.target // newly activated tab
+    //        e.relatedTarget // previous active tab
+    //        console.log($(e.relatedTarget).attr('href'));
+    //        if ($(e.relatedTarget).attr('href') === "#tab2" || $(e.relatedTarget).attr('href') === "#tab3") {
+    //            $('.SearchAllElements').children('.collapse').collapse('hide');
+    //            //$('#SearchReferenceTable').collapse('hide');
+    //        }
+    //    }),
+
+    //    $('#refModal').on('hide.bs.modal', function (e) {
+    //        //$('.SearchAllElements').children('.collapse').collapse({ toggle: false });
+    //        $('.SearchAllElements').children('.collapse').collapse('hide');
+    //        //$('.SearchAllElements').children('.collapse').collapse('hide');
+    //    }),
+    //    $('#refModal').on('show.bs.modal', function (e) {
+    //        $('.SearchAllElements').children('.collapse').collapse({ toggle: false });
+    //        $('.SearchAllElements').children('.collapse').collapse('hide');
+    //        //$('.SearchAllElements').children('.collapse').collapse('hide');
+    //    }),
+
+
+    //    //$('#showAllRefs2').on("click", function () {
+    //    //    $('#SearchReferenceTable').animate({ width: 'toggle' });
+    //    //    $('#showAllRefs').html('<span class="glyphicon glyphicon-collapse-up"></span> Hide');
+    //    //    $('.vertical-alignment-helper .vertical-align-center').css({ width: '80%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //    //    $('#refsList').removeClass("col-md-12");
+    //    //    $('#refsList').addClass("col-md-6");
+    //    //})
+
+    //    $('#showAllRefs2').on("click", function () {
+    //        $('#SearchReferenceTable').animate({ width: 'toggle' });
+    //        $('#showAllRefs').html('<span class="glyphicon glyphicon-collapse-down"></span> Show All');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '45%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#refsList').removeClass("col-md-6");
+    //        $('#refsList').addClass("col-md-12");
+    //    }, function () {
+    //        $('#showAllRefs').html('<span class="glyphicon glyphicon-collapse-up"></span> Hide');
+    //        $('.vertical-alignment-helper .vertical-align-center').css({ width: '80%', height: 'auto', 'max-height': '100%', 'max-width': '100%' });
+    //        $('#refsList').removeClass("col-md-12");
+    //        $('#refsList').addClass("col-md-6");
+    //    })
+
+    //});
+
+
+    function showAllReferences() {
+        //console.log('in show');
+
+        $('#showAllRefs').hide();
+        $('#showAllRefs').html('<i class="fa fa-chevron-left"></i> Hide');
+        $('#showAllRefs').prop('title', 'Hide all references');
+
+        //$('#refsList').css({ width: '570px' });
+        //$('#allRefsList').css({ width: '570px' });
+
+        $('.modal-content').animate({
+            width: '1300px'
+        }, 'slow').promise()
+            .done(function () {
+                $('#showAllRefs').show();
+                $("#allRefsList").fadeIn('slow');
+            });
+        $('#showAllRefs').data('name', 'show');
+    };
+
+    function hideAllReferences() {
+        //console.log('in hide');
+
+        //$('#refsList').css({ width: '570px' });
+        //$('#allRefsList').css({ width: '570px' });
+        //$('#showAllRefs2').data('name', 'hide');
+
+        $('#showAllRefs').hide();
+        $('#showAllRefs').html('<i class="fa fa-chevron-right"></i> All');
+        $('#showAllRefs').prop('title', 'Show all references');
+        //$('#showAllRefs2').show();
+        $("#allRefsList").fadeOut('slow', function () {
+            //$('#showAllRefs2').show();
+            $('.modal-content').animate({
+                width: '670px'
+            }, 'slow', function () { $('#showAllRefs').show(); });
+        });
+
+        $('#showAllRefs').data('name', 'hide');
+    };
+
+    $(function () {
+        $('#showAllRefs').on("click", function () {
+            if ($(this).data('name') == 'show') {
+                hideAllReferences();
+            }
+            else {
+                showAllReferences();
+            }
+        }),
+
+        $('#showAllRefs').trigger('click');
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            e.target // newly activated tab
+            e.relatedTarget // previous active tab
+            hideAllReferences();
+        }),
+
+        $('#refModal').on('hide.bs.modal', function (e) {
+            hideAllReferences();
+        })
+    });
+
+    function showAllContexts() {
+        //console.log('in show');
+
+        $('#showAllCtxs').hide();
+        $('#showAllCtxs').html('<i class="fa fa-chevron-left"></i> Hide');
+        $('#showAllCtxs').prop('title', 'Hide all contexts');
+
+        //$('#refsList').css({ width: '570px' });
+        //$('#allRefsList').css({ width: '570px' });
+
+        $('.modal-content').animate({
+            width: '1300px'
+        }, 'slow').promise()
+            .done(function () {
+                $('#showAllCtxs').show();
+                $("#allCtxsList").fadeIn('slow');
+            });
+        $('#showAllCtxs').data('name', 'show');
+    };
+
+    function hideAllContexts() {
+        //console.log('in hide');
+
+        //$('#refsList').css({ width: '570px' });
+        //$('#allRefsList').css({ width: '570px' });
+        //$('#showAllRefs2').data('name', 'hide');
+
+        $('#showAllCtxs').hide();
+        $('#showAllCtxs').html('<i class="fa fa-chevron-right"></i> All');
+        $('#showAllCtxs').prop('title', 'Show all contexts');
+        //$('#showAllRefs2').show();
+        $("#allCtxsList").fadeOut('slow', function () {
+            //$('#showAllRefs2').show();
+            $('.modal-content').animate({
+                width: '670px'
+            }, 'slow', function () { $('#showAllCtxs').show(); });
+        });
+
+        $('#showAllCtxs').data('name', 'hide');
+    };
+
+    $(function () {
+        $('#showAllCtxs').on("click", function () {
+            if ($(this).data('name') == 'show') {
+                hideAllContexts();
+            }
+            else {
+                showAllContexts();
+            }
+        }),
+
+        $('#showAllCtxs').trigger('click');
+
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function (e) {
+            e.target // newly activated tab
+            e.relatedTarget // previous active tab
+            hideAllContexts();
+        }),
+
+        $('#refModal').on('hide.bs.modal', function (e) {
+            hideAllContexts();
+        })
+    });
+
+
+    function checkTablePermissions() {
+        @if (ViewBag.userPermission == MapPermissionType.RO)
+        {
+            <text>
+        //$('.jtable-command-button').prop('disabled', true);
+        $('.jtable-toolbar-item.jtable-toolbar-item-add-record').hide();
+        $('.jtable-command-button').hide();
+        //$records.each(function () {
+        //    $(this).data.row.find('.jtable-delete-command-button').hide();
+        //});
+
+        //$.each(records, function (i, item) {
+        //    console.log('----- ' + i + ': ' + JSON.stringify(item));
+        //    item.data.row.find('.jtable-command-button').hide();
+        //});
+        </text>
+        }
+    }
+
+    function showDecumentProperties() {
+        $('#documentPropertiesModal').modal('show');
+    }
+
+    function updateGridOption() {
+        myDiagram.startTransaction("grid");
+        var grid = $("#gridValue");
+        //console.log($('#gridValue').prop('checked'));
+        myDiagram.grid.visible = $(grid).prop('checked');
+        myDiagram.commitTransaction("grid");
+    }
+
+    function updateSnapOption() {
+        // no transaction needed, because we are modifying tools for future use
+        var snap = $("#snapValue");
+        if ($(snap).prop('checked')) {
+            myDiagram.toolManager.draggingTool.isGridSnapEnabled = true;
+            myDiagram.toolManager.resizingTool.isGridSnapEnabled = true;
+        } else {
+            myDiagram.toolManager.draggingTool.isGridSnapEnabled = false;
+            myDiagram.toolManager.resizingTool.isGridSnapEnabled = false;
+        }
+    }
+
+
+    function showAboutModal() {
+        $('#aboutKhmap').modal('show');
+    }
+
+
+    /* ------------------------------------ Load Map From JSON -------------------------------------------- */
+
+    function showLoadMapFileModal() {
+        $('#loadMapFile').modal('show');
+    }
+
+
+    function readBlob(opt_startByte, opt_stopByte) {
+
+        var files = document.getElementById('files').files;
+        if (!files.length) {
+            alert('Please select a file!');
+            return;
+        }
+
+        var file = files[0];
+
+        //console.log(file);
+
+        var start = parseInt(opt_startByte) || 0;
+        var stop = parseInt(opt_stopByte) || file.size - 1;
+
+        var reader = new FileReader();
+
+        // If we use onloadend, we need to check the readyState.
+        var contentResult = null;
+        reader.onloadend = function (evt) {
+            if (evt.target.readyState == FileReader.DONE) { // DONE == 2
+                contentResult = evt.target.result;
+                $('#fileContent').val(contentResult);
+
+                $.ajax({
+                    type: "POST",
+                    url: '@Url.Action("LoadMapFromFile", "Map")',
+                    data: { jsonFile: contentResult },
+                    success: function (res) {
+                        //console.log('success load map: ' + res.model);
+                        $("#loadMapFile").modal('hide');
+
+                        @*var jFile = res.model;
+                        var link = '@Url.Action("LaunchMap5", "Map", new { file = "jf" })';
+                        console.log('url: ' + link);
+                        link = link.replace("jf", jFile);
+                        alert(link);*@
+                        window.location.href = res.url;
+
+                    },
+                    error: function () {
+                        $("#loadMapFile").modal('hide');
+                        //console.log('failed load map');
+                    }
+                });
+
+            }
+        };
+
+        var blob = file.slice(start, stop + 1);
+        reader.readAsBinaryString(blob);
+
+        //return contentResult;
+    }
+
+    $(function () {
+        $("#loadMapFromJsonFile").on("submit", function () {
+
+            //console.log('ser: ' + JSON.stringify($("#loadMapFromJsonFile").serialize()));
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("LoadMapFromFile", "Map")',
+                data: $(this).serialize(),
+                success: function (res) {
+                    //console.log('success load map: ' + res.model);
+                    $("#loadMapFile").modal('hide');
+
+                },
+                error: function () {
+                    $("#loadMapFile").modal('hide');
+                    //console.log('failed load map');
+                }
+            });
+        });
+    });
+
+    /* ------------------------------------ End Load Map From JSON -------------------------------------------- */
+
+
+
+    /* ------------------------------------ Talkback -------------------------------------------- */
+
+    function getCommentOfObject() {
+        //console.log(myDiagram.selection);
+        var element = myDiagram.selection.first();
+        return element.data.comment;
+    }
+
+    function addCommentOfObject(cId) {
+        var element = myDiagram.selection.first();
+        element.data.comment = cId;
+    }
+
+    //function removeContextFromObject(data) {
+    //    //console.log('addReferenceToObject: ' + JSON.stringify(data));
+    //    //console.log(data.CtxIdToRemove);
+    //    var node = myDiagram.selection.first();
+    //    var ctxsArr = node.data.ctxs;
+    //    var indexToRemove = ctxsArr.indexOf(data.CtxIdToRemove);
+    //    if (indexToRemove > -1) {
+    //        ctxsArr.splice(indexToRemove, 1);
+    //    }
+    //}
+    function loadComments() {
+        $('#comments-container').comments({
+            profilePictureURL: 'https://app.viima.com/static/media/user_profiles/user-icon.png',
+            roundProfilePictures: true,
+            textareaRows: 1,
+
+            fieldMappings: {
+                id: 'Id',
+                parent: 'Parent',
+                created: 'Created',
+                modified: 'Modified',
+                content: 'Content',
+                fullname: 'Fullname',
+                profilePictureURL: 'ProfilePic',
+                createdByAdmin: 'CreatedByAdmin',
+                createdByCurrentUser: 'CreatedByCurrentUser',
+                upvoteCount: 'UpvoteCount',
+                userHasUpvoted: 'UserHasUpvoted',
+            },
+
+            refresh: function () {
+                $('#comments-container').addClass('rendered');
+                //console.log('in refresh');
+            },
+            getComments: function (success, error) {
+                //console.log('in get');
+
+                var cId = getCommentOfObject();
+                //console.log('cid: ' + cId);
+
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("GetComments", "Comment")',
+                    dataType: 'json',
+                    data: { commentId: cId },
+                    success: function (comment) {
+                        addCommentOfObject(comment.cId)
+                        success(comment.cList);
+                    },
+                    error: error
+                });
+            },
+            postComment: function (commentJSON, success, error) {
+                //console.log('in post');
+
+                var cId = getCommentOfObject();
+
+                //console.log('comment: ' + JSON.stringify(commentJSON));
+
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("CreateComment", "Comment")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ commentId: cId, newComment: commentJSON }),
+                    success: function (comment) {
+                        success(comment)
+                    },
+                    error: error
+                });
+                //success(commentJSON);
+
+                //console.log(commentsArray);
+            },
+            putComment: function (commentJSON, success, error) {
+
+                //console.log('comment: ' + JSON.stringify(commentJSON));
+                var cId = getCommentOfObject();
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("EditComment", "Comment")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ commentId: cId, newComment: commentJSON }),
+                    success: function (comment) {
+                        success(comment)
+                    },
+                    error: error
+                });
+            },
+            deleteComment: function (commentJSON, success, error) {
+                //console.log('in delete');
+                var cId = getCommentOfObject();
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("DeleteComment", "Comment")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ commentId: cId, newComment: commentJSON }),
+                    success: success,
+                    error: error
+                });
+            },
+            upvoteComment: function (commentJSON, success, error) {
+                //console.log('in upvote: ' + JSON.stringify(commentJSON));
+                var cId = getCommentOfObject();
+                $.ajax({
+                    type: 'post',
+                    url: '@Url.Action("VoteComment", "Comment")',
+                    dataType: 'json',
+                    contentType: 'application/json; charset=utf-8',
+                    data: JSON.stringify({ commentId: cId, newComment: commentJSON }),
+                    success: function (comment) {
+                        success(comment)
+                    },
+                    error: error
+                });
+
+            }
+        });
+    }
+
+    /* ------------------------------------ End Talkback -------------------------------------------- */
+
+
+</script>
+
+</head>
+<body onload="init()">
+
+    <div id="menuBar">
+        <nav class="navbar navbar-default navbar-fixed-top">
+            <div class="container-fluid navbar-custom">
+                <!-- Brand and toggle get grouped for better mobile display -->
+                <div class="navbar-header">
+                    <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                        <span class="sr-only">Toggle navigation</span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </button>
+                    <!-- <a class="navbar-brand" href="#">Knowledge Map</a> -->
+                    @Html.ActionLink("Knowledge Map", "Index", "Home", new { area = "" }, new { @class = "navbar-brand" })
+                </div>
+
+                <!-- Collect the nav links, forms, and other content for toggling -->
+                <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">File <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li>@Html.ActionLink("New", "LaunchMap5", "Map", new { id="" }, null)</li>
+                                @*<li><a href="#">Open</a></li>*@
+                                <li><a href="#" class="rwPermissionLink" onclick="save()">Save</a></li>
+                                <li class="divider"></li>
+                                <li class="dropdown-submenu">
+                                    <a href="#">Export</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" onclick="saveAsImg('image/png', '.png')">PNG Image</a></li>
+                                        <li><a href="#" onclick="saveAsImg('image/jpeg', '.jpg')">JPEG Image</a></li>
+                                        @*<li><a href="#" onclick="saveAsSVG('', '.svg')">SVG Image</a></li>*@
+                                        <li><a href="#" onclick="saveAsJSON('', '.json')">JSON File</a></li>
+                                    </ul>
+                                </li>
+                                <li class=""><a href="#" onclick="showLoadMapFileModal()">Import</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#" onclick="printMap()">Print</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#" onclick="showDecumentProperties()">Document Properties</a></li>
+                                <li class="divider"></li>
+                                <li>@Html.ActionLink("Exit", "Index", "Home")</li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Edit <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li><a href="#" onclick="myDiagram.commandHandler.undo()">Undo</a></li>
+                                <li><a href="#" onclick="myDiagram.commandHandler.redo()">Redo</a></li>
+                                <li class="divider"></li>
+                                <li><a href="#" onclick="myDiagram.commandHandler.selectAll()">Select All</a></li>
+                                <li><a href="#" class="rwPermissionLink" onclick="myDiagram.commandHandler.copySelection()">Copy</a></li>
+                                <li><a href="#" class="rwPermissionLink" onclick="myDiagram.commandHandler.cutSelection()">Cut</a></li>
+                                <li><a href="#" class="rwPermissionLink" onclick="myDiagram.commandHandler.pasteSelection()">Paste</a></li>
+                                <li><a href="#" class="rwPermissionLink" onclick="myDiagram.commandHandler.deleteSelection()">Delete</a></li>
+                            </ul>
+                        </li>
+                        <li class="dropdown">
+                            <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">Help <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                @*<li><a href="#">View Help</a></li>
+                                <li class="divider"></li>*@
+                                <li><a href="#" onclick="showAboutModal()">About Khmap</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+
+                    <ul class="nav navbar-nav navbar-right">
+                        <li><a href="#"><div id="currentFile">(Unsaved File)</div></a></li>
+                    </ul>
+
+
+                </div><!-- /.navbar-collapse -->
+            </div><!-- /.container-fluid -->
+
+
+            <div class="btn-toolbar" role="toolbar" style="margin: 1px; padding-top: 6px; padding-bottom: 6px; padding-left: 6px">
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="New" onclick="location.href='@Url.Action("LaunchMap5", "Map", new { id = ""})'"><i class="fa fa-file-o"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Open" onclick="myDiagram.commandHandler.redo()"><i class="fa fa-folder-open-o"></i></button>
+                    <button type="button" id="saveBtn" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Save" onclick="save()"><i class="fa fa-save"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Print" onclick="printMap()"><i class="fa fa-print"></i></button>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Undo (Ctrl+Z)" onclick="myDiagram.commandHandler.undo()"><i class="fa fa-reply"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Redo (Ctrl+Y)" onclick="myDiagram.commandHandler.redo()"><i class="fa fa-share"></i></button>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Zoom In (Ctrl++)" onclick="myDiagram.commandHandler.increaseZoom(1.1)"><i class="fa fa-search-plus"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Zoom Out (Ctrl+-)" onclick="myDiagram.commandHandler.decreaseZoom(0.9)"><i class="fa fa-search-minus"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Reset (Ctrl+0)" onclick="myDiagram.commandHandler.resetZoom()"><i class="fa fa-repeat"></i></button>
+                </div>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Cut (Ctrl+X)" onclick="myDiagram.commandHandler.cutSelection()"><i class="fa fa-scissors"></i></button>
+                    <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Copy (Ctrl+C)" onclick="myDiagram.commandHandler.copySelection()"><i class="fa fa-copy"></i></button>
+                    <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Paste (Ctrl+V)" onclick="myDiagram.commandHandler.pasteSelection()"><i class="fa fa-paste"></i></button>
+                </div>
+            </div>
+
+        </nav>
+    </div>
+    <!--END menu bar -->
+
+    <div id="PaletteAndDiagram">
+        <div id="sideBar">
+            <div class="handle">Map Shapes</div>
+            <div id="myPalette"></div>
+            <div class="handle">Overview</div>
+            <div id="myOverview"></div>
+        </div>
+        <div id="mainBar">
+            <div id="myDiagram"></div>
+
+            <div class="tabbable" id="myTabs" hidden>
+                <ul class="nav nav-tabs">
+                    <li class="active">
+                        <a href="#panel-637089" data-toggle="tab">JSON Model</a>
+                    </li>
+                    @*<li>
+                        <a href="#panel-826018" data-toggle="tab">Console</a>
+                    </li>*@
+                </ul>
+                <div class="tab-content">
+                    <div class="tab-pane active" id="panel-637089">
+
+                        <div id="tabData">
+                            <textarea id="mySavedModel">
+                            </textarea>
+                        </div>
+
+                    </div>
+                    @*<div class="tab-pane" id="panel-826018">
+                        <div id="tabData">
+                                <p>
+                                    Howdy, I'm in Section 2.
+                                </p>
+                        </div>
+                    </div>*@
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+
+    @*<a data-toggle="modal" href="#myModal">Write a Review</a>*@
+
+    <!-- Modal -->
+    <div class="modal fade" id="saveMapModal" tabindex="-1" role="dialog" aria-labelledby="saveMapModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title" id="saveMapModalLabel">Save Map</h4>
+                </div>
+
+                @*<div class="modal-body">
+                <form id="saveNewMap" data-async data-target="#saveMapModal" action="" method="POST" role="form" class="form-horizontal">
+                    <div class="form-group">
+                        <label class="control-label col-md-2 col-md-offset-0" for="mapName">Name</label>
+                        <div class="col-md-6">
+                            <input type="text" class="form-control" id="mapName" placeholder="Enter Map Name">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label class="control-label col-md-2 col-md-offset-0" for="mapDescription">Description</label>
+                        <div class="col-md-6">
+                            <textarea class="form-control" id="mapDescription" rows="3"></textarea>
+                        </div>
+                    </div>
+                </form>
+            </div>*@
+
+                @*<form id="saveNewMap">*@
+                @*<div class="modal-body">*@
+
+                <form id="saveNewMap">
+                    <div class="modal-body">
+                        @Html.Partial("_SaveMap", new SaveMapViewModel { Model = "" })
+                    </div>
+                    <div class="modal-footer">
+                        <div class="form-group">
+                            <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                            <button type="submit" id="saveMapBtn" class="btn btn-primary" value="Submit">Save</button>
+                            @*<input type="submit" id="saveMapBtn" value="Save" class="btn btn-primary" />*@
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+
+    <nav id="notificationBar" class="navbar navbar-default navbar-fixed-bottom">
+        @*<div class="container-fluid">
+                <p id="notificationMsg" class="navbar-text">Notifications</p>
+            </div>*@
+        <div id="notificationMsg" class="navbar-text">Notifications</div>
+    </nav>
+
+
+
+    <div class="modal fade modal-draggable modal-wide" id="refModal" tabindex="-1" data-backdrop="static" data-keyboard="false" data-focus-on="input:first" role="dialog" aria-labelledby="myModalLabel" aria-hidden="false" style="display: none;">
+        <div class="vertical-alignment-helper1">
+            <div class="modal-dialog vertical-align-center1">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="myModalLabel">Properties</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tabbable">
+                            <!-- Only required for left/right tabs -->
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#tab1" data-toggle="tab">Details</a></li>
+                                <li><a href="#tab2" data-toggle="tab">References</a></li>
+                                <li><a href="#tab3" data-toggle="tab">Contexts</a></li>
+                                <li><a href="#tab4" data-toggle="tab">Style</a></li>
+                                <li><a href="#tab5" data-toggle="tab">Talkback</a></li>
+                            </ul>
+                            <div class="tab-content">
+
+                                <div class="tab-pane active" id="tab1">
+                                    <table id="detailsTable" class="table table-hover borderless table-vcenter">
+                                        <tbody>
+                                            <tr>
+                                                <td>Text:</td>
+                                                <td>
+                                                    <input type="text" id="textFeature" class="form-control" name="objectText">
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td>Reference Object:</td>
+                                                <td id="refFeature"></td>
+                                            </tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                <div class="tab-pane" id="tab2">
+                                    <div>
+                                        <div id="refsList" class="col-md-6">
+                                            <div class="panel panel-default">
+                                                <div class="filtering">
+                                                    <form>
+                                                        Text: <input type="text" name="refFilterText" id="refFilterText" />
+                                                        Category:
+                                                        <select id="refCategoryId" name="refCategoryId">
+                                                            <option selected="selected" value="0">All categories</option>
+                                                            <option value="1">Title</option>
+                                                            <option value="2">Author</option>
+                                                            <option value="3">Publication</option>
+                                                        </select>
+                                                        <button type="submit" id="LoadRefsButton">Load records</button>
+                                                    </form>
+                                                </div>
+
+                                                <div class="ReferenceTableContainer"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="searchAllElements">
+                                            <div id="allRefsList" class="col-md-6">
+                                                <div id="SearchReferenceTable">
+                                                    <div class="panel panel-default">
+                                                        <div class="filtering">
+                                                            <form>
+                                                                Text: <input type="text" name="allRefFilterText" id="allRefFilterText" />
+                                                                Category:
+                                                                <select id="allRefCategoryId" name="allRefCategoryId">
+                                                                    <option selected="selected" value="0">All categories</option>
+                                                                    <option value="1">Title</option>
+                                                                    <option value="2">Author</option>
+                                                                    <option value="3">Publication</option>
+                                                                </select>
+                                                                <button type="submit" id="LoadAllRefsButton">Load records</button>
+                                                            </form>
+                                                        </div>
+
+                                                        <div class="SearchReferenceTableContainer"></div>
+                                                        <div>
+                                                            <button id="ReferenceAddSelection" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-plus"></span> Add Selction</button>
+                                                            <button id="ReferenceClearSelection" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Clear Selection</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button id="showAllRefs" type="button" class="btn btn-default btn-xs" data-name="show" title="Show all references">
+                                                <i class="fa fa-chevron-right"></i> All
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+
+                                <div class="tab-pane" id="tab3">
+                                    <div>
+                                        <div id="ctxsList" class="col-md-6">
+                                            <div class="panel panel-default">
+                                                <div class="filtering">
+                                                    <form>
+                                                        Text: <input type="text" name="ctxFilterText" id="ctxFilterText" />
+                                                        Category:
+                                                        <select id="ctxCategoryId" name="ctxCategoryId">
+                                                            <option selected="selected" value="0">All categories</option>
+                                                            <option value="1">Title</option>
+                                                            @*<option value="2">Author</option>
+                                                                <option value="3">Publication</option>*@
+                                                        </select>
+                                                        <button type="submit" id="LoadCtxsButton">Load records</button>
+                                                    </form>
+                                                </div>
+
+                                                <div class="ContextTableContainer"></div>
+                                            </div>
+                                        </div>
+
+                                        <div class="searchAllElements">
+                                            <div id="allCtxsList" class="col-md-6">
+                                                <div id="SearchContextTable">
+                                                    <div class="panel panel-default">
+                                                        <div class="filtering">
+                                                            <form>
+                                                                Text: <input type="text" name="allCtxFilterText" id="allCtxFilterText" />
+                                                                Category:
+                                                                <select id="allCtxCategoryId" name="allCtxCategoryId">
+                                                                    <option selected="selected" value="0">All categories</option>
+                                                                    <option value="1">Title</option>
+                                                                </select>
+                                                                <button type="submit" id="LoadAllCtxsButton">Load records</button>
+                                                            </form>
+                                                        </div>
+
+                                                        <div class="SearchContextTableContainer"></div>
+                                                        <div>
+                                                            <button id="ContextAddSelection" class="btn btn-success btn-xs"><span class="glyphicon glyphicon-plus"></span> Add Selction</button>
+                                                            <button id="ContextClearSelection" class="btn btn-danger btn-xs"><span class="glyphicon glyphicon-remove"></span> Clear Selection</button>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            <button id="showAllCtxs" type="button" class="btn btn-default btn-xs" data-name="show" title="Show all contexts">
+                                                <i class="fa fa-chevron-right"></i> All
+                                            </button>
+                                        </div>
+
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="tab4">
+
+                                    @*<div class="container">
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <span class="label label-default">Shape Color</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type='text' id="colorFill" class='basic' value='red' />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <span class="label label-default">Border Color</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <input type='text' id="colorStroke" class='basic' value='red' />
+                                            </div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="col-md-1">
+                                                <span class="label label-default">Border Thickness</span>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <div class="dropdown">
+                                                    <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                                        <i class="fa fa-bars"></i>
+                                                        <span class="caret"></span>
+                                                    </button>
+                                                    <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 0)">0px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 1)">1px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 2)">2px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 3)">3px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 4)">4px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 5)">5px</a></li>
+                                                        <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 6)">6px</a></li>
+                                                    </ul>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>*@
+
+                                        <table id="styleTable" class="table table-hover borderless table-vcenter">
+                                            <tbody>
+                                                <tr>
+                                                    <td>Shape Color:</td>
+                                                    <td>
+                                                        <input type='text' id="colorFill" class='basic' value='red' />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Border Color:</td>
+                                                    <td>
+                                                        <input type='text' id="colorStroke" class='basic' value='red' />
+                                                    </td>
+                                                </tr>
+                                                <tr>
+                                                    <td>Border Thickness:</td>
+                                                    <td>
+                                                        <div class="dropdown">
+                                                            <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                                                <i class="fa fa-bars"></i>
+                                                                <span class="caret"></span>
+                                                            </button>
+                                                            <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 0)">0px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 1)">1px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 2)">2px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 3)">3px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 4)">4px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 5)">5px</a></li>
+                                                                <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 6)">6px</a></li>
+                                                            </ul>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+
+                                        @*<div class="row">
+                                                <div class="col-md-1">
+                                                    <span class="label label-default">X</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" id="x_coordinate" name="x_coordinate">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-1">
+                                                    <span class="label label-default">Y</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" id="y_coordinate" name="y_coordinate">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-1">
+                                                    <span class="label label-default">Height</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" id="objectHeight" name="objectHeight">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-1">
+                                                    <span class="label label-default">Width</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" id="objectWidth" name="objectWidth">
+                                                </div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="col-md-1">
+                                                    <span class="label label-default">Text</span>
+                                                </div>
+                                                <div class="col-md-3">
+                                                    <input type="text" id="objectText" name="objectText">
+                                                </div>
+                                            </div>*@
+                                </div>
+
+                                <div class="tab-pane" id="tab5">
+                                    <div id="comments-container"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+        <div class="modal fade modal-draggable" id="linePropertiesModal" tabindex="-1" role="dialog" aria-labelledby="linePropertiesModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                        <h4 class="modal-title" id="linePropertiesModalLabel">Link Properties</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="tabbable">
+                            <!-- Only required for left/right tabs -->
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#tab11" data-toggle="tab">Properties</a></li>
+                                <li><a href="#tab22" data-toggle="tab">References</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab11">
+
+                                    <div class="btn-toolbar">
+
+                                        <div class="btn-group">
+                                            <input type="color" id="linkColorStroke" value="#ff0000">
+                                        </div>
+                                        <div class="btn-group">
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                                    <i class="fa fa-scissors"></i>
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkRouting(activeObject, go.Link.Normal)">Normal</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkRouting(activeObject, go.Link.Orthogonal)">Orthogonal</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkRouting(activeObject, go.Link.AvoidsNodes)">AvoidsNodes</a></li>
+                                                </ul>
+                                            </div>
+
+
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu2" data-toggle="dropdown" aria-expanded="true">
+                                                    <i class="fa fa-scissors"></i>
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkCurve(activeObject, go.Link.None)">None</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkCurve(activeObject, go.Link.Bezier)">Bezier</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkCurve(activeObject, go.Link.JumpGap)">JumpGap</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeLinkCurve(activeObject, go.Link.JumpOver)">JumpOver</a></li>
+                                                </ul>
+                                            </div>
+
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                                    <i class="fa fa-scissors"></i>
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 0)">0px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 1)">1px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 2)">2px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 3)">3px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 4)">4px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 5)">5px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeStrokeWidth(activeObject, 6)">6px</a></li>
+                                                </ul>
+                                            </div>
+
+                                        </div>
+
+
+                                        @*new go.Binding("stroke", "arrowheadColor"),  // shape.stroke = data.color
+                                            new go.Binding("strokeWidth", "arrowheadStrokeWidth")  // shape.strokeWidth = data.thick*@
+                                        <div class="btn-group">
+                                            <input type="color" id="linkArrowheadColor" value="#ff0000">
+                                            <div class="dropdown">
+                                                <button class="btn btn-default dropdown-toggle" type="button" id="dropdownMenu1" data-toggle="dropdown" aria-expanded="true">
+                                                    <i class="fa fa-scissors"></i>
+                                                    <span class="caret"></span>
+                                                </button>
+                                                <ul class="dropdown-menu" role="menu" aria-labelledby="dropdownMenu1">
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 0)">0px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 1)">1px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 2)">2px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 3)">3px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 4)">4px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 5)">5px</a></li>
+                                                    <li role="presentation"><a role="menuitem" tabindex="-1" href="#" onclick="changeArrowheadStrokeWidth(activeObject, 6)">6px</a></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                    </div>
+
+                                </div>
+                                <div class="tab-pane" id="tab22">
+                                    <div class="panel panel-default">
+
+                                    <div id="refsList2">
+
+                                        <div class="ReferenceTableContainer"></div>
+
+                                    </div>
+
+                                </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        @*<button type="submit" id="saveMapNow" class="btn btn-primary" value="Submit">Save</button>*@
+                        <div id='response'></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+
+    <div id="documentPropertiesModal" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Document Properties</h4>
+                </div>
+                <div class="modal-body">
+
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="gridValue" value="" onclick="updateGridOption()">
+                            Grid
+                        </label>
+                    </div>
+                    <div class="checkbox">
+                        <label>
+                            <input type="checkbox" id="snapValue" value="" onclick="updateSnapOption()">
+                            Snapping
+                        </label>
+                    </div>
+
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    <div id="aboutKhmap" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">About Knowledge Map</h4>
+                </div>
+                <div class="modal-body">
+
+                    <table class="table borderless">
+                        <tbody>
+                            <tr>
+                                <td>Product:</td>
+                                <td>Knowledge Map</td>
+                            </tr>
+                            <tr>
+                                <td>Version:</td>
+                                <td>1.0</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                </div>
+                <div class="modal-footer">
+                    <small class="pull-left">Copyright &copy; @DateTime.Now.Year <u><strong>Knowledge Map</strong></u>. All rights reserved.</small>
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                </div>
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+
+    @*<div id="loadMapFile" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Load Map</h4>
+                </div>
+
+                <form id="loadMapFromJsonFile" enctype="multipart/form-data">
+                    <div class="modal-body">
+                        <label class="control-label">Select File</label>
+                        <input type="file" id="file" name="file" accept=".json" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="uploadMapFile">Load Map</button>
+                    </div>
+                </form>
+
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->*@
+
+    <div id="loadMapFile" class="modal fade">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title">Load Map</h4>
+                </div>
+                @using (Html.BeginForm("LoadMapFromFile", "Map", FormMethod.Post, new { enctype = "multipart/form-data", target = "_blank" }))
+                {
+                    <div class="modal-body">
+                        <label class="control-label">Select File</label>
+                        <input type="file" id="file" name="file" accept=".json" required>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                        <button type="submit" class="btn btn-primary" id="uploadMapFile">Load Map</button>
+                    </div>
+                }
+            </div><!-- /.modal-content -->
+        </div><!-- /.modal-dialog -->
+    </div><!-- /.modal -->
+
+    
+
+    <div id="printableDiv" style="display: none;"></div>
+
+</body>
+</html>

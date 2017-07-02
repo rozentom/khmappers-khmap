@@ -1,0 +1,253 @@
+﻿@model khmap.Models.MapMiniViewModel
+
+@*<div class="container-fluid fill">
+    <div class="row">
+        <div class="col-md-12">
+            <div class="span12 well">*@
+<div class="well">
+    <h5><strong><i class="fa fa-users"></i> Groups Permissions</strong></h5>
+    <hr />
+    <div class="row">
+        <div class="col-md-7">
+            <div class="input-group">
+                <input type="text" id="searchGroup" class="form-control" placeholder="Search for...">
+                <span class="input-group-btn">
+                    <button type="button" id="btnSearchGroup" class="btn btn-default"><i class="glyphicon glyphicon-search"></i></button>
+                </span>
+            </div>
+        </div>
+        <div class="col-md-5">
+            <button type="button" id="btnAddGroup" class="btn btn-primary pull-right"><i class="fa fa-plus"></i> Add Group</button>
+        </div>
+    </div>
+    <br />
+    <div class="row">
+        <div class="col-md-12">
+            <table id="mapGroupGrid" class="table" data-source="@Url.Action("GetMapGroupPermissionList", "MapPermission", new { mapId = Model.Id })"></table>
+        </div>
+    </div>
+</div>
+            @*</div>
+        </div>
+    </div>
+</div>*@
+
+
+<!-- Modal -->
+<div class="modal fade" id="groupPermissionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Edit Group Permission</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form form-horizontal">
+                    <input type="hidden" id="gmid" />
+                    <input type="hidden" id="ggid" />
+                    <div class="form-group">
+                        <label for="gname" class="control-label col-xs-3">Name</label>
+                        <input type="text" class="form-control col-xs-8" id="gname" placeholder="Name" disabled />
+                    </div>
+                    <div class="form-group">
+                        <label for="gpermission" class="control-label col-xs-3">Permission</label>
+                        <div>
+                            <select class="form-control col-xs-8" id="gpermission">
+                                <option value="0">Read & Write (RW)</option>
+                                <option value="1">Read Only (RO)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnSaveGroup" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Add user Modal -->
+<div class="modal fade" id="AddGroupPermissionModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Add Group Permission</h4>
+            </div>
+            <div class="modal-body">
+                <form class="form form-horizontal">
+                    <input type="hidden" id="addGroupMid" />
+                    <input type="hidden" id="addGroupGid" />
+                    <div class="form-group">
+                        <label for="addGroupName" class="control-label col-xs-3">Group Name</label>
+                        <input type="text" class="form-control col-xs-8" id="addGroupName" placeholder="Group Name" data-provide="typeahead" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="addUserPermission" class="control-label col-xs-3">Permission</label>
+                        <div>
+                            <select class="form-control col-xs-8" id="addGroupPermission">
+                                <option value="0">Read & Write (RW)</option>
+                                <option value="1">Read Only (RO)</option>
+                            </select>
+                        </div>
+                    </div>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                <button type="button" id="btnSaveNewGroup" class="btn btn-primary">Save</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<script type="text/javascript">
+    var mapGroupgrid;
+    function AddGroup() {
+        var mapId = '@Model.Id';
+        $("#addGroupMid").val(mapId);
+        $("#addGroupGid").val("");
+        $("#addGroupName").val("");
+        $("#addGroupPermission").val(0);
+        $("#AddGroupPermissionModal").modal("show");
+    }
+    function SaveNewGroup() {
+        var newGroup = {
+            MId: $("#addGroupMid").val(),
+            GId: $("#addGroupGid").val(),
+            Permission: $("#addGroupPermission").val()
+        };
+        console.log(newGroup);
+        $.ajax({ url: '@Url.Action("AddMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: newGroup.GId, mapId: newGroup.MId, permission: newGroup.Permission } })
+            .done(function () {
+                mapGroupgrid.reload();
+                $("#AddGroupPermissionModal").modal("hide");
+            })
+            .fail(function () {
+                alert("Unable to save.");
+                $("#AddGroupPermissionModal").modal("hide");
+            });
+    }
+    function EditGroup(e) {
+        //console.log(e.data);
+        $("#gmid").val(e.data.record.MId);
+        $("#ggid").val(e.data.id);
+        $("#gname").val(e.data.record.Name);
+        $("#gpermission").val(e.data.record.Permission);
+        $("#groupPermissionModal").modal("show");
+    }
+    function SaveGroup() {
+        var group = {
+            MId: $("#gmid").val(),
+            GId: $("#ggid").val(),
+            Permission: $("#gpermission").val()
+        };
+        console.log(group);
+        $.ajax({ url: '@Url.Action("SaveMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: group.GId, mapId: group.MId, permission: group.Permission } })
+            .done(function () {
+                mapGroupgrid.reload();
+                $("#groupPermissionModal").modal("hide");
+            })
+            .fail(function () {
+                alert("Unable to save.");
+                $("#groupPermissionModal").modal("hide");
+            });
+    }
+    function RemoveGroup(e) {
+        $.ajax({ url: '@Url.Action("RemoveMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: e.data.id, mapId: e.data.record.MId } })
+            .done(function () {
+                mapGroupgrid.reload();
+            })
+            .fail(function () {
+                alert("Unable to remove.");
+            });
+    }
+    function SearchGroup() {
+        mapGroupgrid.reload({ searchString: $("#searchGroup").val() });
+    }
+
+    $(document).ready(function () {
+        mapGroupgrid = $("#mapGroupGrid").grid({
+            dataKey: "GId",
+            uiLibrary: "bootstrap",
+            //width: 200,
+            fontSize: "12px",
+            columns: [
+                { field: "MId", hidden: true },
+                { field: "GId", hidden: true },
+                { field: "Name", title: "Group Name", sortable: true, width: 100 },
+                { field: "Email", title: "Owner Email", sortable: true, width: 150 },
+                { field: "Permission", title: "Permission", hidden: true },
+                { title: "Permission", tmpl: "{PermissionString}", sortable: true },
+                { title: "", field: "Edit", width: 30, align: "center", type: "icon", icon: "glyphicon-pencil", tooltip: "Edit", events: { "click": EditGroup } },
+                { title: "", field: "Delete", width: 30, align: "center", type: "icon", icon: "glyphicon-remove", tooltip: "Delete", events: { "click": RemoveGroup } }
+            ],
+            pager: { enable: true, limit: 5, sizes: [5, 10, 25, 50] }
+        });
+        //grid.on("cellDataBound", function (e, $wrapper, id, index, record) {
+        //    if ("Type" === index) {
+        //        $wrapper.addClass(record.Type.indexOf("U") > -1 ? "userCss" : "groupCss");
+        //    }
+        //});
+        $("#btnAddGroup").on("click", AddGroup);
+        $("#btnSaveGroup").on("click", SaveGroup);
+        $("#btnSaveNewGroup").on("click", SaveNewGroup);
+        $("#btnSearchGroup").on("click", SearchGroup);
+    });
+
+    $(document).ready(function () {
+        console.log('blalalala');
+        $("#addGroupName").typeahead({
+            minLength: 1,
+            source: function (query, process) {
+                var groups = [];
+                map = {};
+
+                // This is going to make an HTTP post request to the controller
+                return $.post('@Url.Action("GetGroupsNamesList", "Group")', { query: query }, function (data) {
+
+                    // Loop through and push to the array
+                    $.each(data, function (i, group) {
+                        //console.log("i: " + i);
+                        map[group.Name] = group;
+                        groups.push(group.Name);
+                    });
+
+                    // Process the details
+                    process(groups);
+                });
+            },
+            updater: function (item) {
+                console.log('item: ' + item);
+                var gId = map[item].GroupId;
+
+                // Set the text to our selected id
+                $("#addGroupGid").val(gId);
+                return item;
+            }
+        });
+    });
+
+
+</script>
+
+
+<style>
+    .form-horizontal .control-label {
+        text-align: left !important;
+    }
+
+    .userCss {
+        background-color: lightblue;
+    }
+
+    .groupCss {
+        background-color: lightseagreen;
+    }
+</style>
