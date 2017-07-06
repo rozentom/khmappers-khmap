@@ -9,7 +9,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using MongoDB.Bson;
 using khmap.Models;
-using WebApplication2.Search;
+using khmap.SearchFolder;
 
 namespace khmap.Controllers
 {

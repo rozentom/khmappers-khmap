@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WebApplication2
+namespace khmap.SearchFolder
 {
     interface ISearchGroups
     {

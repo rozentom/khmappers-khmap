@@ -193,9 +193,9 @@
     </Compile>
     <Compile Include="Helpers\MyHelpers.cs" />
     <Compile Include="InitData\TestData.cs" />
-    <Compile Include="Search\ISearchGroups.cs" />
-    <Compile Include="Search\ISearchMaps.cs" />
-    <Compile Include="Search\ISearchUsers.cs" />
+    <Compile Include="SearchFolder\ISearchGroups.cs" />
+    <Compile Include="SearchFolder\ISearchMaps.cs" />
+    <Compile Include="SearchFolder\ISearchUsers.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Comment.cs" />
     <Compile Include="Models\Context.cs" />
@@ -211,10 +211,10 @@
     <Compile Include="Models\Reference.cs" />
     <Compile Include="Models\SearchViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="Search\Search.cs" />
-    <Compile Include="Search\SearchGroups.cs" />
-    <Compile Include="Search\SearchMaps.cs" />
-    <Compile Include="Search\SearchUsers.cs" />
+    <Compile Include="SearchFolder\Search.cs" />
+    <Compile Include="SearchFolder\SearchGroups.cs" />
+    <Compile Include="SearchFolder\SearchMaps.cs" />
+    <Compile Include="SearchFolder\SearchUsers.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
   <ItemGroup>

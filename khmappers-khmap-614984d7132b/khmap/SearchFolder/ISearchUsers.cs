@@ -5,10 +5,10 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace WebApplication2
+namespace khmap.SearchFolder
 {
-    public interface ISearchMaps
+    public interface ISearchUsers
     {
-        IEnumerable<Map> searchMapsFunc(string text);
+        IEnumerable<ApplicationUser> SearchUsersFunc(string userName);
     }
 }

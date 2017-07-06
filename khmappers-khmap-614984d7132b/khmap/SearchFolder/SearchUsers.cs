@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace WebApplication2
+namespace khmap.SearchFolder
 {
     public class SearchUsers : ISearchUsers
     {

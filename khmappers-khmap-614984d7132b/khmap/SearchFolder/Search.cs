@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Web;
 
-namespace WebApplication2.Search
+namespace khmap.SearchFolder
 {
     public class Search
     {
