@@ -291,6 +291,46 @@ namespace khmap.Controllers
                 return RedirectToAction("Index", "Home");
             }
         }
+        
+        public ActionResult MyFoundMaps(IEnumerable<Map> foundMaps)
+        {
+            try
+            {
+                //gettign intersection between created maps and found maps
+                var id = User.Identity.GetUserId();
+                ObjectId oId = new ObjectId(id);
+                var mapsByUser = _mapManager.GetMapsByCreatorId(oId);
+                var userFoundMaps = foundMaps.Intersect(mapsByUser, new MapComparer());
+
+                /*getting intesection between shared maps and found maps
+
+                id = User.Identity.GetUserId();
+                oId = new ObjectId(id);
+                mapsByUser = _mapManager.GetSharedMapsById(oId);
+
+                GroupController gc = new GroupController();
+                var groups = gc.GetGroupsByUserId(id);
+                var mapsByGroups = _mapManager.GetAllMapContainsGroupsNotOwned(id, groups);
+
+                var sharedMaps = mapsByUser.Union(mapsByGroups, new MapComparer());
+
+                sharedMaps = sharedMaps.Intersect(foundMaps);
+
+                //getting the union between shared found maps and created found maps
+                
+                var maps = userFoundMaps.Union(sharedMaps, new MapComparer());
+                */
+                var maps = userFoundMaps;
+
+
+
+                return PartialView("_MyMapsView", maps);
+            }
+            catch (Exception)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+        }
 
         public ActionResult MySharedMaps()
         {
