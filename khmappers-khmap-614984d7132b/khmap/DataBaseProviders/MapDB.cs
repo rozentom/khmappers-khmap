@@ -89,6 +89,14 @@ namespace khmap.DataBaseProviders
                 {
                     maps.Add(item);
                 }
+                var nodes = item.Model["nodeDataArray"];
+                foreach(var node in nodes.AsBsonArray)
+                {
+                    if (node["text"].ToString().Contains(mapName.ToLower())  && !maps.Contains(item))
+                    {
+                        maps.Add(item);
+                    }
+                }
             }
             return maps;
         }
