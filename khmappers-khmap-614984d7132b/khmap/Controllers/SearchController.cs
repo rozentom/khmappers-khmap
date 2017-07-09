@@ -21,7 +21,7 @@ namespace khmap.Controllers
         private UserDB _userService;
         private GroupDB _groupManager;
         private ApplicationUserManager _userManager;
-        private Search _searchObj;
+        private ISearch _searchObj;
 
         public SearchController()
         {
@@ -48,9 +48,18 @@ namespace khmap.Controllers
         public ActionResult Index(string text)
         {
             SearchViewModel svm = new SearchViewModel();
-            svm.Maps = _mapManager.SearchMap(text);
-            svm.Groups = _groupManager.SearchGroup(text);
-            svm.Users = _userService.SearchUser(text);
+
+
+            //-------the way it was------
+            //svm.Maps = _mapManager.SearchMap(text);
+            //svm.Groups = _groupManager.SearchGroup(text);
+            //svm.Users = _userService.SearchUser(text);
+            //-------searhching combined------
+            //Dictionary<ISearchType, Object> results = _searchObj.searchFunc(text, new List<ISearchType> { new SearchGroups(), new SearchMaps(), new SearchUsers() });
+            //svm.Maps = _searchObj.getMapsOfResult(results);
+            //svm.Groups = _searchObj.getGroupsOfResult(results);
+            //svm.Users = _searchObj.getUsersOfResult(results);
+
             svm.Maps = _searchObj.searchMaps(text);
             svm.Groups = _searchObj.searchGroups(text);
             svm.Users = _searchObj.searchUsers(text);

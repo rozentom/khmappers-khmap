@@ -8,7 +8,7 @@ using System.Web;
 
 namespace khmap.SearchFolder
 {
-    public class SearchMaps : ISearchMaps
+    public class SearchMaps : ISearchMaps, ISearchType
     {
         IEnumerable<Map> _allMaps;
         private MapDB _mapManager;
@@ -18,6 +18,21 @@ namespace khmap.SearchFolder
             _mapManager = new MapDB(new Settings());
             _allMaps = _mapManager.GetAllMaps();
         }
+
+        public bool sameType(ISearchType st)
+        {
+            if(st is SearchMaps)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public object search(string text)
+        {
+            return searchMapsFunc(text);
+        }
+
         public IEnumerable<Map> searchMapsFunc(string mapName)
         {
             List<Map> maps = new List<Map>();

@@ -7,7 +7,7 @@ using System.Web;
 
 namespace khmap.SearchFolder
 {
-    public class SearchUsers : ISearchUsers
+    public class SearchUsers : ISearchUsers, ISearchType
     {
         IEnumerable<ApplicationUser> _allUsers;
         private UserDB _userManeger;
@@ -17,6 +17,21 @@ namespace khmap.SearchFolder
             _userManeger = new UserDB(new Settings());
             _allUsers = _userManeger.GetAllUsers();
         }
+
+        public bool sameType(ISearchType st)
+        {
+            if (st is SearchUsers)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public object search(string text)
+        {
+            return SearchUsersFunc(text);
+        }
+
         public IEnumerable<ApplicationUser> SearchUsersFunc(string userName)
         {
             List<ApplicationUser> users = new List<ApplicationUser>();

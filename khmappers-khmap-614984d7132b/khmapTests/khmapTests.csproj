@@ -68,9 +68,10 @@
     </Otherwise>
   </Choose>
   <ItemGroup>
-    <Compile Include="GroupDbTest.cs" />
+    <Compile Include="UnitTests\GroupDbTest.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="UserDbTest.cs" />
+    <Compile Include="UnitTests\SearchUnitTest.cs" />
+    <Compile Include="UnitTests\UserDbTest.cs" />
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\khmap\khmap.csproj">

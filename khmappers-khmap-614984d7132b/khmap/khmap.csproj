@@ -193,6 +193,7 @@
     </Compile>
     <Compile Include="Helpers\MyHelpers.cs" />
     <Compile Include="InitData\TestData.cs" />
+    <Compile Include="SearchFolder\ISearch.cs" />
     <Compile Include="SearchFolder\ISearchGroups.cs" />
     <Compile Include="SearchFolder\ISearchMaps.cs" />
     <Compile Include="SearchFolder\ISearchUsers.cs" />
@@ -214,6 +215,7 @@
     <Compile Include="SearchFolder\Search.cs" />
     <Compile Include="SearchFolder\SearchGroups.cs" />
     <Compile Include="SearchFolder\SearchMaps.cs" />
+    <Compile Include="SearchFolder\ISearchType.cs" />
     <Compile Include="SearchFolder\SearchUsers.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>

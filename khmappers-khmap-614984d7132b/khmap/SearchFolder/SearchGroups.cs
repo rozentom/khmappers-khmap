@@ -7,7 +7,7 @@ using System.Web;
 
 namespace khmap.SearchFolder
 {
-    public class SearchGroups : ISearchGroups
+    public class SearchGroups : ISearchGroups, ISearchType
     {
         private IEnumerable<Group> _allGroups;
         private GroupDB _groupsManeger;
@@ -16,6 +16,21 @@ namespace khmap.SearchFolder
             _groupsManeger = new GroupDB(new Settings());
             _allGroups = _groupsManeger.GetAllGroups();
         }
+
+        public bool sameType(ISearchType st)
+        {
+            if(st is SearchGroups)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public object search(string text)
+        {
+            return SearchGroupsFunc(text);
+        }
+
         public IEnumerable<Group> SearchGroupsFunc(string groupName)
         {
             List<Group> groups = new List<Group>();
