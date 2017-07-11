@@ -1,0 +1,127 @@
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\WebApplication2.dll.config
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\WebApplication2.dll
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\WebApplication2.pdb
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Http.dll
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Mvc.dll
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Net.Http.Formatting.dll
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.AspNet.Identity.Core.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\MongoDB.Bson.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\MongoDB.Driver.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Http.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Helpers.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Optimization.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.Razor.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.WebPages.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.WebPages.Deployment.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Web.WebPages.Razor.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Antlr3.Runtime.pdb
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Newtonsoft.Json.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.AspNet.Identity.Owin.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.Facebook.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.Cookies.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.OAuth.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.Google.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.Twitter.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\bin\System.Net.Http.Formatting.xml
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\obj\Debug\khmap.csprojResolveAssemblyReference.cache
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\obj\Debug\WebApplication2.dll
+C:\Users\SHLOMI PAKADO\Desktop\stam\WebApplication2\obj\Debug\WebApplication2.pdb
+C:\khmap\khmap\bin\WebApplication2.dll.config
+C:\khmap\khmap\bin\WebApplication2.dll
+C:\khmap\khmap\bin\WebApplication2.pdb
+C:\khmap\khmap\bin\System.Web.Http.dll
+C:\khmap\khmap\bin\System.Web.Mvc.dll
+C:\khmap\khmap\bin\System.Net.Http.Formatting.dll
+C:\khmap\khmap\bin\Microsoft.AspNet.Identity.Core.xml
+C:\khmap\khmap\bin\MongoDB.Bson.xml
+C:\khmap\khmap\bin\MongoDB.Driver.xml
+C:\khmap\khmap\bin\System.Web.Http.xml
+C:\khmap\khmap\bin\System.Web.Helpers.xml
+C:\khmap\khmap\bin\System.Web.Optimization.xml
+C:\khmap\khmap\bin\System.Web.Razor.xml
+C:\khmap\khmap\bin\System.Web.WebPages.xml
+C:\khmap\khmap\bin\System.Web.WebPages.Deployment.xml
+C:\khmap\khmap\bin\System.Web.WebPages.Razor.xml
+C:\khmap\khmap\bin\Antlr3.Runtime.pdb
+C:\khmap\khmap\bin\Newtonsoft.Json.xml
+C:\khmap\khmap\bin\Microsoft.AspNet.Identity.Owin.xml
+C:\khmap\khmap\bin\Microsoft.Owin.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.Facebook.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.Cookies.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.OAuth.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.Google.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.Twitter.xml
+C:\khmap\khmap\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
+C:\khmap\khmap\bin\System.Net.Http.Formatting.xml
+C:\khmap\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
+C:\khmap\khmap\obj\Debug\WebApplication2.dll
+C:\khmap\khmap\obj\Debug\WebApplication2.pdb
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\WebApplication2.dll.config
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\WebApplication2.dll
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\WebApplication2.pdb
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Http.dll
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Mvc.dll
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Net.Http.Formatting.dll
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.AspNet.Identity.Core.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\MongoDB.Bson.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\MongoDB.Driver.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Http.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Helpers.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Optimization.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.Razor.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.WebPages.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.WebPages.Deployment.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Web.WebPages.Razor.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Antlr3.Runtime.pdb
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Newtonsoft.Json.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.AspNet.Identity.Owin.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.Facebook.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.Cookies.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.OAuth.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.Google.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.Twitter.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\bin\System.Net.Http.Formatting.xml
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\obj\Debug\WebApplication2.dll
+C:\Users\SHLOMI PAKADO\Desktop\repo\khmap\obj\Debug\WebApplication2.pdb
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\WebApplication2.dll.config
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\WebApplication2.dll
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\WebApplication2.pdb
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Newtonsoft.Json.dll
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Net.Http.Formatting.dll
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.AspNet.Identity.Core.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\MongoDB.Bson.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\MongoDB.Driver.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.Http.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.Helpers.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.Mvc.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.Optimization.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.Razor.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.WebPages.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.WebPages.Deployment.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Web.WebPages.Razor.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Antlr3.Runtime.pdb
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.AspNet.Identity.Owin.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Host.SystemWeb.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.Facebook.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.Cookies.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.OAuth.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.Google.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.Twitter.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\Microsoft.Owin.Security.MicrosoftAccount.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\bin\System.Net.Http.Formatting.xml
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\obj\Debug\WebApplication2.dll
+C:\Users\Tomer\Desktop\mapsShlomi\khmap\khmap\obj\Debug\WebApplication2.pdb
