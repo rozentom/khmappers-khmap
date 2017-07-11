@@ -24,6 +24,8 @@ namespace khmap.DataBaseProviders
 
         public string AddMap(Map map)
         {
+            //map.Model.AddRange(new BsonDocument { { "try", "2" } });
+
             _database.GetCollection<Map>(_collectionName).Save(map);
             return map.Id.ToString();
         }
