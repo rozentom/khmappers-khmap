@@ -1,4 +1,6 @@
 ﻿@using Microsoft.AspNet.Identity;
+@using khmap.Models;
+@model khmap.Models.Map
 @Scripts.Render("~/bundles/jquery")
 
 @{
@@ -18,8 +20,9 @@
             @Html.ActionLink(" New Map", "LaunchMap5", "Map", null, new { @class = "btn btn-primary" })
         </div>
         <div class="pull-right">
-            <button type="button" id="newFolder" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="New Folder" onclick="addNewFolder(ViewBag.folderID)"><i class="btn btn-primary"></i></button>
-            @*should add here the new directory button*@
+            <i type="button" id="newFolder" class="btn btn-primary" data-toggle="modal" data-target="#loginModal"">Add Folder</i>
+        
+    @*should add here the new directory button*@
         </div>
         <ul class="nav nav-tabs" id="MapTab">
             <li role="presentation" class="active"><a href="#MapAndFolderView" aria-controls="MapAndFolderView" role="tab" data-toggle="tab">My Folders</a></li>
@@ -60,15 +63,65 @@
     </div>
 </div>
 
-
+<div class="modal fade" tabindex="-1" id="loginModal"
+     data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+                <h4 class="modal-title">Add New Folder</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group" style="display:none">
+                        <label for="folderID">folderID</label>
+                        <input class="form-control" placeholder="folderID"
+                               type="text" id="folderID" value="@ViewBag.folderID"/>
+                    </div>
+                    <div class="form-group">
+                        <label for="folderName">Folder Name</label>
+                        <input class="form-control" placeholder="Folder Name"
+                               type="text" id="folderName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="folderDescription">Folder Name</label>
+                        <input class="form-control" placeholder="Folder Description"
+                               type="text" id="folderDescription" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="addNewFolder()">Add</button>
+                <button type="button" class="btn btn-primary"
+                        data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 <script>
-    function addNewFolder(folderID)
-        {
-        $('#saveMapModal').modal('show');
-        $('#saveNewMap').find('input#Model').val(currentModel);
+    function addNewFolder(){
+        var folderName = $('#folderName').val();
+        var folderDescription = $('#folderDescription').val();
+        var folderID = $('#folderID').val();
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("addNewFolder", "MapFolder")',
 
-        };
+            data: { parentID: folderID, folderName: folderName, folderDescription: folderDescription },
+            success: function () {
+                window.location.href = '/Home/Index/' + folderID;
+            },
+            error: function () {
+                $("#loginModal").modal('hide');
+                alert("Save Failed!");
+            }
+        });
+    }
 
 </script>
 

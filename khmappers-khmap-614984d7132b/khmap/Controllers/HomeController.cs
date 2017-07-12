@@ -10,6 +10,7 @@ using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Owin;
 using MongoDB.Bson;
+using khmap.DataBaseProviders;
 
 namespace khmap.Controllers
 {
@@ -38,6 +39,16 @@ namespace khmap.Controllers
             if (id!=null)
             {
                 ViewBag.folderID = new ObjectId(id);
+            }
+            else
+            {
+                ObjectId userID = new ObjectId(User.Identity.GetUserId());
+                var supFolder = new MapFolderDB(new Settings()).GetSuperiorMapFolderOfUser(userID);
+                if (supFolder != null)
+                {
+                    ObjectId fId = supFolder.Id;
+                    ViewBag.folderID = fId;
+                }
             }
             return View();
         }

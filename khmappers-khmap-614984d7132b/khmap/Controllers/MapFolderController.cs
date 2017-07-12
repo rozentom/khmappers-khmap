@@ -150,15 +150,17 @@ namespace khmap.Controllers
         public ActionResult OpenFolder(string Id)
         {
 
-            //var id = User.Identity.GetUserId();
+            string userIdAsString = User.Identity.GetUserId();
+            ObjectId userObjectID = new ObjectId(userIdAsString);
             // ObjectId FolderId = new ObjectId(toOpenId);
             //var FolderId = new ObjectId(Id);
             //var parent = this._mapFolderDataManager.GetMapFolderById(FolderId);
-            var parent = STATIC_FOLDER;
+            ObjectId parentID = new ObjectId(Id);
+            var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
             //MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUser(UserId);
-            //var mapFolders = this._mapFolderDataManager.GetAllSubFolder(superiorMapFolder);
             var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
-            mapFolders = new List<MapFolder>() { STATIC_INNER_FOLDER };
+            //var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
+            //mapFolders = new List<MapFolder>();
             var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
             ViewBag.maps = maps;
             //return "y u no work";
@@ -166,6 +168,39 @@ namespace khmap.Controllers
 
         }
 
+        public void addNewFolder(string parentID, string folderName, string folderDescription)
+        {
+            MapFolderDB folderManeger = new MapFolderDB(new Settings());
+            var id = User.Identity.GetUserId();
+            ObjectId UserId = new ObjectId(id);
+            if (parentID == null)
+            {
+                parentID = folderManeger.GetSuperiorMapFolderOfUser(UserId).Id.ToString();
+            }
+            _mapFolderDataManager = new MapFolderDB(new Settings());
+
+
+            MapPermissions mapPermissions = new MapPermissions();
+            mapPermissions.Owner = new KeyValuePair<ObjectId, MapPermissionType>(UserId, MapPermissionType.RW);
+            mapPermissions.Users = new Dictionary<ObjectId, MapPermissionType>();
+            mapPermissions.Groups = new Dictionary<ObjectId, MapPermissionType>();
+            mapPermissions.AllUsers = MapPermissionType.NA;
+
+            mapPermissions.Users.Add(UserId, MapPermissionType.RW);
+
+            MapFolder folder = new MapFolder();
+            folder.Name = folderName;
+            folder.Creator = UserId;
+            folder.CreationTime = DateTime.Now;
+            folder.Description = folderDescription;
+            folder.Followers = new HashSet<ObjectId>();
+            folder.Permissions = mapPermissions;
+            folder.idOfMapsInFolder = new HashSet<ObjectId>();
+            folder.idOfSubFolders = new HashSet<ObjectId>();
+            folder.ParentDierctory = new ObjectId(parentID);
+            MapFolder parentDir = folderManeger.GetMapFolderById(folder.ParentDierctory);
+            folderManeger.AddSubFolder(parentDir, folder);
+        }
 
         public ActionResult Delete(string id)
         {

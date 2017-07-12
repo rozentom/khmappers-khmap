@@ -94,6 +94,7 @@ namespace khmap.DataBaseProviders
             return mapFoldersList;
         }
 
+
         public IEnumerable<Map> GetAllMapsInFolder(MapFolder parent)
         {
             try

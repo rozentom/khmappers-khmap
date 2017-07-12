@@ -520,6 +520,7 @@
     <Content Include="Views\MapFolder\_MyFoldersView.cshtml" />
     <Content Include="Views\MapFolder\Index.cshtml" />
     <Content Include="Views\MapFolder\OpenFolder.cshtml" />
+    <Content Include="Views\Home\_SaveMap.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
