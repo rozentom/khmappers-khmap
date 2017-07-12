@@ -182,7 +182,7 @@ namespace khmap.Controllers
             MapFolderDB folderManeger = new MapFolderDB(new Settings());
             var id = User.Identity.GetUserId();
             ObjectId UserId = new ObjectId(id);
-            if (parentID == null)
+            if (parentID == null || parentID.Equals(""))
             {
                 parentID = folderManeger.GetSuperiorMapFolderOfUser(UserId).Id.ToString();
             }
