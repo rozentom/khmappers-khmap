@@ -157,6 +157,8 @@ namespace khmap.Controllers
             //var parent = this._mapFolderDataManager.GetMapFolderById(FolderId);
             ObjectId parentID = new ObjectId(Id);
             var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
+            ObjectId prevFolderID = parent.ParentDierctory;
+            var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
             //MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUser(UserId);
             var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
             //var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
@@ -164,6 +166,13 @@ namespace khmap.Controllers
             var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
             ViewBag.maps = maps;
             //return "y u no work";
+            ViewBag.prevFolder = prevFolder;
+            if (prevFolder != null)
+            {
+                List<MapFolder> prevFOlderInList = new List<MapFolder>() { prevFolder };
+                mapFolders = prevFOlderInList.Union(mapFolders);
+                List<MapFolder> viewList = mapFolders.ToList();
+            }
             return PartialView("_MyFoldersView", mapFolders);
 
         }
