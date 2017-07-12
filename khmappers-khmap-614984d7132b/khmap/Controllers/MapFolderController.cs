@@ -165,8 +165,17 @@ namespace khmap.Controllers
             //mapFolders = new List<MapFolder>();
             var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
             ViewBag.maps = maps;
-            //return "y u no work";
+            ViewBag.currFolder = parent;
+            ViewBag.currFolderID = parent.Id;
             ViewBag.prevFolder = prevFolder;
+            if (prevFolder == null)
+            {
+                ViewBag.prevFolderID = null;
+            }
+            else
+            {
+                ViewBag.prevFolderID = prevFolder.Id;
+            }
             if (prevFolder != null)
             {
                 List<MapFolder> prevFOlderInList = new List<MapFolder>() { prevFolder };
@@ -211,14 +220,38 @@ namespace khmap.Controllers
             folderManeger.AddSubFolder(parentDir, folder);
         }
 
+        public void deleteFolder(string currFolder)
+        {
+            MapFolderDB folderManeger = new MapFolderDB(new Settings());
+            ObjectId currFolderID = new ObjectId(currFolder);
+            MapFolder currentFolder = folderManeger.GetMapFolderById(currFolderID);
+            ObjectId prevFolderID = currentFolder.ParentDierctory;
+            MapFolder prevFolder = folderManeger.GetMapFolderById(prevFolderID);
+            foreach(ObjectId objID in prevFolder.idOfSubFolders)
+            {
+                if (currFolderID.Equals(objID))
+                {
+                    currFolderID = objID;
+                }
+            }
+            prevFolder.idOfSubFolders.Remove(currFolderID);
+            folderManeger.UpdateMapFolder(prevFolder);
+            folderManeger.RemoveMapFolderById(currFolderID);
+            ViewBag.go2 = prevFolderID.ToString();
+        }
+
         public ActionResult Delete(string id)
         {
             try
             {
+                // deleteFolder(id);
+                ViewBag.folderID = id;
+                var folder = new MapFolderDB(new Settings()).GetMapFolderById(new ObjectId(id));
+                ViewBag.prevFolderID = folder.ParentDierctory.ToString();
                 var map = this._mapFolderDataManager.GetMapFolderById(new ObjectId(id));
                 if (IsValidId(id) && IsValidMap(map) )
                 {
-                    var mdvm = new MapDeleteViewModel { Id = map.Id.ToString(), Name = map.Name, CreatorEmail = _userManager.GetEmail(map.Creator.ToString()), CreationTime = map.CreationTime, Description = map.Description };
+                    var mdvm = new MapDeleteViewModel { Id = map.Id.ToString(), Name = map.Name, CreatorEmail = "", CreationTime = map.CreationTime, Description = map.Description };
                     return View(mdvm);
                 }
             }
