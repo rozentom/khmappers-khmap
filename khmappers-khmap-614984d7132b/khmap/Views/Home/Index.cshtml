@@ -26,21 +26,34 @@
         </div>
         <ul class="nav nav-tabs" id="MapTab">
             <li role="presentation" class="active"><a href="#MapAndFolderView" aria-controls="MapAndFolderView" role="tab" data-toggle="tab">My Folders</a></li>
+            <li role="presentation"><a href="#shared" aria-controls="shared" role="tab" data-toggle="tab">My Shared Folders</a></li>
+        @*
             <li role="presentation"><a href="#MyMaps" aria-controls="MyMaps" role="tab" data-toggle="tab">My Maps</a></li>
             <li role="presentation"><a href="#SharedMaps" aria-controls="SharedMaps" role="tab" data-toggle="tab">Shared Maps</a></li>
+        *@
         </ul>
         <div class="tab-content" id="UsersView" style="max-height:220px;overflow-y:auto;">
-            @if (ViewBag.folderID == null)
+            @if (ViewBag.ownedFolderID == null)
             {
                 <div role="tabpanel" class="tab-pane active" id="MapAndFolderView">@{ Html.RenderAction("MyFirstMapAndFolders", "MapFolder"); }</div>
             }
             else
             {
-                <div role="tabpanel" class="tab-pane active" id="MapAndFolderView">@{ Html.RenderAction("OpenFolder", "MapFolder", new {id = ViewBag.folderID }); }</div>
+                <div role="tabpanel" class="tab-pane active" id="MapAndFolderView">@{ Html.RenderAction("OpenFolder", "MapFolder", new {id = ViewBag.ownedFolderID }); }</div>
             }
-            <div role="tabpanel" class="tab-pane" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
+            @if (ViewBag.sharedFolderID == null)
+            {
+                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("MyFirstMapAndFoldersShared", "MapFolder"); }</div>
+            }
+            else
+            {
+                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("OpenFolder", "MapFolder", new {id = ViewBag.sharedFolderID }); }</div>
+            }
+            @*
+    <div role="tabpanel" class="tab-pane" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
 
-            <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
+    <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
+            *@
         </div>
     </div>
 </div>
@@ -78,7 +91,12 @@
                     <div class="form-group" style="display:none">
                         <label for="folderID">folderID</label>
                         <input class="form-control" placeholder="folderID"
-                               type="text" id="folderID" value="@ViewBag.folderID"/>
+                               type="text" id="folderID" value="@ViewBag.ownedFolderID"/>
+                    </div>
+                    <div class="form-group" style="display:none">
+                        <label for="sharedFolderID">sharedFolderID</label>
+                        <input class="form-control" placeholder="sharedFolderID"
+                               type="text" id="sharedFolderID" value="@ViewBag.sharedFolderID" />
                     </div>
                     <div class="form-group">
                         <label for="folderName">Folder Name</label>
@@ -107,7 +125,18 @@
     function addNewFolder(){
         var folderName = $('#folderName').val();
         var folderDescription = $('#folderDescription').val();
-        var folderID = $('#folderID').val();
+        var ownedFolderID = $('#folderID').val();
+        var sharedFolderID = $('#sharedFolderID').val();
+        var folderID = null;
+
+        var activeTabs = $('.nav-tabs .active').text();
+        if (activeTabs.includes("My Shared Folders")) {
+            folderID = sharedFolderID;
+        }
+        else {
+            folderID = ownedFolderID;
+        }
+
         $.ajax({
             type: "POST",
             url: '@Url.Action("addNewFolder", "MapFolder")',

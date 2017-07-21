@@ -16,8 +16,14 @@ namespace khmap.Controllers
         private ApplicationUserManager _userManager;
         private MapDB _mapDataManager;
         private GroupDB _groupManager;
-        public static MapFolder STATIC_FOLDER;
-        public static MapFolder STATIC_INNER_FOLDER;
+        //public static MapFolder STATIC_FOLDER;
+        //public static MapFolder STATIC_INNER_FOLDER;
+
+        public static string OWNED_SUPIRIOR = SharedCodedData.OWNED_SUPIRIOR;
+        public static string SHARED_SUPIRIOR = SharedCodedData.SHARED_SUPIRIOR;
+        public static string NOT_SUPIRIOR_BUT_SHARED = SharedCodedData.NOT_SUPIRIOR_BUT_SHARED;
+        public static string NOT_SUPIRIOR_BUT_OWNED = SharedCodedData.NOT_SUPIRIOR_BUT_OWNED;
+
 
 
         public MapFolderController()
@@ -61,7 +67,7 @@ namespace khmap.Controllers
              toadd.Creator = UserId;
          }**/
 
-       private MapFolder createSuppFolderLocaly()
+       private MapFolder createSuppFolderLocaly(string whichSupp)
         {
             _mapFolderDataManager = new MapFolderDB(new Settings());
 
@@ -77,16 +83,17 @@ namespace khmap.Controllers
             mapPermissions.Users.Add(UserId, MapPermissionType.RW);
 
             MapFolder suppFolder = new MapFolder();
-            suppFolder.Name = "suppFolder";
+            suppFolder.Name = "suppFolder" + whichSupp;
             suppFolder.Creator = UserId;
             suppFolder.CreationTime = DateTime.Now;
-            suppFolder.Description = "Supirior Folder";
+            suppFolder.Description = "Supirior Folder "+ whichSupp;
             suppFolder.Followers = new HashSet<ObjectId>();
             suppFolder.Permissions = mapPermissions;
             suppFolder.idOfMapsInFolder = new HashSet<ObjectId>();
             suppFolder.idOfSubFolders = new HashSet<ObjectId>();
             suppFolder.ParentDierctory = new ObjectId();
             suppFolder.FirstFolderOfUser = UserId;
+            suppFolder.Model = new BsonDocument { { "type", whichSupp } };
             var maps = new MapDB(new Settings()).GetAllMaps();
             foreach (Map map in maps)
             {
@@ -102,10 +109,10 @@ namespace khmap.Controllers
             {
                 var id = User.Identity.GetUserId();
                 ObjectId UserId = new ObjectId(id);
-                MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUser(UserId);
+                MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(UserId);
                 if(superiorMapFolder == null)
                 {
-                    superiorMapFolder = createSuppFolderLocaly();
+                    superiorMapFolder = createSuppFolderLocaly(OWNED_SUPIRIOR);
                     _mapFolderDataManager.AddFolder(superiorMapFolder);
                 }
                 var mapFolders = this._mapFolderDataManager.GetAllSubFolder(superiorMapFolder);
@@ -113,25 +120,6 @@ namespace khmap.Controllers
                 //var mapFolders = this._mapFolderDataManager.GetFirstFoldersOfUser(UserId);
                 var maps = this._mapFolderDataManager.GetAllMapsInFolder(superiorMapFolder);
                 _mapDataManager = new MapDB(new Settings());
-                //var maps = _mapDataManager.GetAllMaps();
-                //MapFolder tempSingleFolder = new MapFolder();
-                //tempSingleFolder.Name = "try plz work";
-                //ObjectId mapID = maps.First().Id;
-                //tempSingleFolder.idOfMapsInFolder = new HashSet<ObjectId>();
-                //tempSingleFolder.idOfMapsInFolder.Add(mapID);
-                //MapFolder innerFolder = new MapFolder();
-                //innerFolder.Name = "inner";
-                //innerFolder.idOfMapsInFolder = new HashSet<ObjectId>();
-                //innerFolder.idOfMapsInFolder.Add(mapID);
-                //string innerFolderId = maps.First().Id.ToString().Substring(1);
-                //innerFolder.Id = new ObjectId("6" + innerFolderId);
-                //tempSingleFolder.idOfSubFolders = new HashSet<ObjectId>();
-                //tempSingleFolder.idOfSubFolders.Add(innerFolder.Id);
-                //tempSingleFolder.Id = new ObjectId("7" + innerFolderId);
-                //List<MapFolder> tempFolders = new List<MapFolder>() { tempSingleFolder };
-                //ViewBag.maps = new List<Map>();
-                //STATIC_FOLDER = tempSingleFolder;
-                //STATIC_INNER_FOLDER = innerFolder;
                 ViewBag.maps = maps;
                 ViewBag.currFolder = superiorMapFolder;
                 return PartialView("_MyFoldersView", mapFolders);
@@ -147,11 +135,46 @@ namespace khmap.Controllers
             }
         }
 
+
+        public ActionResult MyFirstMapAndFoldersShared()
+        {
+            try
+            {
+                var id = User.Identity.GetUserId();
+                ObjectId UserId = new ObjectId(id);
+                MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(UserId);
+                if (superiorMapFolder == null)
+                {
+                    superiorMapFolder = createSuppFolderLocaly(SHARED_SUPIRIOR);
+                    _mapFolderDataManager.AddFolder(superiorMapFolder);
+                }
+                var mapFolders = this._mapFolderDataManager.GetAllSubFolder(superiorMapFolder);
+
+                //var mapFolders = this._mapFolderDataManager.GetFirstFoldersOfUser(UserId);
+                var maps = this._mapFolderDataManager.GetAllMapsInFolder(superiorMapFolder);
+                _mapDataManager = new MapDB(new Settings());
+                ViewBag.maps = maps;
+                ViewBag.currFolder = superiorMapFolder;
+                return PartialView("_MyFoldersView", mapFolders);
+            }
+            catch (Exception e)
+            {
+                string exp = e.ToString();
+                //return RedirectToAction("Index", "Home");
+                _mapDataManager = new MapDB(new Settings());
+                ViewBag.maps = _mapDataManager.GetAllMaps();
+                return PartialView("_MyFoldersView", new List<MapFolder>());
+
+            }
+        }
+
+
         public ActionResult OpenFolder(string Id)
         {
-
             string userIdAsString = User.Identity.GetUserId();
             ObjectId userObjectID = new ObjectId(userIdAsString);
+           // var folders = new MapFolderDB(new Settings()).GetFirstFoldersOfUser(userObjectID);
+
             // ObjectId FolderId = new ObjectId(toOpenId);
             //var FolderId = new ObjectId(Id);
             //var parent = this._mapFolderDataManager.GetMapFolderById(FolderId);
@@ -216,8 +239,17 @@ namespace khmap.Controllers
             folder.idOfMapsInFolder = new HashSet<ObjectId>();
             folder.idOfSubFolders = new HashSet<ObjectId>();
             folder.ParentDierctory = new ObjectId(parentID);
-            MapFolder parentDir = folderManeger.GetMapFolderById(folder.ParentDierctory);
-            folderManeger.AddSubFolder(parentDir, folder);
+            MapFolder parentFolder = folderManeger.GetMapFolderById(folder.ParentDierctory);
+            if ((parentFolder.Model["type"]).Equals("sharedSup") || (parentFolder.Model["type"]).Equals("shared"))
+            {
+                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_SHARED } };
+            }
+            else
+            {
+                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_OWNED } };
+
+            }
+            folderManeger.AddSubFolder(parentFolder, folder);
         }
 
         public void deleteFolder(string currFolder)
@@ -276,5 +308,7 @@ namespace khmap.Controllers
         {
             return folder != null;
         }
+
+
     }
 }

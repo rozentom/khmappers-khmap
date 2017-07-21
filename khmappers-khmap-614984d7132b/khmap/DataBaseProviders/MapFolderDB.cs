@@ -66,6 +66,43 @@ namespace khmap.DataBaseProviders
             return supfolder;
         }
 
+        public MapFolder GetSuperiorMapFolderOfUserOwned(ObjectId userId)
+        {
+            var query = Query<MapFolder>.EQ(e => e.FirstFolderOfUser, userId);
+            var folders = GetAllMapFoldersOfUser(userId);
+            MapFolder supfolder = null;
+            foreach (MapFolder mf in folders)
+            {
+                if ((mf.Model["type"]).Equals(SharedCodedData.OWNED_SUPIRIOR))
+                {
+                    supfolder = mf;
+                    break;
+                }
+            }
+            return supfolder;
+        }
+
+        public MapFolder GetSuperiorMapFolderOfUserShared(ObjectId userId)
+        {
+            var query = Query<MapFolder>.EQ(e => e.FirstFolderOfUser, userId);
+            //var supfolder = _database.GetCollection<MapFolder>(_collectionName).FindOne(query);
+            //if (supfolder != null)
+            //{
+            //    return new MapFolder();
+            //}   
+            var folders = GetAllMapFoldersOfUser(userId);
+            MapFolder supfolder = null;
+            foreach(MapFolder mf in folders)
+            {
+                if ((mf.Model["type"]).Equals(SharedCodedData.SHARED_SUPIRIOR))
+                {
+                    supfolder = mf;
+                    break;
+                }
+            }      
+            return supfolder;
+        }
+
         public IEnumerable<MapFolder> GetFirstFoldersOfUser(ObjectId userId)
         {
             try
