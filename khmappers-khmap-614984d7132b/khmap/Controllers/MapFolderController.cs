@@ -45,8 +45,9 @@ namespace khmap.Controllers
                     bool isFollowing = Folder.Followers.Contains(new ObjectId(userId), new IDComparer());
                     ViewBag.isFollowing = isFollowing;
                     MapPermissionController mpc = new MapPermissionController();
-                   // MapViewModel mvm = new MapViewModel { Id = map.Id, Name = map.Name, CreationTime = map.CreationTime, CreatorId = map.Creator, CreatorEmail = UserManager.GetEmail(map.Creator.ToString()), Description = map.Description, Model = map.Model, ModelArchive = map.MapsArchive };
-                    if (mpc.IsMapOwner(id, User.Identity.GetUserId()))
+                    // MapViewModel mvm = new MapViewModel { Id = map.Id, Name = map.Name, CreationTime = map.CreationTime, CreatorId = map.Creator, CreatorEmail = UserManager.GetEmail(map.Creator.ToString()), Description = map.Description, Model = map.Model, ModelArchive = map.MapsArchive };
+
+                    if (Folder.Permissions.Owner.Key.ToString().Equals(userId))
                     {
                         return View();
                     }
@@ -133,6 +134,35 @@ namespace khmap.Controllers
                 return PartialView("_MyFoldersView", new List<MapFolder>());
 
             }
+        }
+
+        public ActionResult Details(string id)
+        {
+            if (!string.IsNullOrEmpty(id))
+            {
+                MapFolderDB _mfManeger = new MapFolderDB(new Settings());
+                UserDB _userManeger = new UserDB(new Settings());
+
+                var mId = new ObjectId(id);
+                var folder = _mfManeger.GetMapFolderById(mId);
+                if (folder != null)
+                {
+                    var userId = User.Identity.GetUserId();
+                    bool isFollowing = folder.Followers.Contains(new ObjectId(userId), new IDComparer());
+                    ViewBag.isFollowing = isFollowing;
+                    FolderPermissionController fpc = new FolderPermissionController();
+                    MapViewModel mvm = new MapViewModel { Id = folder.Id, Name = folder.Name, CreationTime = folder.CreationTime, CreatorId = folder.Creator, CreatorEmail = "not supported yet"/*UserManager.GetEmail(map.Creator.ToString())*/, Description = folder.Description, Model = folder.Model, ModelArchive = null };
+                    if (fpc.IsFolderOwner(id, User.Identity.GetUserId()))
+                    {
+                        return View(mvm);
+                    }
+                    else
+                    {
+                        return View(mvm);
+                    }
+                }
+            }
+            return RedirectToAction("Index", "Home");
         }
 
 
