@@ -111,8 +111,8 @@
 <script type="text/javascript">
     var mapGroupgrid;
     function AddGroup() {
-        var mapId = '@Model.Id';
-        $("#addGroupMid").val(mapId);
+        var folderId = '@Model.Id';
+        $("#addGroupMid").val(folderId);
         $("#addGroupGid").val("");
         $("#addGroupName").val("");
         $("#addGroupPermission").val(0);
@@ -120,12 +120,12 @@
     }
     function SaveNewGroup() {
         var newGroup = {
-            MId: $("#addGroupMid").val(),
+            FId: $("#addGroupMid").val(),
             GId: $("#addGroupGid").val(),
             Permission: $("#addGroupPermission").val()
         };
         console.log(newGroup);
-        $.ajax({ url: '@Url.Action("AddMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: newGroup.GId, mapId: newGroup.MId, permission: newGroup.Permission } })
+        $.ajax({ url: '@Url.Action("AddFolderGroupPermission", "FolderPermission")', type: "POST", data: { groupId: newGroup.GId, folderId: newGroup.FId, permission: newGroup.Permission } })
             .done(function () {
                 mapGroupgrid.reload();
                 $("#AddGroupPermissionModal").modal("hide");
@@ -137,7 +137,7 @@
     }
     function EditGroup(e) {
         //console.log(e.data);
-        $("#gmid").val(e.data.record.MId);
+        $("#gmid").val(e.data.record.FId);
         $("#ggid").val(e.data.id);
         $("#gname").val(e.data.record.Name);
         $("#gpermission").val(e.data.record.Permission);
@@ -145,12 +145,12 @@
     }
     function SaveGroup() {
         var group = {
-            MId: $("#gmid").val(),
+            FId: $("#gmid").val(),
             GId: $("#ggid").val(),
             Permission: $("#gpermission").val()
         };
         console.log(group);
-        $.ajax({ url: '@Url.Action("SaveMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: group.GId, mapId: group.MId, permission: group.Permission } })
+        $.ajax({ url: '@Url.Action("SaveFolderGroupPermission", "FolderPermission")', type: "POST", data: { groupId: group.GId, folderId: group.FId, permission: group.Permission } })
             .done(function () {
                 mapGroupgrid.reload();
                 $("#groupPermissionModal").modal("hide");
@@ -161,7 +161,7 @@
             });
     }
     function RemoveGroup(e) {
-        $.ajax({ url: '@Url.Action("RemoveMapGroupPermission", "MapPermission")', type: "POST", data: { groupId: e.data.id, mapId: e.data.record.MId } })
+        $.ajax({ url: '@Url.Action("RemoveFolderGroupPermission", "FolderPermission")', type: "POST", data: { groupId: e.data.id, folderId: e.data.record.FId } })
             .done(function () {
                 mapGroupgrid.reload();
             })
