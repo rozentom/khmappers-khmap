@@ -115,6 +115,25 @@ namespace khmap.Models
         public DateTime CreationTime { get; set; }
     }
 
+    public class FolderMiniViewModel
+    {
+        [Required]
+        [Display(Name = "Folder ID")]
+        public string Id { get; set; }
+
+        [Required]
+        [Display(Name = "Folder Name")]
+        public string Name { get; set; }
+
+        [Required]
+        [Display(Name = "Creator ID")]
+        public string CreatorId { get; set; }
+
+        [Required]
+        [Display(Name = "Creation Time")]
+        public DateTime CreationTime { get; set; }
+    }
+
     public class SaveMapViewModel
     {
         [Required]
