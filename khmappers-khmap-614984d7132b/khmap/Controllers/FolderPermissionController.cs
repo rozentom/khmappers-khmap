@@ -411,10 +411,10 @@ namespace khmap.Controllers
             }
         }
 
-        public ActionResult GetGroupMapPermissions(string folderId)
+        public ActionResult GetGroupFolderPermissions(string folderId)
         {
             var folder = _folderManeger.GetMapFolderById(new ObjectId(folderId));
-            MapMiniViewModel mmvm = new MapMiniViewModel { Id = folder.Id.ToString(), Name = folder.Name, CreatorId = folder.Creator.ToString(), CreationTime = folder.CreationTime };
+            FolderMiniViewModel mmvm = new FolderMiniViewModel { Id = folder.Id.ToString(), Name = folder.Name, CreatorId = folder.Creator.ToString(), CreationTime = folder.CreationTime };
 
             if (IsFolderOwner(folderId, User.Identity.GetUserId()))
             {

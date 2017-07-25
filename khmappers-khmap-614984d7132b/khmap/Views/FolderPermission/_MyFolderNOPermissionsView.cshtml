@@ -1,4 +1,5 @@
-﻿@model khmap.Models.FolderPermissionsViewModel
+﻿
+@model khmap.Models.FolderPermissionsViewModel
 
 
 @*<div class="container-fluid fill">
@@ -17,21 +18,21 @@
                 </span>
             </div>
         </div>
-        <div class="col-md-5">
-            <button type="button" id="btnAddUser" class="btn btn-primary pull-right"><i class="fa fa-plus"></i> Add User</button>
-        </div>
+        @*<div class="col-md-5">
+                <button type="button" id="btnAddUser" class="btn btn-primary pull-right"><i class="fa fa-plus"></i> Add User</button>
+            </div>*@
     </div>
     <br />
     <div class="row">
         <div class="col-md-12">
-            <table id="mapUserGrid" class="table" data-source="@Url.Action("GetFolderUserPermissionList", "FolderPermission", new { folderId = Model.Map.Id })"></table>
+            <table id="mapUserGrid" class="table" data-source="@Url.Action("GetFolderUserPermissionList", "FolderPermission", new { folderId = Model.Folder.Id })"></table>
         </div>
     </div>
 </div>
-            @*</div>
+@*</div>
+            </div>
         </div>
-    </div>
-</div>*@
+    </div>*@
 
 
 <!-- Modal -->
@@ -114,7 +115,7 @@
 <script type="text/javascript">
     var mapUserGrid;
     function AddUser() {
-        var mapId = '@Model.Map.Id';
+        var mapId = '@Model.Folder.Id';
         $("#addUserMid").val(mapId);
         $("#addUserEmail").val("");
         $("#addUserPermission").val(0);
@@ -192,18 +193,11 @@
                 { field: "LastName", title: "Last Name", sortable: true, hidden: true },
                 { title: "Name", tmpl: "{FirstName} {LastName}", sortable: true, width: 120 },
                 { field: "Permission", title: "Permission", hidden: true },
-                { title: "Permission", tmpl: "{PermissionString}", sortable: true },
-                { title: "", field: "Edit", width: 30, align: "center", type: "icon", icon: "glyphicon-pencil", tooltip: "Edit", events: { "click": Edit } },
-                { title: "", field: "Delete", width: 30, align: "center", type: "icon", icon: "glyphicon-remove", tooltip: "Delete", events: { "click": Remove } }
+                { title: "Permission", tmpl: "{PermissionString}", sortable: true }
+                //{ title: "", field: "Edit", width: 30, align: "center", type: "icon", icon: "glyphicon-pencil", tooltip: "Edit", events: { "click": Edit } },
+                //{ title: "", field: "Delete", width: 30, align: "center", type: "icon", icon: "glyphicon-remove", tooltip: "Delete", events: { "click": Remove } }
             ],
             pager: { enable: true, limit: 5, sizes: [5, 10, 25, 50] }
-        });
-        mapUserGrid.on("cellDataBound", function (e, $wrapper, id, index, record) {
-            if (record.Email === '@Model.Owner.Key.Email') {
-                if ("Edit" === index || "Delete" === index) {
-                    $wrapper.parent().attr("hidden", true);
-                }
-            }
         });
         mapUserGrid.on("rowDataBound", function (e, $row, id, record) {
             if (record.Email === '@Model.Owner.Key.Email') {
@@ -252,11 +246,17 @@
 
 
 <style>
-    .form-horizontal .control-label{
-        text-align:left !important; 
+    .form-horizontal .control-label {
+        text-align: left !important;
     }
 
-    .ownerCss {
+    .userCss {
         background-color: lightblue;
     }
+
+    .groupCss {
+        background-color: lightseagreen;
+    }
 </style>
+
+

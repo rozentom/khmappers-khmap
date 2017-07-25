@@ -526,7 +526,10 @@
     <Content Include="Views\Home\_SaveMap.cshtml" />
     <Content Include="Views\MapFolder\Delete.cshtml" />
     <Content Include="Views\MapFolder\Details.cshtml" />
-    <Content Include="Views\MapPermission\_MyFolderPermissionsView.cshtml" />
+    <Content Include="Views\FolderPermission\_MyFolderPermissionsView.cshtml" />
+    <Content Include="Views\FolderPermission\_MapGroupPermissionsView.cshtml" />
+    <Content Include="Views\FolderPermission\_MapGroupNOPermissionsView.cshtml" />
+    <Content Include="Views\FolderPermission\_MyFolderNOPermissionsView.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
