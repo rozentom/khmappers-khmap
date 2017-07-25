@@ -115,20 +115,20 @@
 <script type="text/javascript">
     var mapUserGrid;
     function AddUser() {
-        var mapId = '@Model.Folder.Id';
-        $("#addUserMid").val(mapId);
+        var folderId = '@Model.Folder.Id';
+        $("#addUserMid").val(folderId);
         $("#addUserEmail").val("");
         $("#addUserPermission").val(0);
         $("#AddUserPermissionModal").modal("show");
     }
     function SaveNewUser() {
         var newUser = {
-            MId: $("#addUserMid").val(),
+            FId: $("#addUserMid").val(),
             Email: $("#addUserEmail").val(),
             Permission: $("#addUserPermission").val()
         };
         console.log(newUser);
-        $.ajax({ url: '@Url.Action("AddMapUserPermission", "MapPermission")', type: "POST", data: { userEmail: newUser.Email, mapId: newUser.MId, permission: newUser.Permission } })
+        $.ajax({ url: '@Url.Action("AddFolderUserPermission", "FolderPermission")', type: "POST", data: { userEmail: newUser.Email, folderId: newUser.FId, permission: newUser.Permission } })
             .done(function () {
                 mapUserGrid.reload();
                 $("#AddUserPermissionModal").modal("hide");
@@ -140,7 +140,7 @@
     }
     function Edit(e) {
         //console.log(e.data);
-        $("#mid").val(e.data.record.MId);
+        $("#mid").val(e.data.record.FId);
         $("#uid").val(e.data.id);
         $("#email").val(e.data.record.Email);
         $("#name").val(e.data.record.FirstName + ' ' + e.data.record.LastName);
@@ -149,14 +149,14 @@
     }
     function Save() {
         var user = {
-            MId: $("#mid").val(),
+            FId: $("#mid").val(),
             UId: $("#uid").val(),
             Email: $("#email").val(),
             Name: $("#name").val(),
             Permission: $("#permission").val()
         };
         console.log(user);
-        $.ajax({ url: '@Url.Action("SaveMapUserPermission", "MapPermission")', type: "POST", data: user })
+        $.ajax({ url: '@Url.Action("SaveFolderUserPermission", "FolderPermission")', type: "POST", data: user })
             .done(function () {
                 mapUserGrid.reload();
                 $("#userPermissionModal").modal("hide");
@@ -167,7 +167,7 @@
             });
     }
     function Remove(e) {
-        $.ajax({ url: '@Url.Action("RemoveMapUserPermission", "MapPermission")', type: "POST", data: { userId: e.data.id, mapId: e.data.record.MId } })
+        $.ajax({ url: '@Url.Action("RemoveFolderUserPermission", "FolderPermission")', type: "POST", data: { userId: e.data.id, folderId: e.data.record.FId } })
             .done(function () {
                 mapUserGrid.reload();
             })
