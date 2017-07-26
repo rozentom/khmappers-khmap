@@ -203,19 +203,21 @@ namespace khmap.Controllers
         {
             string userIdAsString = User.Identity.GetUserId();
             ObjectId userObjectID = new ObjectId(userIdAsString);
-           // var folders = new MapFolderDB(new Settings()).GetFirstFoldersOfUser(userObjectID);
-
-            // ObjectId FolderId = new ObjectId(toOpenId);
-            //var FolderId = new ObjectId(Id);
-            //var parent = this._mapFolderDataManager.GetMapFolderById(FolderId);
             ObjectId parentID = new ObjectId(Id);
             var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
+            if(parent.Model["type"].Equals(SharedCodedData.OWNED_SUPIRIOR))
+            {
+                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(userObjectID);
+                parentID = parent.Id;
+            }
+            if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
+            {
+                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
+                parentID = parent.Id;
+            }
             ObjectId prevFolderID = parent.ParentDierctory;
             var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
-            //MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUser(UserId);
             var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
-            //var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
-            //mapFolders = new List<MapFolder>();
             var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
             ViewBag.maps = maps;
             ViewBag.currFolder = parent;
