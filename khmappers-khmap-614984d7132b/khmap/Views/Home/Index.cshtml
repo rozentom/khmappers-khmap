@@ -47,7 +47,7 @@
             }
             else
             {
-                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("OpenFolder", "MapFolder", new {id = ViewBag.sharedFolderID }); }</div>
+                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("OpenFolderShared", "MapFolder", new {id = ViewBag.sharedFolderID }); }</div>
             }
             
     <div role="tabpanel" class="tab-pane" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
