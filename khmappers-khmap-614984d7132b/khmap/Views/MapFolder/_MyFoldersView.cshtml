@@ -63,7 +63,7 @@
                         <i class="fa fa-sitemap"></i>
                     </td>
                     <td class="col-md-9">
-                        @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id }, new { title = "Load " + map.Name })
+                        @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null"}, new { title = "Load " + map.Name })
                     </td>
 
                     <td class="col-md-2">

@@ -17,7 +17,7 @@
     <div class="span12 well" style="height:320px;padding-top:5px;" role="tabpanel">
         <h4>@name's Maps and Folders</h4>
         <div class="pull-right">
-            @Html.ActionLink(" New Map", "LaunchMap5", "Map", null, new { @class = "btn btn-primary" })
+            @Html.ActionLink(" New Map", "LaunchMap5", "Map", new { currentFolderID = ViewBag.ownedFolderID }, new { @class = "btn btn-primary" })
         </div>
         <div class="pull-right">
             <i type="button" id="newFolder" class="btn btn-primary" data-toggle="modal" data-target="#loginModal"">Add Folder</i>

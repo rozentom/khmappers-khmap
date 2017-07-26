@@ -24,11 +24,14 @@ namespace khmap.Controllers
         private MapDB _mapManager;
         private GroupDB _groupManager;
         private ApplicationUserManager _userManager;
+        private MapFolderDB _folderManeger;
+        private static string _currentFolderID;
 
         public MapController()
         {
             this._mapManager = new MapDB(new Settings());
             this._groupManager = new GroupDB(new Settings());
+            this._folderManeger = new MapFolderDB(new Settings());
         }
 
         public ApplicationUserManager UserManager
@@ -103,6 +106,12 @@ namespace khmap.Controllers
                 Map map = new Map { Name = newMapModel.Name, Creator = oId, CreationTime = DateTime.Now, Description = newMapModel.Description, Model = bMapModel, Permissions = mapPermissions, MapsArchive = versions, Followers = new HashSet<ObjectId>() };
                 var mId = _mapManager.AddMap(map);
 
+                ObjectId mapID = new ObjectId(mId);
+                string currentFolderIdString = _currentFolderID;
+                ObjectId folderID = new ObjectId(currentFolderIdString);
+                MapFolder folder = _folderManeger.GetMapFolderById(folderID);
+                folder.idOfMapsInFolder.Add(mapID);
+                _folderManeger.UpdateMapFolder(folder);
 
                 return Json(new { mapId = mId, mapName = map.Name }, JsonRequestBehavior.AllowGet);
             }
@@ -408,8 +417,9 @@ namespace khmap.Controllers
         }
 
 
-        public ActionResult LaunchMap5(string id)
+        public ActionResult LaunchMap5(string id, string currentFolderID)
         {
+            _currentFolderID = currentFolderID;
             if (id != null && !_mapManager.IsMapExist(new ObjectId(id)))
             {
                 return RedirectToAction("index", "Home");
