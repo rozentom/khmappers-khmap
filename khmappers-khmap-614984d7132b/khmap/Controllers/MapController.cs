@@ -251,10 +251,11 @@ namespace khmap.Controllers
         }
 
         // GET: Map/Delete/5
-        public ActionResult Delete(string id)
+        public ActionResult Delete(string id, string currFolderID)
         {
             try
             {
+                _currentFolderID = currFolderID;
                 var map = _mapManager.GetMapById(new ObjectId(id));
                 if (IsValidId(id) && IsValidMap(map) && _mapManager.IsMapOwner(map.Id.ToString(), User.Identity.GetUserId()))
                 {
@@ -277,7 +278,12 @@ namespace khmap.Controllers
             try
             {
                 _mapManager.RemoveMap(new ObjectId(model.Id));
-                return RedirectToAction("Index", "Home");
+
+                var folder = _folderManeger.GetMapFolderById(new ObjectId(_currentFolderID));
+                folder.idOfMapsInFolder.Remove(new ObjectId(model.Id));
+                _folderManeger.UpdateMapFolder(folder);
+
+                return RedirectToAction("Index", "Home", new { id = _currentFolderID });
             }
             catch
             {

@@ -220,6 +220,8 @@ namespace khmap.Controllers
             ViewBag.maps = maps;
             ViewBag.currFolder = parent;
             ViewBag.currFolderID = parent.Id;
+            ViewBag.currFolderIDString = parent.Id.ToString();
+
             ViewBag.prevFolder = prevFolder;
             if (prevFolder == null)
             {

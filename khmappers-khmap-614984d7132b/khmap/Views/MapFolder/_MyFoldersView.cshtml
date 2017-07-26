@@ -71,7 +71,7 @@
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
                         {
-                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id , currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
                     </td>
                 </tr>
