@@ -344,7 +344,7 @@ namespace khmap.Controllers
                 mapFolders = prevFOlderInList.Union(mapFolders);
                 List<MapFolder> viewList = mapFolders.ToList();
             }
-            return PartialView("_MyFoldersView", mapFolders);
+            return PartialView("_MySharedFoldersView", mapFolders);
 
         }
 

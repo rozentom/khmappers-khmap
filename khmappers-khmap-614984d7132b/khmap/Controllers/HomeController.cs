@@ -69,9 +69,21 @@ namespace khmap.Controllers
         }
 
 
-        public ActionResult Index(string id)
+        public ActionResult Index(string id, string ownedOrShared)
         {
             //MailSender.SendMailMessage("khmap@bgu.ac.il", "giladsabari@gmail.com", "", "", "(do not reply)", "lalalalalala");
+            bool isOwned;
+            bool isShared;
+            if (ownedOrShared == null)
+            {
+                isOwned = false;
+                isShared = false;
+            }
+            else
+            {
+                isOwned = ownedOrShared.Equals("owned");
+                isShared = ownedOrShared.Equals("shared");
+            }
             ViewBag.ownedFolderID = null;
             MapFolderDB mapFolderManeger = new MapFolderDB(new Settings());
             bool isIdOfOwned = false;
@@ -79,7 +91,7 @@ namespace khmap.Controllers
             {
                 ObjectId oId = new ObjectId(id);
                 MapFolder mf = mapFolderManeger.GetMapFolderById(oId);
-                if((mf.Model["type"]).Equals(SharedCodedData.OWNED_SUPIRIOR) || (mf.Model["type"]).Equals(SharedCodedData.NOT_SUPIRIOR_BUT_OWNED))
+                if(isOwned)
                 {
                     ViewBag.ownedFolderID = oId;
                     isIdOfOwned = true;
@@ -110,7 +122,7 @@ namespace khmap.Controllers
             {
                 ObjectId oId = new ObjectId(id);
                 MapFolder mf = mapFolderManeger.GetMapFolderById(oId);
-                if ((mf.Model["type"]).Equals(SharedCodedData.SHARED_SUPIRIOR) || (mf.Model["type"]).Equals(SharedCodedData.NOT_SUPIRIOR_BUT_SHARED))
+                if (isShared)
                 {
                     ViewBag.sharedFolderID = oId;
                     isIdOfShared = true;

@@ -530,6 +530,7 @@
     <Content Include="Views\FolderPermission\_MapGroupPermissionsView.cshtml" />
     <Content Include="Views\FolderPermission\_MapGroupNOPermissionsView.cshtml" />
     <Content Include="Views\FolderPermission\_MyFolderNOPermissionsView.cshtml" />
+    <Content Include="Views\MapFolder\_MySharedFoldersView.cshtml" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="App_Data\" />
