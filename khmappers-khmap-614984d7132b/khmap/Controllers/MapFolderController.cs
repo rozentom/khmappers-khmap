@@ -243,6 +243,111 @@ namespace khmap.Controllers
 
         }
 
+
+        public ActionResult OpenFolderShared(string Id)
+        {
+            string userIdAsString = User.Identity.GetUserId();
+            ObjectId userObjectID = new ObjectId(userIdAsString);
+            ObjectId parentID = new ObjectId(Id);
+            var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
+            bool isCurrentFolderSupp = false;
+            if (parent.Model["type"].Equals(SharedCodedData.OWNED_SUPIRIOR))
+            {
+                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(userObjectID);
+                parentID = parent.Id;
+                isCurrentFolderSupp = true;
+            }
+            if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
+            {
+                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
+                parentID = parent.Id;
+                isCurrentFolderSupp = true;
+            }
+            ObjectId prevFolderID = parent.ParentDierctory;
+            var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
+
+            var mapFolders = _mapFolderDataManager.GetAllSubFolder(parent);
+            if (isCurrentFolderSupp)
+            {
+                mapFolders = this._mapFolderDataManager.GetAllFolders();
+            }
+            var finalMapFolders = new List<MapFolder>();
+            foreach(var mapFolder in mapFolders)
+            {
+                if (mapFolder.Id.Equals(parent.Id))
+                {
+                    continue;
+                }
+                if (mapFolder.Permissions.Owner.Key.Equals(userObjectID))
+                {
+                    continue;
+                }
+                if (mapFolder.Permissions.Users.Keys.Contains(userObjectID))
+                {
+                    finalMapFolders.Add(mapFolder);
+                }
+                else
+                {
+                    foreach(var groupId in mapFolder.Permissions.Groups.Keys)
+                    {
+                        var group = _groupManager.GetGroupById(groupId);
+                        if (group.Members.Keys.Contains(userObjectID))
+                        {
+                            finalMapFolders.Add(mapFolder);
+                        }
+                    }
+                }
+            }
+            mapFolders = finalMapFolders;
+            var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
+            var finalMaps = new List<Map>();
+            foreach (var tempMap in maps)
+            {
+                if (tempMap.Permissions.Owner.Key.Equals(userObjectID))
+                {
+                    continue;
+                }
+                if (tempMap.Permissions.Users.Keys.Contains(userObjectID))
+                {
+                    finalMaps.Add(tempMap);
+                }
+                else
+                {
+                    foreach (var groupId in tempMap.Permissions.Groups.Keys)
+                    {
+                        var group = _groupManager.GetGroupById(groupId);
+                        if (group.Members.Keys.Contains(userObjectID))
+                        {
+                            finalMaps.Add(tempMap);
+                        }
+                    }
+                }
+            }
+            maps = finalMaps;
+            ViewBag.maps = maps;
+            ViewBag.currFolder = parent;
+            ViewBag.currFolderID = parent.Id;
+            ViewBag.currFolderIDString = parent.Id.ToString();
+
+            ViewBag.prevFolder = prevFolder;
+            if (prevFolder == null)
+            {
+                ViewBag.prevFolderID = null;
+            }
+            else
+            {
+                ViewBag.prevFolderID = prevFolder.Id;
+            }
+            if (prevFolder != null)
+            {
+                List<MapFolder> prevFOlderInList = new List<MapFolder>() { prevFolder };
+                mapFolders = prevFOlderInList.Union(mapFolders);
+                List<MapFolder> viewList = mapFolders.ToList();
+            }
+            return PartialView("_MyFoldersView", mapFolders);
+
+        }
+
         public void addNewFolder(string parentID, string folderName, string folderDescription)
         {
             MapFolderDB folderManeger = new MapFolderDB(new Settings());

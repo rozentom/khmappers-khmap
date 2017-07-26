@@ -54,6 +54,12 @@ namespace khmap.DataBaseProviders
             return folders;
         }
 
+        public IEnumerable<MapFolder> GetAllFolders()
+        {
+            var folders = _database.GetCollection<MapFolder>(_collectionName).FindAll();
+            return folders;
+        }
+
         //this method return all the suprior/first mapFolders of the given user
         public MapFolder GetSuperiorMapFolderOfUser(ObjectId userId)
         {
