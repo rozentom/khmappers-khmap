@@ -94,7 +94,7 @@ namespace khmap.Controllers
             suppFolder.idOfSubFolders = new HashSet<ObjectId>();
             suppFolder.ParentDierctory = new ObjectId();
             suppFolder.FirstFolderOfUser = UserId;
-            suppFolder.Model = new BsonDocument { { "type", whichSupp } };
+            suppFolder.Model = new BsonDocument { { "type", whichSupp }, {"path", ""} };
             var maps = new MapDB(new Settings()).GetAllMaps();
             foreach (Map map in maps)
             {
@@ -379,15 +379,25 @@ namespace khmap.Controllers
             folder.idOfSubFolders = new HashSet<ObjectId>();
             folder.ParentDierctory = new ObjectId(parentID);
             MapFolder parentFolder = folderManeger.GetMapFolderById(folder.ParentDierctory);
-            if ((parentFolder.Model["type"]).Equals("sharedSup") || (parentFolder.Model["type"]).Equals("shared"))
+            string path = parentFolder.Model["path"].ToString();
+            if (path.Equals(""))
             {
-                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_SHARED } };
+                path = parentFolder.Name;
             }
             else
             {
-                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_OWNED } };
+                path = path + "/" + parentFolder.Name;
+            }
+            if ((parentFolder.Model["type"]).Equals("sharedSup") || (parentFolder.Model["type"]).Equals("shared"))
+            {
+                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_SHARED }, {"path", path} };
+            }
+            else
+            {
+                folder.Model = new BsonDocument { { "type", NOT_SUPIRIOR_BUT_OWNED }, { "path", path } };
 
             }
+
             folderManeger.AddSubFolder(parentFolder, folder);
         }
 
@@ -448,6 +458,33 @@ namespace khmap.Controllers
             return folder != null;
         }
 
+        public ActionResult GetUserFolderNames(string folderId)
+        {
+            var userID = User.Identity.GetUserId();
+            var folders = _mapFolderDataManager.GetAllMapFoldersOfUser(new ObjectId(userID));
+            var namesList = folders.Select(u => new GroupNameViewModel { GroupId = u.Id.ToString(), Name = u.Name });
+            var temp = new List<GroupNameViewModel>();
+            foreach(var name in namesList)
+            {
+                var tempFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(name.GroupId));
+                if (!name.GroupId.ToString().Equals(folderId) && !tempFolder.Model["type"].ToString().Equals(SharedCodedData.SHARED_SUPIRIOR))
+                {
+                    string path = tempFolder.Model["path"].ToString();
+                    if (path.Equals(""))
+                    {
+                        path = tempFolder.Name;
+                    }
+                    else
+                    {
+                        path = path + "/" + tempFolder.Name;
+                    }
+                    temp.Add(new GroupNameViewModel { GroupId = tempFolder.Id.ToString(), Name =  path});
+                }
+            }
+            namesList = temp;
+            return Json(namesList, JsonRequestBehavior.AllowGet);
+        }
+
         public ActionResult Edit(string id)
         {
             if (!IsValidId(id))
@@ -457,9 +494,11 @@ namespace khmap.Controllers
             try
             {
                 var folder = _mapFolderDataManager.GetMapFolderById(new ObjectId(id));
-                if (IsValidMap(folder) && folder.Permissions.Owner.Equals(User.Identity.GetUserId()))
+                var prevFolder =_mapFolderDataManager.GetMapFolderById(folder.ParentDierctory);
+                var userID = User.Identity.GetUserId();
+                if (IsValidMap(folder) && folder.Permissions.Owner.Key.ToString().Equals(userID.ToString()))
                 {
-                    var mevm = new MapEditViewModel { Id = folder.Id.ToString(), Name = folder.Name, Description = folder.Description };
+                    var mevm = new MapEditViewModel { Id = folder.Id.ToString(), Name = folder.Name, Description = folder.Description, Path = folder.Model["path"].ToString() };
                     return View(mevm);
                 }
             }
@@ -482,8 +521,31 @@ namespace khmap.Controllers
                     var folder = _mapFolderDataManager.GetMapFolderById(new ObjectId(model.Id));
                     folder.Name = model.Name;
                     folder.Description = model.Description;
-                    _mapFolderDataManager.UpdateMapFolder(folder);
-                    return RedirectToAction("Details", "MapFolder", new { id = model.Id });
+                    string path = model.Path;
+                    folder.Model["path"] = path;
+                    int index = path.LastIndexOf("/");
+                    string prevPath = path.Substring(0, index);
+                    string prevFolderName = path.Substring(index+1);
+                    var userID = User.Identity.GetUserId();
+                    var allFoldersOfUser = _mapFolderDataManager.GetAllMapFoldersOfUser(new ObjectId(userID));
+                    
+                    foreach (var tempFolder in allFoldersOfUser)//tempFolder represents the folder that MIGHT be the new prev folder
+                    {
+                        if (tempFolder.Name.Equals(prevFolderName) && prevPath.Equals(tempFolder.Model["path"].ToString()))
+                        {
+                            var prevFolder = _mapFolderDataManager.GetMapFolderById(folder.ParentDierctory);
+                            prevFolder.idOfSubFolders.Remove(folder.Id);
+                            tempFolder.idOfSubFolders.Add(folder.Id);
+                            folder.ParentDierctory = tempFolder.Id;
+                            _mapFolderDataManager.UpdateMapFolder(prevFolder);
+                            _mapFolderDataManager.UpdateMapFolder(tempFolder);
+                            _mapFolderDataManager.UpdateMapFolder(folder);
+                            return RedirectToAction("Details", "MapFolder", new { id = model.Id });
+
+                        }
+                    }
+   //                 _mapFolderDataManager.UpdateMapFolder(folder);
+     //               return RedirectToAction("Details", "MapFolder", new { id = model.Id });
                 }
                 catch
                 {

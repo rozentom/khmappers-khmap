@@ -58,7 +58,7 @@ namespace khmap.Controllers
             suppFolder.idOfSubFolders = new HashSet<ObjectId>();
             suppFolder.ParentDierctory = new ObjectId();
             suppFolder.FirstFolderOfUser = UserId;
-            suppFolder.Model = new BsonDocument { { "type", whichSupp } };
+            suppFolder.Model = new BsonDocument { { "type", whichSupp }, { "path", "" } };
             var maps = new MapDB(new Settings()).GetAllMaps();
             foreach (Map map in maps)
             {

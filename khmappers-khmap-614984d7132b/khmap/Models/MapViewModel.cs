@@ -35,6 +35,12 @@ namespace khmap.Models
         [DataType(DataType.MultilineText)]
         [Display(Name = "Description")]
         public string Description { get; set; }
+
+        [Display(Name = "Path")]
+        public string Path
+        {
+            get; set;
+        }
     }
 
     public class MapDeleteViewModel
