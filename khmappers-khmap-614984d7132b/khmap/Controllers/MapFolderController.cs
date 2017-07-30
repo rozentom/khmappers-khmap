@@ -448,6 +448,52 @@ namespace khmap.Controllers
             return folder != null;
         }
 
+        public ActionResult Edit(string id)
+        {
+            if (!IsValidId(id))
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            try
+            {
+                var folder = _mapFolderDataManager.GetMapFolderById(new ObjectId(id));
+                if (IsValidMap(folder) && folder.Permissions.Owner.Equals(User.Identity.GetUserId()))
+                {
+                    var mevm = new MapEditViewModel { Id = folder.Id.ToString(), Name = folder.Name, Description = folder.Description };
+                    return View(mevm);
+                }
+            }
+            catch (Exception)
+            {
+                return RedirectToAction("Index", "Home");
+            }
+            return RedirectToAction("Index", "Home");
+        }
+
+        // POST: Map/Edit/5
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult Edit(MapEditViewModel model)
+        {
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var folder = _mapFolderDataManager.GetMapFolderById(new ObjectId(model.Id));
+                    folder.Name = model.Name;
+                    folder.Description = model.Description;
+                    _mapFolderDataManager.UpdateMapFolder(folder);
+                    return RedirectToAction("Details", "MapFolder", new { id = model.Id });
+                }
+                catch
+                {
+                    return View(model);
+                }
+            }
+            return View(model);
+        }
+
+
 
     }
 }
