@@ -49,7 +49,7 @@
         @Html.AntiForgeryToken()
 
         <div class="form-actions no-color">
-            <i class="btn btn-danger"  onclick="deleteFolder()">Delete</i>
+            <label class="btn btn-danger"  onclick="deleteFolder()">Delete</label>
             @*<input type="submit" value="Delete" class="btn btn-danger" />*@
             @Html.ActionLink("Cancel", "Index", "Home", new { id = Model.Id.ToString() }, new { @class = "btn btn-default", title = "Cancel" })
         </div>

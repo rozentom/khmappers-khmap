@@ -23,6 +23,10 @@
                 {
                 <tr>
                     <td class="col-md-2">
+                        @if (ViewBag.prevFolder != null)
+                        {
+                           <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
+                        }
                         <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "owned" }, new { })</i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
@@ -60,11 +64,14 @@
                 <tr>
                     <td class="col-md-1">
                         @*<span class="glyphicon glyphicon-star"></span>*@
-                        <i class="fa fa-sitemap"></i>
-                    </td>
-                    <td class="col-md-9">
-                        @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null"}, new { title = "Load " + map.Name })
-                    </td>
+                        @if (ViewBag.prevFolder != null)
+                        {
+                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
+                        }
+                        <i class="fa fa-sitemap">
+                            @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null" }, new { title = "Load " + map.Name })
+                        </i>
+
 
                     <td class="col-md-2">
                         @Html.ActionLink(" ", "Index", "Map", new { id = map.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })

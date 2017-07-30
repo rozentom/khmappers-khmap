@@ -291,7 +291,7 @@ namespace khmap.Controllers
                     var userID = User.Identity.GetUserId();
                     var allFoldersOfUser = _folderManeger.GetAllMapFoldersOfUser(new ObjectId(userID));
 
-                    foreach(var folderOfMap in allFoldersOfUser)
+                    foreach (var folderOfMap in allFoldersOfUser)
                     {
                         if (folderOfMap.Name.Equals(prevFolderNameInMap) && prevFolderPathInMap.Equals(folderOfMap.Model["path"].ToString()))
                         {
