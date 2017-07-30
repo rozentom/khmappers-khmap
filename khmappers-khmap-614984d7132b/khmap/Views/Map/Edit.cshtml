@@ -30,6 +30,17 @@
             </div>
         </div>
 
+
+        <div class="form-group">
+            @Html.LabelFor(model => model.Path, htmlAttributes: new { @class = "control-label col-md-2" })
+            <div class="col-md-10">
+                @Html.TextAreaFor(model => model.Path, 3, 0, new Dictionary<string, object>() { { "id", "addGroupName" }, { "class", "form-control" }, { "style", "width:100%;" }, { "data-provide", "typeahead" } })
+                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
+            </div>
+        </div>
+
+
+
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
                 <input type="submit" value="Save" class="btn btn-primary" />
@@ -42,6 +53,45 @@
 @section Scripts {
     @Scripts.Render("~/bundles/jqueryval")
 }
+
+
+
+<script>
+
+    $(document).ready(function () {
+        console.log('blalalala');
+        $("#addGroupName").typeahead({
+            minLength: 1,
+            source: function (query, process) {
+                var groups = [];
+                map = {};
+
+                // This is going to make an HTTP post request to the controller
+                return $.post('@Url.Action("GetUserFolderNames", "MapFolder", new {folderId = Model.Id})', { query: query }, function (data) {
+
+                    // Loop through and push to the array
+                    $.each(data, function (i, group) {
+                        //console.log("i: " + i);
+                        map[group.Name] = group;
+                        groups.push(group.Name);
+                    });
+
+                    // Process the details
+                    process(groups);
+                });
+            },
+            updater: function (item) {
+                console.log('item: ' + item);
+                var gId = map[item].GroupId;
+
+                // Set the text to our selected id
+                $("#addGroupGid").val(gId);
+                return item;
+            }
+        });
+    });
+
+</script>
 
 <style>
     .form-horizontal .control-label {

@@ -99,6 +99,7 @@ namespace khmap.Controllers
 
                 BsonDocument bMapModel = BsonDocument.Parse(newMapModel.Model);
                 //BsonDocument bMapModel = mapModel.ToBsonDocument();
+                
 
                 Queue<MapVersion> versions = new Queue<MapVersion>(MapVersion.VERSIONS);
                 versions.Enqueue(new MapVersion { CreationTime = DateTime.Now, Model = bMapModel });
@@ -110,6 +111,21 @@ namespace khmap.Controllers
                 string currentFolderIdString = _currentFolderID;
                 ObjectId folderID = new ObjectId(currentFolderIdString);
                 MapFolder folder = _folderManeger.GetMapFolderById(folderID);
+
+                string path = folder.Model["path"].ToString();
+                if (path.Equals(""))
+                {
+                    path = folder.Name;
+                }
+                else
+                {
+                    path = path + "/" + folder.Name;
+                }
+                bMapModel.Add("path", path);
+                map.Model = bMapModel;
+                _mapManager.UpdateMap(map);
+
+
                 folder.idOfMapsInFolder.Add(mapID);
                 _folderManeger.UpdateMapFolder(folder);
 
@@ -216,7 +232,7 @@ namespace khmap.Controllers
                 var map = _mapManager.GetMapById(new ObjectId(id));
                 if (IsValidMap(map) && _mapManager.IsMapOwner(map.Id.ToString(), User.Identity.GetUserId()))
                 {
-                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description };
+                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description, Path = map.Model["path"].ToString() };
                     return View(mevm);
                 }
             }
@@ -239,8 +255,63 @@ namespace khmap.Controllers
                     var map = _mapManager.GetMapById(new ObjectId(model.Id));
                     map.Name = model.Name;
                     map.Description = model.Description;
-                    _mapManager.UpdateMap(map);
-                    return RedirectToAction("Index", "Map", new { id = model.Id });
+
+                    string path = model.Path;
+                    string mapPath = map.Model["path"].ToString();
+                    map.Model["path"] = path;
+                    string prevFolderPathNew;
+                    string prevFolderNameNew;
+                    int index = path.LastIndexOf("/");
+                    if (index < 0)
+                    {
+                        prevFolderPathNew = "";
+                        prevFolderNameNew = path;
+                    }
+                    else
+                    {
+                        prevFolderPathNew = path.Substring(0, index);
+                        prevFolderNameNew = path.Substring(index + 1);
+                    }
+
+                    index = mapPath.LastIndexOf("/");
+                    string prevFolderPathInMap;
+                    string prevFolderNameInMap;
+                    if (index < 0)
+                    {
+                        prevFolderPathInMap = "";
+                        prevFolderNameInMap = path;
+                    }
+                    else
+                    {
+                        prevFolderPathInMap = mapPath.Substring(0, index);
+                        prevFolderNameInMap = mapPath.Substring(index + 1);
+                    }
+
+
+                    var userID = User.Identity.GetUserId();
+                    var allFoldersOfUser = _folderManeger.GetAllMapFoldersOfUser(new ObjectId(userID));
+
+                    foreach(var folderOfMap in allFoldersOfUser)
+                    {
+                        if (folderOfMap.Name.Equals(prevFolderNameInMap) && prevFolderPathInMap.Equals(folderOfMap.Model["path"].ToString()))
+                        {
+                            folderOfMap.idOfMapsInFolder.Remove(map.Id);
+                            _folderManeger.UpdateMapFolder(folderOfMap);
+                            break;
+                        }
+                    }
+
+                    foreach (var tempFolder in allFoldersOfUser)//tempFolder represents the folder that MIGHT be the new prev folder
+                    {
+                        if (tempFolder.Name.Equals(prevFolderNameNew) && prevFolderPathNew.Equals(tempFolder.Model["path"].ToString()))
+                        {
+                            tempFolder.idOfMapsInFolder.Add(map.Id);
+                            _folderManeger.UpdateMapFolder(tempFolder);
+                            return RedirectToAction("Details", "MapFolder", new { id = model.Id });
+
+                        }
+                    }
+
                 }
                 catch
                 {
