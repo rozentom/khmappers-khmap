@@ -13,7 +13,6 @@
         @if (true)
         {
             int i = 0;
-            string s = i.ToString();
             if (ViewBag.prevFolder == null)
             {
                 i++;
@@ -29,8 +28,8 @@
                         {
                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
-                        <label id="@s" style="display:none">@id</label>
-                        <i id="@id" onmousedown="onClick(document.getElementById('@s').innerText, event)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
+                        <label id="@i.ToString()" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClick(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
                         
@@ -91,11 +90,29 @@
         }
 
     </table>
+    
+  <div id="menu">
+    <span class="menuItem">Delete</span>
+    <br />
+    <span class="menuItem">Edit</span>
+    <br />
+    <span class="menuItem">Move</span>
+</div>
+
+
+
 @*}*@
 
 <script>
-    function onClick(id, event) {
 
+ 
+
+    function onClick(id, event, num) {
+
+
+
+        var element = document.getElementById(id);
+        element.oncontextmenu = function () { return false;}
             switch (event.which) {
                 case 1:
                     window.location.href = '@Url.Action("Index", "Home", new {id = "ID", ownedOrShared = "owned" })'.replace("ID", id);
@@ -104,12 +121,23 @@
                     console.log('Middle Mouse button pressed.');
                     break;
                 case 3:
-                    alert(id);
+                    $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                    $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+                    $("#menu").show();
                     break;
                 default:
                     console.log('You have a strange Mouse!');
             }
     }
+
+    $(document).ready(function(){
+        $(document).click(function (e) {
+            if (e.button == 0) {
+                $("#menu").fadeOut(80);
+            }
+        })
+    })
+
 
 </script>
 
@@ -129,4 +157,25 @@
     table tr {
         width: auto !important;
     }
+
+    #menu
+    {
+        background-color:#CDCDCD;
+        border:2px solid #6A6A6A;
+        border-radius:5px;
+        box-shadow:5px 5px 10px #474747;
+        width:130px;
+        padding-top:5px;
+        padding-bottom:5px;
+        display:none;
+        position:absolute;
+    }
+    .menuItem
+    {
+        padding-left:5px;
+        padding-right:5px;
+        font-family:Arial,Arial, Helvetica, sans-serif;
+    }
+
+
 </style>
