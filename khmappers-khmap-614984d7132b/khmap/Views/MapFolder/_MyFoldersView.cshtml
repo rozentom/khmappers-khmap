@@ -13,12 +13,14 @@
         @if (true)
         {
             int i = 0;
+            string s = i.ToString();
             if (ViewBag.prevFolder == null)
             {
                 i++;
             }
             foreach (var item in Model)
             {
+                string id = item.Id.ToString();
                 if (i > 0)
                 {
                 <tr>
@@ -27,9 +29,12 @@
                         {
                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
-                        <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "owned" }, new { })</i>          @*this is the folder "button"*@
+                        <label id="@s" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClick(document.getElementById('@s').innerText, event)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
+                        
+
                         @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (item.Creator.ToString() == User.Identity.GetUserId())
@@ -89,8 +94,21 @@
 @*}*@
 
 <script>
-    function openFoler() {
+    function onClick(id, event) {
 
+            switch (event.which) {
+                case 1:
+                    window.location.href = '@Url.Action("Index", "Home", new {id = "ID", ownedOrShared = "owned" })'.replace("ID", id);
+                    break;
+                case 2:
+                    console.log('Middle Mouse button pressed.');
+                    break;
+                case 3:
+                    alert(id);
+                    break;
+                default:
+                    console.log('You have a strange Mouse!');
+            }
     }
 
 </script>
