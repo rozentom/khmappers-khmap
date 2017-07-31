@@ -13,23 +13,17 @@
         @if (true)
         {
             int i = 0;
-            if (ViewBag.prevFolder == null)
-            {
-                i++;
-            }
             foreach (var item in Model)
             {
                 string id = item.Id.ToString();
-                if (i > 0)
-                {
                 <tr>
                     <td class="col-md-2">
-                        @if (ViewBag.prevFolder != null)
+                        @if (ViewBag.prevFolder != null && i > 0)
                         {
                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
                         <label id="@i.ToString()" style="display:none">@id</label>
-                        <i id="@id" onmousedown="onClick(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
+                        <i id="@id" onmousedown="onClickFolder(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
                         
@@ -42,29 +36,13 @@
                         }
                     </td>
                 </tr>
-                }
-                else
-                {
-                    <tr>
-                        <td class="col-md-9">
-                            <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "owned" }, new { })</i>          @*this is the folder "button"*@
-                        </td>
-                        <td class="col-md-2">
-                            @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                            @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                            @if (item.Creator.ToString() == User.Identity.GetUserId())
-                            {
 
-                                @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
-                            }
-                        </td>
-                    </tr>
-                }
                 i++;
             }
-        }
-        @foreach (var map in ViewBag.maps)
+
+        foreach (var map in ViewBag.maps)
         {
+            string id = map.Id.ToString();
                 <tr>
                     <td class="col-md-1">
                         @*<span class="glyphicon glyphicon-star"></span>*@
@@ -72,9 +50,12 @@
                         {
                             <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
-                        <i class="fa fa-sitemap">
-                            @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null" }, new { title = "Load " + map.Name })
-                        </i>
+
+                        <label id="@i.ToString()" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClickMap(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i>          @*this is the folder "button"*@
+
+
+                      
 
 
                     <td class="col-md-2">
@@ -82,21 +63,22 @@
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
                         {
-                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id , currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id, currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
                     </td>
                 </tr>
-            
+            i++;
         }
+  }
 
     </table>
     
   <div id="menu">
-    <span class="menuItem">Delete</span>
+    <span id="deleteMenuBurron" class="menuItem">Delete</span>
     <br />
-    <span class="menuItem">Edit</span>
+    <span id="detailsMenuBurron" class="menuItem">Details</span>
     <br />
-    <span class="menuItem">Move</span>
+    <span id="moveMenuBurron" class="menuItem">Move</span>
 </div>
 
 
@@ -105,11 +87,36 @@
 
 <script>
 
- 
 
-    function onClick(id, event, num) {
+    var currentID;
+    var isFolder;
+
+    function onClickMap(id, event, num) {
+        currentID = id;
+        isFolder = false;
+        var element = document.getElementById(id);
+        element.oncontextmenu = function () { return false;}
+        switch (event.which) {
+            case 1:
+                window.location.href = '@Url.Action("LaunchMap5", "Map", new {id = "ID", currentFolderID = "null" })'.replace("ID", id);
+                break;
+            case 2:
+                console.log('Middle Mouse button pressed.');
+                break;
+            case 3:
+                $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+                $("#menu").show();
+                break;
+            default:
+                console.log('You have a strange Mouse!');
+        }
+    }
 
 
+    function onClickFolder(id, event, num) {
+        currentID = id;
+        isFolder = true;
 
         var element = document.getElementById(id);
         element.oncontextmenu = function () { return false;}
@@ -138,6 +145,26 @@
         })
     })
 
+    $(document).ready(function () {
+        $("#deleteMenuBurron").click(function () {
+            if (isFolder) {
+                window.location.href = '@Url.Action("Delete", "MapFolder", new {id = "ID"})'.replace("ID", currentID);
+            }
+            else {
+                window.location.href = '@Url.Action("Delete", "Map", new {id = "ID", currFolderID = ViewBag.currFolderIDString})'.replace("ID", currentID);
+            }
+        })
+        $("#detailsMenuBurron").click(function () {
+            if (isFolder) {
+                window.location.href = '@Url.Action("Details", "MapFolder", new {id = "ID"})'.replace("ID", currentID);
+            }
+            else {
+                window.location.href = '@Url.Action("Index", "Map", new {id = "ID"})'.replace("ID", currentID);
+            }
+        })
+        $("#moveMenuBurron").click(function () {
+        })
+    })
 
 </script>
 
