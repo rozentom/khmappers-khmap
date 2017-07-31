@@ -95,6 +95,10 @@ namespace khmap.Controllers
             //var user = UserManager.FindById(id);
             //return user.FirstName;
             var user = _userService.GetUserById(new ObjectId(id));
+            if (user == null)
+            {
+                return "got null";
+            }
             return user.FirstName;
         }
 
@@ -103,6 +107,10 @@ namespace khmap.Controllers
             //var user = UserManager.FindById(id);
             //return user.FirstName;
             var user = _userService.GetUserById(new ObjectId(id));
+            if(user == null)
+            {
+                return "";
+            }
             return user.LastName;
         }
 

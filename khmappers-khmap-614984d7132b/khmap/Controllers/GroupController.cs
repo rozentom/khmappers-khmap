@@ -76,6 +76,45 @@ namespace khmap.Controllers
             return View();
         }
 
+
+        private MapFolder createFolderLocaly(string folderName)
+        {
+            MapFolderDB _mapFolderDataManager = new MapFolderDB(new Settings());
+
+            var id = User.Identity.GetUserId();
+            ObjectId UserId = new ObjectId(id);
+
+            MapPermissions mapPermissions = new MapPermissions();
+            mapPermissions.Owner = new KeyValuePair<ObjectId, MapPermissionType>(UserId, MapPermissionType.RW);
+            mapPermissions.Users = new Dictionary<ObjectId, MapPermissionType>();
+            mapPermissions.Groups = new Dictionary<ObjectId, MapPermissionType>();
+            mapPermissions.AllUsers = MapPermissionType.NA;
+
+            mapPermissions.Users.Add(UserId, MapPermissionType.RW);
+
+            MapFolder suppFolder = new MapFolder();
+            suppFolder.Name = folderName;
+            suppFolder.Creator = UserId;
+            suppFolder.CreationTime = DateTime.Now;
+            suppFolder.Description = "shared folder for group" + folderName;
+            suppFolder.Followers = new HashSet<ObjectId>();
+            suppFolder.Permissions = mapPermissions;
+            suppFolder.idOfMapsInFolder = new HashSet<ObjectId>();
+            suppFolder.idOfSubFolders = new HashSet<ObjectId>();
+
+           // MapFolder supFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUser
+            suppFolder.ParentDierctory = new ObjectId();
+            suppFolder.FirstFolderOfUser = UserId;
+            var maps = new MapDB(new Settings()).GetAllMaps();
+            foreach (Map map in maps)
+            {
+                suppFolder.idOfMapsInFolder.Add(map.Id);
+            }
+            return suppFolder;
+
+        }
+
+
         // POST: Group/Create
         [HttpPost]
         [ValidateAntiForgeryToken]

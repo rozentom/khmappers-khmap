@@ -25,7 +25,8 @@ namespace khmap.Models
     public class Map
     {
         [BsonId]
-        public ObjectId Id { get; set; }
+        public ObjectId Id { get;
+            set; }
         public string Name { get; set; }
         public ObjectId Creator { get; set; }
         public DateTime CreationTime { get; set; }

@@ -24,8 +24,6 @@ namespace khmap.DataBaseProviders
 
         public string AddMap(Map map)
         {
-            //map.Model.AddRange(new BsonDocument { { "try", "2" } });
-
             _database.GetCollection<Map>(_collectionName).Save(map);
             return map.Id.ToString();
         }
@@ -90,14 +88,6 @@ namespace khmap.DataBaseProviders
                 if (item.Name.ToLower().Contains(mapName.ToLower()))
                 {
                     maps.Add(item);
-                }
-                var nodes = item.Model["nodeDataArray"];
-                foreach(var node in nodes.AsBsonArray)
-                {
-                    if (node["text"].ToString().Contains(mapName.ToLower())  && !maps.Contains(item))
-                    {
-                        maps.Add(item);
-                    }
                 }
             }
             return maps;

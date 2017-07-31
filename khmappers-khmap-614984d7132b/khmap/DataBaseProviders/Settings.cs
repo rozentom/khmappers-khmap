@@ -18,5 +18,6 @@ namespace khmap.DataBaseProviders
         public string ReferencesCollectionName { get { return "references"; } }
         public string ContextsCollectionName { get { return "Contexts"; } }
         public string CommentsCollectionName { get { return "Comments"; } }
+        public string MapFoldersCollectionName { get { return "mapFolders"; } }
     }
 }

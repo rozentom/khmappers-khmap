@@ -13,10 +13,20 @@
     <div class="col-md-4">
         <div class="span4 well" style="margin-left:0px;height:380px;">
             <strong>Maps</strong><hr />
-                    <ul class="nav nav-tabs" id="MapTab"></ul>
-                    <div class="tab-content" style="max-height:220px;overflow-y:auto;">
-                        <div role="tabpanel" class="tab-pane active" id="MyMaps">@{ Html.RenderAction("MyFoundMaps", "Map", new { foundMaps = Model.Maps }); }</div>
-                    </div> 
+            @if (Model.Maps.Count() == 0)
+            {
+                <div class="alert alert-info">No maps to display</div>
+            }
+            <div style="max-height:300px;overflow-y:auto;" id="maplistcontainer">
+                @foreach (var item in Model.Maps)
+                {
+                    <div>
+                        <div style="position: relative"><strong>@Html.ActionLink(item.Name, "Index", "Map", new { id = item.Id }, null)</strong></div>
+                        <div><small>Created on @item.CreationTime</small></div>
+                    </div>
+                    <hr style="margin:23px 0px 0px 0px;" />
+                }
+            </div>
         </div>
     </div>
 

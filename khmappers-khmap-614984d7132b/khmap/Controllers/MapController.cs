@@ -24,11 +24,14 @@ namespace khmap.Controllers
         private MapDB _mapManager;
         private GroupDB _groupManager;
         private ApplicationUserManager _userManager;
+        private MapFolderDB _folderManeger;
+        private static string _currentFolderID;
 
         public MapController()
         {
             this._mapManager = new MapDB(new Settings());
             this._groupManager = new GroupDB(new Settings());
+            this._folderManeger = new MapFolderDB(new Settings());
         }
 
         public ApplicationUserManager UserManager
@@ -96,6 +99,7 @@ namespace khmap.Controllers
 
                 BsonDocument bMapModel = BsonDocument.Parse(newMapModel.Model);
                 //BsonDocument bMapModel = mapModel.ToBsonDocument();
+                
 
                 Queue<MapVersion> versions = new Queue<MapVersion>(MapVersion.VERSIONS);
                 versions.Enqueue(new MapVersion { CreationTime = DateTime.Now, Model = bMapModel });
@@ -103,6 +107,27 @@ namespace khmap.Controllers
                 Map map = new Map { Name = newMapModel.Name, Creator = oId, CreationTime = DateTime.Now, Description = newMapModel.Description, Model = bMapModel, Permissions = mapPermissions, MapsArchive = versions, Followers = new HashSet<ObjectId>() };
                 var mId = _mapManager.AddMap(map);
 
+                ObjectId mapID = new ObjectId(mId);
+                string currentFolderIdString = _currentFolderID;
+                ObjectId folderID = new ObjectId(currentFolderIdString);
+                MapFolder folder = _folderManeger.GetMapFolderById(folderID);
+
+                string path = folder.Model["path"].ToString();
+                if (path.Equals(""))
+                {
+                    path = folder.Name;
+                }
+                else
+                {
+                    path = path + "/" + folder.Name;
+                }
+                bMapModel.Add("path", path);
+                map.Model = bMapModel;
+                _mapManager.UpdateMap(map);
+
+
+                folder.idOfMapsInFolder.Add(mapID);
+                _folderManeger.UpdateMapFolder(folder);
 
                 return Json(new { mapId = mId, mapName = map.Name }, JsonRequestBehavior.AllowGet);
             }
@@ -207,7 +232,7 @@ namespace khmap.Controllers
                 var map = _mapManager.GetMapById(new ObjectId(id));
                 if (IsValidMap(map) && _mapManager.IsMapOwner(map.Id.ToString(), User.Identity.GetUserId()))
                 {
-                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description };
+                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description, Path = map.Model["path"].ToString() };
                     return View(mevm);
                 }
             }
@@ -230,8 +255,63 @@ namespace khmap.Controllers
                     var map = _mapManager.GetMapById(new ObjectId(model.Id));
                     map.Name = model.Name;
                     map.Description = model.Description;
-                    _mapManager.UpdateMap(map);
-                    return RedirectToAction("Index", "Map", new { id = model.Id });
+
+                    string path = model.Path;
+                    string mapPath = map.Model["path"].ToString();
+                    map.Model["path"] = path;
+                    string prevFolderPathNew;
+                    string prevFolderNameNew;
+                    int index = path.LastIndexOf("/");
+                    if (index < 0)
+                    {
+                        prevFolderPathNew = "";
+                        prevFolderNameNew = path;
+                    }
+                    else
+                    {
+                        prevFolderPathNew = path.Substring(0, index);
+                        prevFolderNameNew = path.Substring(index + 1);
+                    }
+
+                    index = mapPath.LastIndexOf("/");
+                    string prevFolderPathInMap;
+                    string prevFolderNameInMap;
+                    if (index < 0)
+                    {
+                        prevFolderPathInMap = "";
+                        prevFolderNameInMap = path;
+                    }
+                    else
+                    {
+                        prevFolderPathInMap = mapPath.Substring(0, index);
+                        prevFolderNameInMap = mapPath.Substring(index + 1);
+                    }
+
+
+                    var userID = User.Identity.GetUserId();
+                    var allFoldersOfUser = _folderManeger.GetAllMapFoldersOfUser(new ObjectId(userID));
+
+                    foreach (var folderOfMap in allFoldersOfUser)
+                    {
+                        if (folderOfMap.Name.Equals(prevFolderNameInMap) && prevFolderPathInMap.Equals(folderOfMap.Model["path"].ToString()))
+                        {
+                            folderOfMap.idOfMapsInFolder.Remove(map.Id);
+                            _folderManeger.UpdateMapFolder(folderOfMap);
+                            break;
+                        }
+                    }
+
+                    foreach (var tempFolder in allFoldersOfUser)//tempFolder represents the folder that MIGHT be the new prev folder
+                    {
+                        if (tempFolder.Name.Equals(prevFolderNameNew) && prevFolderPathNew.Equals(tempFolder.Model["path"].ToString()))
+                        {
+                            tempFolder.idOfMapsInFolder.Add(map.Id);
+                            _folderManeger.UpdateMapFolder(tempFolder);
+                            return RedirectToAction("Details", "MapFolder", new { id = model.Id });
+
+                        }
+                    }
+
                 }
                 catch
                 {
@@ -242,10 +322,11 @@ namespace khmap.Controllers
         }
 
         // GET: Map/Delete/5
-        public ActionResult Delete(string id)
+        public ActionResult Delete(string id, string currFolderID)
         {
             try
             {
+                _currentFolderID = currFolderID;
                 var map = _mapManager.GetMapById(new ObjectId(id));
                 if (IsValidId(id) && IsValidMap(map) && _mapManager.IsMapOwner(map.Id.ToString(), User.Identity.GetUserId()))
                 {
@@ -268,7 +349,12 @@ namespace khmap.Controllers
             try
             {
                 _mapManager.RemoveMap(new ObjectId(model.Id));
-                return RedirectToAction("Index", "Home");
+
+                var folder = _folderManeger.GetMapFolderById(new ObjectId(_currentFolderID));
+                folder.idOfMapsInFolder.Remove(new ObjectId(model.Id));
+                _folderManeger.UpdateMapFolder(folder);
+
+                return RedirectToAction("Index", "Home", new { id = _currentFolderID });
             }
             catch
             {
@@ -284,46 +370,6 @@ namespace khmap.Controllers
                 var id = User.Identity.GetUserId();
                 ObjectId oId = new ObjectId(id);
                 var maps = _mapManager.GetMapsByCreatorId(oId);
-                return PartialView("_MyMapsView", maps);
-            }
-            catch (Exception)
-            {
-                return RedirectToAction("Index", "Home");
-            }
-        }
-        
-        public ActionResult MyFoundMaps(IEnumerable<Map> foundMaps)
-        {
-            try
-            {
-                //gettign intersection between created maps and found maps
-                var id = User.Identity.GetUserId();
-                ObjectId oId = new ObjectId(id);
-                var mapsByUser = _mapManager.GetMapsByCreatorId(oId);
-                var userFoundMaps = foundMaps.Intersect(mapsByUser, new MapComparer());
-
-                /*getting intesection between shared maps and found maps
-
-                id = User.Identity.GetUserId();
-                oId = new ObjectId(id);
-                mapsByUser = _mapManager.GetSharedMapsById(oId);
-
-                GroupController gc = new GroupController();
-                var groups = gc.GetGroupsByUserId(id);
-                var mapsByGroups = _mapManager.GetAllMapContainsGroupsNotOwned(id, groups);
-
-                var sharedMaps = mapsByUser.Union(mapsByGroups, new MapComparer());
-
-                sharedMaps = sharedMaps.Intersect(foundMaps);
-
-                //getting the union between shared found maps and created found maps
-                
-                var maps = userFoundMaps.Union(sharedMaps, new MapComparer());
-                */
-                var maps = userFoundMaps;
-
-
-
                 return PartialView("_MyMapsView", maps);
             }
             catch (Exception)
@@ -448,8 +494,9 @@ namespace khmap.Controllers
         }
 
 
-        public ActionResult LaunchMap5(string id)
+        public ActionResult LaunchMap5(string id, string currentFolderID)
         {
+            _currentFolderID = currentFolderID;
             if (id != null && !_mapManager.IsMapExist(new ObjectId(id)))
             {
                 return RedirectToAction("index", "Home");
