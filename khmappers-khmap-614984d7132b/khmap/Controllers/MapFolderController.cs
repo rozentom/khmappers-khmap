@@ -262,12 +262,6 @@ namespace khmap.Controllers
             ObjectId parentID = new ObjectId(Id);
             var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
             bool isCurrentFolderSupp = false;
-            if (parent.Model["type"].Equals(SharedCodedData.OWNED_SUPIRIOR))
-            {
-                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(userObjectID);
-                parentID = parent.Id;
-                isCurrentFolderSupp = true;
-            }
             if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
             {
                 parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
@@ -276,7 +270,31 @@ namespace khmap.Controllers
             }
             ObjectId prevFolderID = parent.ParentDierctory;
             var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
-
+            if (prevFolder != null)
+            {
+                bool isPrevCorrect = false;
+                if (prevFolder.Permissions.Users.Keys.Contains(userObjectID))
+                {
+                    isPrevCorrect = true;
+                }
+                else
+                {
+                    foreach (var groupId in prevFolder.Permissions.Groups.Keys)
+                    {
+                        var group = _groupManager.GetGroupById(groupId);
+                        if (group.Members.Keys.Contains(userObjectID))
+                        {
+                            isPrevCorrect = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isPrevCorrect)
+                {
+                    prevFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
+                    prevFolderID = prevFolder.Id;
+                }
+            }
             var mapFolders = _mapFolderDataManager.GetAllSubFolder(parent);
             if (isCurrentFolderSupp)
             {
@@ -309,32 +327,42 @@ namespace khmap.Controllers
                     }
                 }
             }
+
             mapFolders = finalMapFolders;
-            var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
-            var finalMaps = new List<Map>();
-            foreach (var tempMap in maps)
+
+            var maps = new List<Map>();
+            if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
             {
-                if (tempMap.Permissions.Owner.Key.Equals(userObjectID))
+                var allMaps = _mapDataManager.GetAllMaps();
+                foreach(var tempMap in allMaps)
                 {
-                    continue;
-                }
-                if (tempMap.Permissions.Users.Keys.Contains(userObjectID))
-                {
-                    finalMaps.Add(tempMap);
-                }
-                else
-                {
-                    foreach (var groupId in tempMap.Permissions.Groups.Keys)
+                    if (tempMap.Permissions.Owner.Key.Equals(userObjectID))
                     {
-                        var group = _groupManager.GetGroupById(groupId);
-                        if (group.Members.Keys.Contains(userObjectID))
+                        continue;
+                    }
+                    else if (tempMap.Permissions.Users.Keys.Contains(userObjectID))
+                    {
+                        maps.Add(tempMap);
+                    }
+                    else
+                    {
+                        var groups = _groupManager.GetAllGroupsOfUser(userObjectID);
+                        foreach(var group in groups)
                         {
-                            finalMaps.Add(tempMap);
+                            if (tempMap.Permissions.Groups.Keys.Contains(group.Id))
+                            {
+                                maps.Add(tempMap);
+                                break;
+                            }
                         }
                     }
                 }
             }
-            maps = finalMaps;
+            else
+            {
+                maps = this._mapFolderDataManager.GetAllMapsInFolder(parent).ToList();
+            }
+            
             ViewBag.maps = maps;
             ViewBag.currFolder = parent;
             ViewBag.currFolderID = parent.Id;
