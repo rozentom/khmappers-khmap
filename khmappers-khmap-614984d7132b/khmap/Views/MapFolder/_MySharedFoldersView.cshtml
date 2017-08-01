@@ -13,17 +13,24 @@
         @if (true)
         {
             int i = 0;
-            if (ViewBag.prevFolder == null)
-            {
-                i++;
-            }
             foreach (var item in Model)
             {
-                if (i > 0)
+                string name;
+                if (i == 0 && ViewBag.prevFolder != null)
                 {
+                    name = "..";
+                }
+                else
+                {
+                    name = item.Name;
+                }
+                if (ViewBag.prevFolder != null && i > 0)
+                {
+                    <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
+                }
                 <tr>
                     <td class="col-md-2">
-                        <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString() , ownedOrShared = "shared"}, new { })</i>          @*this is the folder "button"*@
+                        <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(name, "Index", "Home", new { id = item.Id.ToString() , ownedOrShared = "shared"}, new { })</i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
                         @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
@@ -34,24 +41,6 @@
                         }
                     </td>
                 </tr>
-                }
-                else
-                {
-                    <tr>
-                        <td class="col-md-9">
-                            <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "shared" }, new { })</i>          @*this is the folder "button"*@
-                        </td>
-                        <td class="col-md-2">
-                            @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                            @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                            @if (item.Creator.ToString() == User.Identity.GetUserId())
-                            {
-
-                                @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
-                            }
-                        </td>
-                    </tr>
-                }
                 i++;
             }
         }

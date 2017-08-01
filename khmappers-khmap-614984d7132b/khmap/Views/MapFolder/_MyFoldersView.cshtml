@@ -8,14 +8,26 @@
     }
     else
     {*@
+@if (true)
+{
+    int i = 0;
     <table class="table table-condensed table-responsive table-hover">
  
         @if (true)
         {
-            int i = 0;
+
             foreach (var item in Model)
             {
                 string id = item.Id.ToString();
+                string name;
+                if (i == 0 && ViewBag.prevFolder != null)
+                {
+                    name = "..";
+                }
+                else
+                {
+                    name = item.Name;
+                }
                 <tr>
                     <td class="col-md-2">
                         @if (ViewBag.prevFolder != null && i > 0)
@@ -23,7 +35,7 @@
                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
                         <label id="@i.ToString()" style="display:none">@id</label>
-                        <i id="@id" onmousedown="onClickFolder(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @item.Name</button></i>          @*this is the folder "button"*@
+                        <i id="@id" onmousedown="onClickFolder(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
                         
@@ -40,9 +52,9 @@
                 i++;
             }
 
-        foreach (var map in ViewBag.maps)
-        {
-            string id = map.Id.ToString();
+            foreach (var map in ViewBag.maps)
+            {
+                string id = map.Id.ToString();
                 <tr>
                     <td class="col-md-1">
                         @*<span class="glyphicon glyphicon-star"></span>*@
@@ -63,12 +75,12 @@
                         }
                     </td>
                 </tr>
-            i++;
+                i++;
+            }
         }
-  }
 
     </table>
-    
+
   <div id="menu">
     <span id="deleteMenuBurron" class="menuItem">Delete</span>
     <br />
@@ -77,15 +89,120 @@
     <span id="moveMenuBurron" class="menuItem">Move</span>
 </div>
 
+<div class="modal" tabindex="-1" id="moveModal" style="display:none;"
+     data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+                <h4 class="modal-title">Move To Folder</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                   
+                <table>
+                    <tr>
+                        <th id="name">Name</th>
+                        <th id="nothing"> &nbsp&nbsp&nbsp&nbsp&nbsp     </th>
+                        <th id="path">Path</th>
+                    </tr>
+                    @if (true)
+                    {
+                        var allFoldersOfUser = ViewBag.allFoldersOfUser;
+                        foreach (MapFolder folder in allFoldersOfUser)
+                        {
+                            string thisID = folder.Id.ToString();
+                            string path = folder.Model["path"].ToString();
+                            if (path.Equals(""))
+                            {
+                                path = folder.Name;
+                            }
+                            else
+                            {
+                                path = path + "/" + folder.Name;
+                            }
+                            <tr>
+                                <td headers="name">
+                                    
+                                    <label id="@i.ToString()" style="display:none">@folder.Id.ToString()</label>
+                                    <button class="btn-link"  onmousedown="folderClickedInModal(document.getElementById('@i.ToString()').innerText)">
+                                       @folder.Name
+                                    </button>
+                                </td>
+                                <td headers="nothing">     &nbsp&nbsp&nbsp&nbsp&nbsp      </td>
+                                <td headers="path">
+                                    <button class="btn-link" onmousedown="folderClickedInModal(document.getElementById('@i.ToString()').innerText)">
+                                        @path
+                                    </button>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
 
+                </table>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="addNewFolder()">Add</button>
+                <button type="button" class="btn btn-primary"
+                        data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 
 @*}*@
-
+}
 <script>
-
 
     var currentID;
     var isFolder;
+
+    function folderClickedInModal(id) {
+        if (isFolder) {
+            var moveToFolderId = id;
+            var folderToMoveId = currentID;
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("MoveFolderToFolder", "MapFolder")',
+                data: { folderToMoveId: folderToMoveId, moveToFolderId: moveToFolderId },
+                success: function () {
+                    $("#menu").hide();
+                },
+                error: function () {
+                    $("#menu").hide();
+                    alert("Moving Failed!");
+                }
+            });
+        }
+        else {
+
+            var mapToMoveId = currentID;
+            var moveToFolderId = id;
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("MoveMapToFolder", "MapFolder")',
+                data: { mapToMoveId: mapToMoveId, moveToFolderId: moveToFolderId },
+                success: function () {
+                    $("#menu").hide();
+                },
+                error: function () {
+                    $("#menu").hide();
+                    alert("Moving Failed!");
+                }
+            });
+        }
+    }
+
+
 
     function onClickMap(id, event, num) {
         currentID = id;
@@ -159,8 +276,12 @@
             }
         })
         $("#moveMenuBurron").click(function () {
+                $("#moveModal").show();
         })
     })
+
+
+
 
 </script>
 
