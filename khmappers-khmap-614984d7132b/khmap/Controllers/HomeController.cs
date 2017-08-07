@@ -59,7 +59,16 @@ namespace khmap.Controllers
             suppFolder.ParentDierctory = new ObjectId();
             suppFolder.FirstFolderOfUser = UserId;
             suppFolder.Model = new BsonDocument { { "type", whichSupp }, { "path", "" } };
-            var maps = new MapDB(new Settings()).GetAllMaps();
+            List<Map> maps = null;
+            if (whichSupp.Equals(SharedCodedData.SHARED_SUPIRIOR))
+            {
+                maps = new MapDB(new Settings()).GetMapsByCreatorId(UserId).ToList();
+
+            }
+            else
+            {
+                maps = new MapDB(new Settings()).GetSharedMapsById(UserId).ToList();
+            }
             foreach (Map map in maps)
             {
                 suppFolder.idOfMapsInFolder.Add(map.Id);
@@ -74,6 +83,7 @@ namespace khmap.Controllers
             //MailSender.SendMailMessage("khmap@bgu.ac.il", "giladsabari@gmail.com", "", "", "(do not reply)", "lalalalalala");
             bool isOwned;
             bool isShared;
+            ViewBag.isShared = ownedOrShared!=null && ownedOrShared.Equals("shared");
             if (ownedOrShared == null)
             {
                 isOwned = false;

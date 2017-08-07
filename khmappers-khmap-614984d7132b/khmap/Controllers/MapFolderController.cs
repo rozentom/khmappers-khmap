@@ -30,6 +30,7 @@ namespace khmap.Controllers
         {
             this._mapFolderDataManager = new MapFolderDB(new Settings());
             this._groupManager = new GroupDB(new Settings());
+            this._mapDataManager = new MapDB(new Settings());
         }
 
         // GET: MapFolder
@@ -216,6 +217,16 @@ namespace khmap.Controllers
                 parentID = parent.Id;
             }
             ObjectId prevFolderID = parent.ParentDierctory;
+            var allFoldersOfUser = _mapFolderDataManager.GetAllMapFoldersOfUser(userObjectID);
+            var allFolderOwnedByUsr = new List<MapFolder>();
+            foreach(var folder in allFoldersOfUser)
+            {
+                if (folder.Permissions.Owner.Key.ToString().Equals(userObjectID.ToString()) && !folder.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
+                {
+                    allFolderOwnedByUsr.Add(folder);
+                }
+            }
+            ViewBag.allFoldersOfUser = allFolderOwnedByUsr;
             var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
             var mapFolders = this._mapFolderDataManager.GetAllSubFolder(parent);
             var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
@@ -251,12 +262,6 @@ namespace khmap.Controllers
             ObjectId parentID = new ObjectId(Id);
             var parent = new MapFolderDB(new Settings()).GetMapFolderById(parentID);
             bool isCurrentFolderSupp = false;
-            if (parent.Model["type"].Equals(SharedCodedData.OWNED_SUPIRIOR))
-            {
-                parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(userObjectID);
-                parentID = parent.Id;
-                isCurrentFolderSupp = true;
-            }
             if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
             {
                 parent = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
@@ -265,7 +270,31 @@ namespace khmap.Controllers
             }
             ObjectId prevFolderID = parent.ParentDierctory;
             var prevFolder = new MapFolderDB(new Settings()).GetMapFolderById(prevFolderID);
-
+            if (prevFolder != null)
+            {
+                bool isPrevCorrect = false;
+                if (prevFolder.Permissions.Users.Keys.Contains(userObjectID))
+                {
+                    isPrevCorrect = true;
+                }
+                else
+                {
+                    foreach (var groupId in prevFolder.Permissions.Groups.Keys)
+                    {
+                        var group = _groupManager.GetGroupById(groupId);
+                        if (group.Members.Keys.Contains(userObjectID))
+                        {
+                            isPrevCorrect = true;
+                            break;
+                        }
+                    }
+                }
+                if (!isPrevCorrect)
+                {
+                    prevFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(userObjectID);
+                    prevFolderID = prevFolder.Id;
+                }
+            }
             var mapFolders = _mapFolderDataManager.GetAllSubFolder(parent);
             if (isCurrentFolderSupp)
             {
@@ -298,32 +327,42 @@ namespace khmap.Controllers
                     }
                 }
             }
+
             mapFolders = finalMapFolders;
-            var maps = this._mapFolderDataManager.GetAllMapsInFolder(parent);
-            var finalMaps = new List<Map>();
-            foreach (var tempMap in maps)
+
+            var maps = new List<Map>();
+            if (parent.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
             {
-                if (tempMap.Permissions.Owner.Key.Equals(userObjectID))
+                var allMaps = _mapDataManager.GetAllMaps();
+                foreach(var tempMap in allMaps)
                 {
-                    continue;
-                }
-                if (tempMap.Permissions.Users.Keys.Contains(userObjectID))
-                {
-                    finalMaps.Add(tempMap);
-                }
-                else
-                {
-                    foreach (var groupId in tempMap.Permissions.Groups.Keys)
+                    if (tempMap.Permissions.Owner.Key.Equals(userObjectID))
                     {
-                        var group = _groupManager.GetGroupById(groupId);
-                        if (group.Members.Keys.Contains(userObjectID))
+                        continue;
+                    }
+                    else if (tempMap.Permissions.Users.Keys.Contains(userObjectID))
+                    {
+                        maps.Add(tempMap);
+                    }
+                    else
+                    {
+                        var groups = _groupManager.GetAllGroupsOfUser(userObjectID);
+                        foreach(var group in groups)
                         {
-                            finalMaps.Add(tempMap);
+                            if (tempMap.Permissions.Groups.Keys.Contains(group.Id))
+                            {
+                                maps.Add(tempMap);
+                                break;
+                            }
                         }
                     }
                 }
             }
-            maps = finalMaps;
+            else
+            {
+                maps = this._mapFolderDataManager.GetAllMapsInFolder(parent).ToList();
+            }
+            
             ViewBag.maps = maps;
             ViewBag.currFolder = parent;
             ViewBag.currFolderID = parent.Id;
@@ -399,6 +438,58 @@ namespace khmap.Controllers
             }
 
             folderManeger.AddSubFolder(parentFolder, folder);
+        }
+
+        public void MoveFolderToFolder (string folderToMoveId, string moveToFolderId)
+        {
+            if (!folderToMoveId.Equals(moveToFolderId))
+            {
+
+                MapFolder folderToMove = _mapFolderDataManager.GetMapFolderById(new ObjectId(folderToMoveId));
+                MapFolder moveToFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(moveToFolderId));
+                MapFolder oldPrevFolder = _mapFolderDataManager.GetMapFolderById(folderToMove.ParentDierctory);
+
+                oldPrevFolder.idOfSubFolders.Remove(folderToMove.Id);
+                folderToMove.ParentDierctory = moveToFolder.Id;
+                moveToFolder.idOfSubFolders.Add(folderToMove.Id);
+
+                _mapFolderDataManager.UpdateMapFolder(folderToMove);
+                _mapFolderDataManager.UpdateMapFolder(moveToFolder);
+                _mapFolderDataManager.UpdateMapFolder(oldPrevFolder);
+            }
+        }
+
+        public void MoveMapToFolder(string mapToMoveId, string moveToFolderId)
+        {
+            Map mapToMove = _mapDataManager.GetMapById(new ObjectId(mapToMoveId));
+            MapFolder moveToFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(moveToFolderId));
+
+
+            MapFolder oldPrevFolder = null;
+            string userIdAsString = User.Identity.GetUserId();
+            ObjectId userObjectID = new ObjectId(userIdAsString);
+            var allFoldersOfUser = _mapFolderDataManager.GetAllMapFoldersOfUser(userObjectID);
+            var allFolderOwnedByUsr = new List<MapFolder>();
+
+            foreach (var folder in allFoldersOfUser)
+            {
+                if (folder.Permissions.Owner.Key.ToString().Equals(userObjectID.ToString()) && !folder.Model["type"].Equals(SharedCodedData.SHARED_SUPIRIOR))
+                {
+                    if (folder.idOfMapsInFolder.Contains(mapToMove.Id))
+                    {
+                        oldPrevFolder = folder;
+                        break;
+                    }
+                }
+            }
+
+            oldPrevFolder.idOfMapsInFolder.Remove(mapToMove.Id);
+            moveToFolder.idOfMapsInFolder.Add(mapToMove.Id);
+
+
+            _mapDataManager.UpdateMap(mapToMove);
+            _mapFolderDataManager.UpdateMapFolder(moveToFolder);
+            _mapFolderDataManager.UpdateMapFolder(oldPrevFolder);
         }
 
         public void deleteFolder(string currFolder)

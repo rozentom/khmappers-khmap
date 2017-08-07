@@ -8,59 +8,53 @@
     }
     else
     {*@
+@if (true)
+{
+    int i = 0;
     <table class="table table-condensed table-responsive table-hover">
  
         @if (true)
         {
-            int i = 0;
-            if (ViewBag.prevFolder == null)
-            {
-                i++;
-            }
+
             foreach (var item in Model)
             {
-                if (i > 0)
+                string id = item.Id.ToString();
+                string name;
+                if (i == 0 && ViewBag.prevFolder != null)
                 {
+                    name = "..";
+                }
+                else
+                {
+                    name = item.Name;
+                }
                 <tr>
                     <td class="col-md-2">
-                        @if (ViewBag.prevFolder != null)
+                        @if (ViewBag.prevFolder != null && i > 0)
                         {
                            <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
-                        <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "owned" }, new { })</i>          @*this is the folder "button"*@
+                        <label id="@i.ToString()" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClickFolder(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
+                        
+
                         @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                        @if (item.Creator.ToString() == User.Identity.GetUserId())
+                        @if (item.Model["type"].ToString() != SharedCodedData.OWNED_SUPIRIOR)
                         {
                             @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
                     </td>
                 </tr>
-                }
-                else
-                {
-                    <tr>
-                        <td class="col-md-9">
-                            <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(item.Name, "Index", "Home", new { id = item.Id.ToString(), ownedOrShared = "owned" }, new { })</i>          @*this is the folder "button"*@
-                        </td>
-                        <td class="col-md-2">
-                            @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                            @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                            @if (item.Creator.ToString() == User.Identity.GetUserId())
-                            {
 
-                                @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
-                            }
-                        </td>
-                    </tr>
-                }
                 i++;
             }
-        }
-        @foreach (var map in ViewBag.maps)
-        {
+
+            foreach (var map in ViewBag.maps)
+            {
+                string id = map.Id.ToString();
                 <tr>
                     <td class="col-md-1">
                         @*<span class="glyphicon glyphicon-star"></span>*@
@@ -68,30 +62,226 @@
                         {
                             <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
-                        <i class="fa fa-sitemap">
-                            @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null" }, new { title = "Load " + map.Name })
-                        </i>
 
+                        <label id="@i.ToString()" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClickMap(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i>          @*this is the folder "button"*@
 
                     <td class="col-md-2">
                         @Html.ActionLink(" ", "Index", "Map", new { id = map.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
                         {
-                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id , currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id, currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
                     </td>
                 </tr>
-            
+                i++;
+            }
         }
 
     </table>
+
+  <div id="menu">
+    <span id="deleteMenuBurron" class="menuItem">Delete</span>
+    <br />
+    <span id="detailsMenuBurron" class="menuItem">Details</span>
+    <br />
+    <span id="moveMenuBurron" class="menuItem">Move</span>
+</div>
+
+<div class="modal" tabindex="-1" id="moveModal" style="display:none;"
+     data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+                <h4 class="modal-title">Move To Folder</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                   
+                <table>
+                    <tr>
+                        <th id="name">Name</th>
+                        <th id="nothing"> &nbsp&nbsp&nbsp&nbsp&nbsp     </th>
+                        <th id="path">Path</th>
+                    </tr>
+                    @if (true)
+                    {
+                        var allFoldersOfUser = ViewBag.allFoldersOfUser;
+                        foreach (MapFolder folder in allFoldersOfUser)
+                        {
+                            string thisID = folder.Id.ToString();
+                            string path = folder.Model["path"].ToString();
+                            if (path.Equals(""))
+                            {
+                                path = folder.Name;
+                            }
+                            else
+                            {
+                                path = path + "/" + folder.Name;
+                            }
+                            <tr>
+                                <td headers="name">
+                                    
+                                    <label id="@i.ToString()" style="display:none">@folder.Id.ToString()</label>
+                                    <button class="btn-link"  onmousedown="folderClickedInModal(document.getElementById('@i.ToString()').innerText)">
+                                       @folder.Name
+                                    </button>
+                                </td>
+                                <td headers="nothing">     &nbsp&nbsp&nbsp&nbsp&nbsp      </td>
+                                <td headers="path">
+                                    <button class="btn-link" onmousedown="folderClickedInModal(document.getElementById('@i.ToString()').innerText)">
+                                        @path
+                                    </button>
+                                </td>
+                            </tr>
+                            i++;
+                        }
+                    }
+
+                </table>
+
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="addNewFolder()">Add</button>
+                <button type="button" class="btn btn-primary"
+                        data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @*}*@
-
+}
 <script>
-    function openFoler() {
 
+    var currentID;
+    var isFolder;
+
+    function folderClickedInModal(id) {
+        if (isFolder) {
+            var moveToFolderId = id;
+            var folderToMoveId = currentID;
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("MoveFolderToFolder", "MapFolder")',
+                data: { folderToMoveId: folderToMoveId, moveToFolderId: moveToFolderId },
+                success: function () {
+                    $("#menu").hide();
+                },
+                error: function () {
+                    $("#menu").hide();
+                    alert("Moving Failed!");
+                }
+            });
+        }
+        else {
+
+            var mapToMoveId = currentID;
+            var moveToFolderId = id;
+
+            $.ajax({
+                type: "POST",
+                url: '@Url.Action("MoveMapToFolder", "MapFolder")',
+                data: { mapToMoveId: mapToMoveId, moveToFolderId: moveToFolderId },
+                success: function () {
+                    $("#menu").hide();
+                },
+                error: function () {
+                    $("#menu").hide();
+                    alert("Moving Failed!");
+                }
+            });
+        }
     }
+
+
+
+    function onClickMap(id, event, num) {
+        currentID = id;
+        isFolder = false;
+        var element = document.getElementById(id);
+        element.oncontextmenu = function () { return false;}
+        switch (event.which) {
+            case 1:
+                window.location.href = '@Url.Action("LaunchMap5", "Map", new {id = "ID", currentFolderID = "null" })'.replace("ID", id);
+                break;
+            case 2:
+                console.log('Middle Mouse button pressed.');
+                break;
+            case 3:
+                $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+                $("#menu").show();
+                break;
+            default:
+                console.log('You have a strange Mouse!');
+        }
+    }
+
+
+    function onClickFolder(id, event, num) {
+        currentID = id;
+        isFolder = true;
+
+        var element = document.getElementById(id);
+        element.oncontextmenu = function () { return false;}
+            switch (event.which) {
+                case 1:
+                    window.location.href = '@Url.Action("Index", "Home", new {id = "ID", ownedOrShared = "owned" })'.replace("ID", id);
+                    break;
+                case 2:
+                    console.log('Middle Mouse button pressed.');
+                    break;
+                case 3:
+                    $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                    $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+                    $("#menu").show();
+                    break;
+                default:
+                    console.log('You have a strange Mouse!');
+            }
+    }
+
+    $(document).ready(function(){
+        $(document).click(function (e) {
+            if (e.button == 0) {
+                $("#menu").fadeOut(80);
+            }
+        })
+    })
+
+    $(document).ready(function () {
+        $("#deleteMenuBurron").click(function () {
+            if (isFolder) {
+                window.location.href = '@Url.Action("Delete", "MapFolder", new {id = "ID"})'.replace("ID", currentID);
+            }
+            else {
+                window.location.href = '@Url.Action("Delete", "Map", new {id = "ID", currFolderID = ViewBag.currFolderIDString})'.replace("ID", currentID);
+            }
+        })
+        $("#detailsMenuBurron").click(function () {
+            if (isFolder) {
+                window.location.href = '@Url.Action("Details", "MapFolder", new {id = "ID"})'.replace("ID", currentID);
+            }
+            else {
+                window.location.href = '@Url.Action("Index", "Map", new {id = "ID"})'.replace("ID", currentID);
+            }
+        })
+        $("#moveMenuBurron").click(function () {
+                $("#moveModal").show();
+        })
+    })
+
+
+
 
 </script>
 
@@ -111,4 +301,25 @@
     table tr {
         width: auto !important;
     }
+
+    #menu
+    {
+        background-color:#CDCDCD;
+        border:2px solid #6A6A6A;
+        border-radius:5px;
+        box-shadow:5px 5px 10px #474747;
+        width:130px;
+        padding-top:5px;
+        padding-bottom:5px;
+        display:none;
+        position:absolute;
+    }
+    .menuItem
+    {
+        padding-left:5px;
+        padding-right:5px;
+        font-family:Arial,Arial, Helvetica, sans-serif;
+    }
+
+
 </style>

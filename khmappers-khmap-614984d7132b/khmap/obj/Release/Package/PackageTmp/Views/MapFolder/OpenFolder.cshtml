@@ -1,0 +1,98 @@
+﻿@using Microsoft.AspNet.Identity;
+@model IEnumerable<khmap.Models.MapFolder>
+@using khmap.Models;
+@Scripts.Render("~/bundles/jquery")
+@if (Model.Count() == 0)
+{
+    <div class="alert alert-info">No folders to display</div>
+}
+else
+{
+    <table class="table table-condensed table-responsive table-hover">
+        @foreach (var item in Model)
+        {
+            <tr>
+                <td class="col-md-1">
+                    @*<span class="glyphicon glyphicon-star"></span>*@
+                    <div id="tomerDIV">
+                        <a id="tomer">hi</a>
+                        <i class="fa fa-folder" aria-hidden="true">@Ajax.ActionLink(item.Name, "OpenFolder", new { Id = item.Id }, new AjaxOptions { UpdateTargetId = "blablabla" });</i>          @*this is the folder "button"*@
+                    </div>
+                    @*Html.ActionLink(item.Name, "OpenFolder", "MapFolder", new { id = item.Id }, new { @class = "fa fa-folder", title = @item.Name })
+                        @**@
+                </td>
+                <td class="col-md-9">
+                    @* @Html.ActionLink(item.Name, "OpenFolder", "MapFolder", new { id = item.Id }, new { title = "Open " + item.Name })*@
+                    @try
+                    {
+                    }
+                    catch (Exception e)
+                    {
+
+                    }
+                </td>
+
+                <td class="col-md-2">
+                    @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
+                    @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
+                    @if (item.Creator.ToString() == User.Identity.GetUserId())
+                    {
+                        @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                    }
+                    @Html.ActionLink(" ", "", "", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+
+
+                </td>
+            </tr>
+        }
+
+        @foreach (var map in ViewBag.maps)
+        {
+            <tr>
+                <td class="col-md-1">
+                    @*<span class="glyphicon glyphicon-star"></span>*@
+                    <i class="fa fa-sitemap"></i>
+                </td>
+                <td class="col-md-9">
+                    @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id }, new { title = "Load " + map.Name })
+                </td>
+
+                <td class="col-md-2">
+                    @Html.ActionLink(" ", "Index", "Map", new { id = map.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
+                    @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
+                    @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
+                    {
+                        @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                    }
+                </td>
+            </tr>
+
+        }
+
+    </table>
+}
+
+<script>
+    function openFoler() {
+
+    }
+
+</script>
+
+
+<style>
+    .table td {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        word-wrap: break-word;
+    }
+
+    .table {
+        table-layout: fixed;
+    }
+
+    table tr {
+        width: auto !important;
+    }
+</style>

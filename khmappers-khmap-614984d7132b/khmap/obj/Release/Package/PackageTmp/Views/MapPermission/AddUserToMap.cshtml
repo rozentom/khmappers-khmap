@@ -1,4 +1,4 @@
-﻿@model WebApplication2.Models.AddUserToMapViewModel
+﻿@model khmap.Models.AddUserToMapViewModel
 
 
 @using (Html.BeginForm())
@@ -24,8 +24,8 @@
         <div class="form-group">
             @Html.LabelFor(model => model.permission, htmlAttributes: new { @class = "control-label col-md-2" })
             <div class="col-md-10">
-                @Html.RadioButtonFor(model => model.permission, WebApplication2.Models.MapPermissionType.RW, false) 
-                @Html.RadioButtonFor(model => model.permission, WebApplication2.Models.MapPermissionType.RO, true)
+                @Html.RadioButtonFor(model => model.permission, khmap.Models.MapPermissionType.RW, false) 
+                @Html.RadioButtonFor(model => model.permission, khmap.Models.MapPermissionType.RO, true)
                 @Html.ValidationMessageFor(model => model.permission, "", new { @class = "text-danger" })
             </div>
         </div>
