@@ -83,6 +83,7 @@ namespace khmap.Controllers
             //MailSender.SendMailMessage("khmap@bgu.ac.il", "giladsabari@gmail.com", "", "", "(do not reply)", "lalalalalala");
             bool isOwned;
             bool isShared;
+            ViewBag.isShared = ownedOrShared!=null && ownedOrShared.Equals("shared");
             if (ownedOrShared == null)
             {
                 isOwned = false;

@@ -1,4 +1,7 @@
 ﻿@using Microsoft.AspNet.Identity;
+@using khmap.Models;
+@model khmap.Models.Map
+@Scripts.Render("~/bundles/jquery")
 
 @{
     ViewBag.Title = "Home Page";
@@ -12,17 +15,46 @@
 
 <div class="col-md-6">
     <div class="span12 well" style="height:320px;padding-top:5px;" role="tabpanel">
-        <h4>Maps</h4>
+        <h4>@name's Maps and Folders</h4>
         <div class="pull-right">
-            @Html.ActionLink(" New Map", "LaunchMap5", "Map", null, new { @class = "btn btn-primary" })
+            @Html.ActionLink(" New Map", "LaunchMap5", "Map", new { currentFolderID = ViewBag.ownedFolderID }, new { @class = "btn btn-primary" })
+        </div>
+        <div class="pull-right">
+            <label type="button" id="newFolder" class="btn btn-primary" data-toggle="modal" data-target="#loginModal"">Add Folder</label>
+        
+    @*should add here the new directory button*@
         </div>
         <ul class="nav nav-tabs" id="MapTab">
-            <li role="presentation" class="active"><a href="#MyMaps" aria-controls="MyMaps" role="tab" data-toggle="tab">My Maps</a></li>
+            <li role="presentation" class="active"><a href="#MapAndFolderView" aria-controls="MapAndFolderView" role="tab" data-toggle="tab">My Folders</a></li>
+            <li role="presentation"><a href="#shared" aria-controls="shared" role="tab" data-toggle="tab">My Shared Folders</a></li>
+        @*
+            <li role="presentation"><a href="#MyMaps" aria-controls="MyMaps" role="tab" data-toggle="tab">My Maps</a></li>
             <li role="presentation"><a href="#SharedMaps" aria-controls="SharedMaps" role="tab" data-toggle="tab">Shared Maps</a></li>
+        *@
+
         </ul>
-        <div class="tab-content" style="max-height:220px;overflow-y:auto;">
-            <div role="tabpanel" class="tab-pane active" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
-            <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
+        <div class="tab-content" id="UsersView" style="max-height:220px;overflow-y:auto;">
+            @if (ViewBag.ownedFolderID == null)
+            {
+                <div role="tabpanel" class="tab-pane active" id="MapAndFolderView">@{ Html.RenderAction("MyFirstMapAndFolders", "MapFolder"); }</div>
+            }
+            else
+            {
+                <div role="tabpanel" class="tab-pane active" id="MapAndFolderView">@{ Html.RenderAction("OpenFolder", "MapFolder", new {id = ViewBag.ownedFolderID }); }</div>
+            }
+            @if (ViewBag.sharedFolderID == null)
+            {
+                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("MyFirstMapAndFoldersShared", "MapFolder"); }</div>
+            }
+            else
+            {
+                <div role="tabpanel" class="tab-pane" id="shared">@{ Html.RenderAction("OpenFolderShared", "MapFolder", new {id = ViewBag.sharedFolderID }); }</div>
+            }
+       @*
+    <div role="tabpanel" class="tab-pane" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
+
+    <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
+    *@        
         </div>
     </div>
 </div>
@@ -45,4 +77,81 @@
     </div>
 </div>
 
+<div class="modal fade" tabindex="-1" id="loginModal"
+     data-keyboard="false" data-backdrop="static">
+    <div class="modal-dialog modal-sm">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal">
+                    &times;
+                </button>
+                <h4 class="modal-title">Add New Folder</h4>
+            </div>
+            <div class="modal-body">
+                <form>
+                    <div class="form-group" style="display:none">
+                        <label for="folderID">folderID</label>
+                        <input class="form-control" placeholder="folderID"
+                               type="text" id="folderID" value="@ViewBag.ownedFolderID"/>
+                    </div>
+                    <div class="form-group" style="display:none">
+                        <label for="sharedFolderID">sharedFolderID</label>
+                        <input class="form-control" placeholder="sharedFolderID"
+                               type="text" id="sharedFolderID" value="@ViewBag.sharedFolderID" />
+                    </div>
+                    <div class="form-group">
+                        <label for="folderName">Folder Name</label>
+                        <input class="form-control" placeholder="Folder Name"
+                               type="text" id="folderName" />
+                    </div>
+                    <div class="form-group">
+                        <label for="folderDescription">Folder Description</label>
+                        <input class="form-control" placeholder="Folder Description"
+                               type="text" id="folderDescription" />
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="submit" class="btn btn-primary" onclick="addNewFolder()">Add</button>
+                <button type="button" class="btn btn-primary"
+                        data-dismiss="modal">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function addNewFolder(){
+        var folderName = $('#folderName').val();
+        var folderDescription = $('#folderDescription').val();
+        var ownedFolderID = $('#folderID').val();
+        var sharedFolderID = $('#sharedFolderID').val();
+        var folderID = null;
+
+        var activeTabs = $('.nav-tabs .active').text();
+        if (activeTabs.includes("My Shared Folders")) {
+            folderID = sharedFolderID;
+        }
+        else {
+            folderID = ownedFolderID;
+        }
+
+        $.ajax({
+            type: "POST",
+            url: '@Url.Action("addNewFolder", "MapFolder")',
+
+            data: { parentID: folderID, folderName: folderName, folderDescription: folderDescription },
+            success: function () {
+                window.location.href = '/Home/Index/' + folderID;
+            },
+            error: function () {
+                $("#loginModal").modal('hide');
+                alert("Save Failed!");
+            }
+        });
+    }
+
+</script>
 
