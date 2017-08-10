@@ -60,7 +60,7 @@ namespace khmap.Controllers
             suppFolder.FirstFolderOfUser = UserId;
             suppFolder.Model = new BsonDocument { { "type", whichSupp }, { "path", "" } };
             List<Map> maps = null;
-            if (whichSupp.Equals(SharedCodedData.SHARED_SUPIRIOR))
+            if (whichSupp.Equals(SharedCodedData.OWNED_SUPIRIOR))
             {
                 maps = new MapDB(new Settings()).GetMapsByCreatorId(UserId).ToList();
 

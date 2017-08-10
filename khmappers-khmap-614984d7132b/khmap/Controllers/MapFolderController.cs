@@ -69,9 +69,9 @@ namespace khmap.Controllers
              toadd.Creator = UserId;
          }**/
 
-       private MapFolder createSuppFolderLocaly(string whichSupp)
+        private MapFolder createSuppFolderLocaly(string whichSupp)
         {
-            _mapFolderDataManager = new MapFolderDB(new Settings());
+            MapFolderDB _mapFolderDataManager = new MapFolderDB(new Settings());
 
             var id = User.Identity.GetUserId();
             ObjectId UserId = new ObjectId(id);
@@ -88,19 +88,29 @@ namespace khmap.Controllers
             suppFolder.Name = "suppFolder" + whichSupp;
             suppFolder.Creator = UserId;
             suppFolder.CreationTime = DateTime.Now;
-            suppFolder.Description = "Supirior Folder "+ whichSupp;
+            suppFolder.Description = "Supirior Folder " + whichSupp;
             suppFolder.Followers = new HashSet<ObjectId>();
             suppFolder.Permissions = mapPermissions;
             suppFolder.idOfMapsInFolder = new HashSet<ObjectId>();
             suppFolder.idOfSubFolders = new HashSet<ObjectId>();
             suppFolder.ParentDierctory = new ObjectId();
             suppFolder.FirstFolderOfUser = UserId;
-            suppFolder.Model = new BsonDocument { { "type", whichSupp }, {"path", ""} };
-            var maps = new MapDB(new Settings()).GetAllMaps();
+            suppFolder.Model = new BsonDocument { { "type", whichSupp }, { "path", "" } };
+            List<Map> maps = null;
+            if (whichSupp.Equals(SharedCodedData.OWNED_SUPIRIOR))
+            {
+                maps = new MapDB(new Settings()).GetMapsByCreatorId(UserId).ToList();
+
+            }
+            else
+            {
+                maps = new MapDB(new Settings()).GetSharedMapsById(UserId).ToList();
+            }
             foreach (Map map in maps)
             {
                 suppFolder.idOfMapsInFolder.Add(map.Id);
             }
+            _mapFolderDataManager.AddFolder(suppFolder);
             return suppFolder;
 
         }
@@ -392,9 +402,15 @@ namespace khmap.Controllers
             MapFolderDB folderManeger = new MapFolderDB(new Settings());
             var id = User.Identity.GetUserId();
             ObjectId UserId = new ObjectId(id);
-            if (parentID == null || parentID.Equals(""))
+            var parentTempFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(parentID));
+            if (parentID == null || parentID.Equals("") || parentTempFolder==null)
             {
-                parentID = folderManeger.GetSuperiorMapFolderOfUser(UserId).Id.ToString();
+                var tempSupFolder = folderManeger.GetSuperiorMapFolderOfUser(UserId);
+                if (tempSupFolder == null)
+                {
+                    tempSupFolder = createSuppFolderLocaly(SharedCodedData.OWNED_SUPIRIOR);
+                }
+                parentID = tempSupFolder.Id.ToString();
             }
             _mapFolderDataManager = new MapFolderDB(new Settings());
 
