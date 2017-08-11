@@ -196,6 +196,11 @@
     </Compile>
     <Compile Include="Helpers\MyHelpers.cs" />
     <Compile Include="InitData\TestData.cs" />
+    <Compile Include="SearchDirectory\ISearch.cs" />
+    <Compile Include="SearchDirectory\ISearchGroups.cs" />
+    <Compile Include="SearchDirectory\ISearchMaps.cs" />
+    <Compile Include="SearchDirectory\ISearchType.cs" />
+    <Compile Include="SearchDirectory\ISearchUsers.cs" />
     <Compile Include="Models\AccountViewModels.cs" />
     <Compile Include="Models\Comment.cs" />
     <Compile Include="Models\Context.cs" />
@@ -213,6 +218,10 @@
     <Compile Include="Models\Reference.cs" />
     <Compile Include="Models\SearchViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SearchDirectory\Search.cs" />
+    <Compile Include="SearchDirectory\SearchGroups.cs" />
+    <Compile Include="SearchDirectory\SearchMaps.cs" />
+    <Compile Include="SearchDirectory\SearchUsers.cs" />
     <Compile Include="SharedCodedData.cs" />
     <Compile Include="Startup.cs" />
   </ItemGroup>
