@@ -3,7 +3,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using khmap.DataBaseProviders;
 using khmap.Models;
 using MongoDB.Bson;
-using khmap.SearchFolder;
+using khmap.SearchDirectory;
 using System.Collections.Generic;
 
 namespace khmapTests.UnitTests
@@ -13,12 +13,14 @@ namespace khmapTests.UnitTests
     {
         private static readonly int STRING_SIZE_MAX = 10;
         private static readonly int DOCUMENT_SIZE_MAX = 10;
-        private static readonly int LOOP_SIZE = 100;
+        private static readonly int LOOP_SIZE = 2;
 
         private MapDB _mapManeger;
         private UserDB _userManager;
         private GroupDB _groupManeger;
         private Random _rnd;
+        private ApplicationUser _user;
+        private ObjectId _userId;
         private ISearch _searchObj;
 
         [TestInitialize]
@@ -29,10 +31,25 @@ namespace khmapTests.UnitTests
             _userManager = new UserDB(new Settings());
             _groupManeger = new GroupDB(new Settings());
             _rnd = new Random();
+            _user = new ApplicationUser();
+            _user.FirstName = "kkk";
+            _user.UserName = "lllll";
+            _user.LastName = "ddddddddd";
+            _userManager.AddUser(_user);
+            _userId = new ObjectId(_user.Id);
             int mapsAmmount = _rnd.Next(1, 21);
             for(int i=0; i< mapsAmmount; i++)
             {
                 Map map = randomMap();
+
+                MapPermissions mapPermissions = new MapPermissions();
+                mapPermissions.Owner = new KeyValuePair<ObjectId, MapPermissionType>(_userId, MapPermissionType.RW);
+                mapPermissions.Users = new Dictionary<ObjectId, MapPermissionType>();
+                mapPermissions.Groups = new Dictionary<ObjectId, MapPermissionType>();
+                mapPermissions.AllUsers = MapPermissionType.NA;
+
+                mapPermissions.Users.Add(_userId, MapPermissionType.RW);
+                map.Permissions = mapPermissions;
                 _mapManeger.AddMap(map);
             }
         }
@@ -41,6 +58,7 @@ namespace khmapTests.UnitTests
         public void cleanUp()
         {
             cleanMaps();
+            _userManager.RemoveAllUsers();
         }
 
 
@@ -55,7 +73,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (Map map in maps)
                 {
-                    List<Map> result = (List<Map>)_searchObj.searchMaps(map.Name);
+                    List<Map> result = (List<Map>)_searchObj.searchMaps(map.Name, _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -79,7 +97,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (Map map in maps)
                 {
-                    List<Map> result = (List<Map>)_searchObj.searchMaps(map.Name.Substring(_rnd.Next(0, map.Name.Length)));
+                    List<Map> result = (List<Map>)_searchObj.searchMaps(map.Name.Substring(_rnd.Next(0, map.Name.Length)), _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -106,7 +124,7 @@ namespace khmapTests.UnitTests
                 {
                     foreach (var element in map.Model["nodeDataArray"].AsBsonArray)
                     {
-                        List<Map> result = (List<Map>)_searchObj.searchMaps(element["text"].ToString());
+                        List<Map> result = (List<Map>)_searchObj.searchMaps(element["text"].ToString(), _userId);
 
                         bool foundSomthing = result.Count > 0;
                         Assert.IsTrue(foundSomthing);
@@ -136,7 +154,7 @@ namespace khmapTests.UnitTests
                     foreach (var element in map.Model["nodeDataArray"].AsBsonArray)
                     {
                         string text = element["text"].ToString();
-                        List<Map> result = (List<Map>)_searchObj.searchMaps(text.Substring(_rnd.Next(0, text.Length)));
+                        List<Map> result = (List<Map>)_searchObj.searchMaps(text.Substring(_rnd.Next(0, text.Length)), _userId);
 
                         bool foundSomthing = result.Count > 0;
                         Assert.IsTrue(foundSomthing);
@@ -160,7 +178,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string mapName = randomString(11, 12);
-                List<Map> result = (List<Map>)_searchObj.searchMaps(mapName);
+                List<Map> result = (List<Map>)_searchObj.searchMaps(mapName, _userId);
                 Assert.AreEqual(result.Count, 0);
             }
         }
@@ -174,7 +192,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (ApplicationUser user in users)
                 {
-                    List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(user.FirstName);
+                    List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(user.FirstName, _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -198,7 +216,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (ApplicationUser user in users)
                 {
-                    List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(user.FirstName.Substring(_rnd.Next(0, user.FirstName.Length)));
+                    List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(user.FirstName.Substring(_rnd.Next(0, user.FirstName.Length)), _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -221,7 +239,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string userName = randomString(11, 12);
-                List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(userName);
+                List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.searchUsers(userName, _userId);
                 Assert.AreEqual(result.Count, 0);
             }
         }
@@ -236,7 +254,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (Group group in groups)
                 {
-                    List<Group> result = (List<Group>)_searchObj.searchGroups(group.Name);
+                    List<Group> result = (List<Group>)_searchObj.searchGroups(group.Name, _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -261,7 +279,7 @@ namespace khmapTests.UnitTests
                 foreach (Group group in groups)
                 {
                     string groupName = group.Name.Substring(_rnd.Next(0, group.Name.Length));
-                    List<Group> result = (List<Group>)_searchObj.searchUsers(groupName);
+                    List<Group> result = (List<Group>)_searchObj.searchUsers(groupName, _userId);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
                     bool isfound = false;
@@ -284,7 +302,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string groupName = randomString(11, 12);
-                List<Group> result = (List<Group>)_searchObj.searchGroups(groupName);
+                List<Group> result = (List<Group>)_searchObj.searchGroups(groupName, _userId);
                 Assert.AreEqual(result.Count, 0);
             }
         }
@@ -301,7 +319,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (Map map in maps)
                 {
-                    var resultNotFilltered = _searchObj.searchFunc(map.Name, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(map.Name, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<Map> result = (List<Map>)_searchObj.getMapsOfResult(resultNotFilltered);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
@@ -329,7 +347,7 @@ namespace khmapTests.UnitTests
                 foreach (Map map in maps)
                 {
                     string text = map.Name.Substring(_rnd.Next(0, map.Name.Length));
-                    var resultNotFilltered = _searchObj.searchFunc(text, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(text, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<Map> result = (List<Map>)_searchObj.getMapsOfResult(resultNotFilltered);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
@@ -358,7 +376,7 @@ namespace khmapTests.UnitTests
                     foreach (var element in map.Model["nodeDataArray"].AsBsonArray)
                     {
                         string text = element["text"].ToString();
-                        var resultNotFilltered = _searchObj.searchFunc(text, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                        var resultNotFilltered = _searchObj.searchFunc(text, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                         List<Map> result = (List<Map>)_searchObj.getMapsOfResult(resultNotFilltered);
 
                         bool foundSomthing = result.Count > 0;
@@ -394,7 +412,7 @@ namespace khmapTests.UnitTests
                     {
                         string text = element["text"].ToString();
                         text = text.Substring(_rnd.Next(0, text.Length));
-                        var resultNotFilltered = _searchObj.searchFunc(text, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                        var resultNotFilltered = _searchObj.searchFunc(text, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                         List<Map> result = (List<Map>)_searchObj.getMapsOfResult(resultNotFilltered);
 
                         bool foundSomthing = result.Count > 0;
@@ -419,7 +437,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string text = randomString(11, 12);
-                var resultNotFilltered = _searchObj.searchFunc(text, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                var resultNotFilltered = _searchObj.searchFunc(text, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                 List<Map> result = (List<Map>)_searchObj.getMapsOfResult(resultNotFilltered);
                 Assert.AreEqual(result.Count, 0);
             }
@@ -435,7 +453,7 @@ namespace khmapTests.UnitTests
 
                 foreach (ApplicationUser user in users)
                 {
-                    var resultNotFilltered = _searchObj.searchFunc(user.FirstName, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(user.FirstName, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.getUsersOfResult(resultNotFilltered);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
@@ -461,7 +479,7 @@ namespace khmapTests.UnitTests
                 foreach (ApplicationUser user in users)
                 {
                     string userName = user.FirstName.Substring(_rnd.Next(0, user.FirstName.Length));
-                    var resultNotFilltered = _searchObj.searchFunc(userName, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(userName, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.getUsersOfResult(resultNotFilltered);
 
                     bool foundSomthing = result.Count > 0;
@@ -486,7 +504,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string userName = randomString(11, 12);
-                var resultNotFilltered = _searchObj.searchFunc(userName, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                var resultNotFilltered = _searchObj.searchFunc(userName, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                 List<ApplicationUser> result = (List<ApplicationUser>)_searchObj.getUsersOfResult(resultNotFilltered);
                 Assert.AreEqual(result.Count, 0);
             }
@@ -502,7 +520,7 @@ namespace khmapTests.UnitTests
             {
                 foreach (Group group in groups)
                 {
-                    var resultNotFilltered = _searchObj.searchFunc(group.Name, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(group.Name, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<Group> result = (List<Group>)_searchObj.getGroupsOfResult(resultNotFilltered);
                     bool foundSomthing = result.Count > 0;
                     Assert.IsTrue(foundSomthing);
@@ -529,7 +547,7 @@ namespace khmapTests.UnitTests
                 foreach (Group group in groups)
                 {
                     string groupName = group.Name.Substring(_rnd.Next(0, group.Name.Length));
-                    var resultNotFilltered = _searchObj.searchFunc(groupName, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                    var resultNotFilltered = _searchObj.searchFunc(groupName, _userId, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                     List<Group> result = (List<Group>)_searchObj.getGroupsOfResult(resultNotFilltered);
 
                     bool foundSomthing = result.Count > 0;
@@ -554,7 +572,7 @@ namespace khmapTests.UnitTests
             for (int k = 0; k < LOOP_SIZE; k++)
             {
                 string groupName = randomString(11, 12);
-                var resultNotFilltered = _searchObj.searchFunc(groupName, new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
+                var resultNotFilltered = _searchObj.searchFunc(groupName, _userId,new List<ISearchType>() { new SearchMaps(), new SearchGroups(), new SearchUsers() });
                 List<Group> result = (List<Group>)_searchObj.getGroupsOfResult(resultNotFilltered);
                 Assert.AreEqual(result.Count, 0);
             }
@@ -569,6 +587,7 @@ namespace khmapTests.UnitTests
             map.Name = randomString();
             BsonDocument document = randomBsonDocument();
             map.Model = document;
+
             return map;
         }
         private static string randomString()

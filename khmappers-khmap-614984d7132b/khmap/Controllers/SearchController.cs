@@ -9,6 +9,7 @@ using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.Owin;
 using MongoDB.Bson;
 using khmap.Models;
+using khmap.SearchDirectory;
 
 namespace khmap.Controllers
 {
@@ -20,12 +21,14 @@ namespace khmap.Controllers
         private UserDB _userService;
         private GroupDB _groupManager;
         private ApplicationUserManager _userManager;
+        private ISearch _searchObj;
 
         public SearchController()
         {
             this._mapManager = new MapDB(new Settings());
             this._userService = new UserDB(new Settings());
             this._groupManager = new GroupDB(new Settings());
+            _searchObj = new Search();
             //UserManager = UserManager;
         }
 
@@ -45,9 +48,21 @@ namespace khmap.Controllers
         public ActionResult Index(string text)
         {
             SearchViewModel svm = new SearchViewModel();
-            svm.Maps = _mapManager.SearchMap(text);
-            svm.Groups = _groupManager.SearchGroup(text);
-            svm.Users = _userService.SearchUser(text);
+
+            ObjectId userId = new ObjectId(User.Identity.GetUserId());
+            //-------the way it was------
+            //svm.Maps = _mapManager.SearchMap(text);
+            //svm.Groups = _groupManager.SearchGroup(text);
+            //svm.Users = _userService.SearchUser(text);
+            //-------searhching combined------
+            //Dictionary<ISearchType, Object> results = _searchObj.searchFunc(text, new List<ISearchType> { new SearchGroups(), new SearchMaps(), new SearchUsers() });
+            //svm.Maps = _searchObj.getMapsOfResult(results);
+            //svm.Groups = _searchObj.getGroupsOfResult(results);
+            //svm.Users = _searchObj.getUsersOfResult(results);
+
+            svm.Maps = _searchObj.searchMaps(text, userId);
+            svm.Groups = _searchObj.searchGroups(text, userId);
+            svm.Users = _searchObj.searchUsers(text, userId);
             svm.SearchText = text;
             return View(svm);
         }
