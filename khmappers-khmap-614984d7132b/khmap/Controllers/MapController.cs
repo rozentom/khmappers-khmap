@@ -348,11 +348,17 @@ namespace khmap.Controllers
         {
             try
             {
-                _mapManager.RemoveMap(new ObjectId(model.Id));
+                ObjectId mapID = new ObjectId(model.Id);
+                _mapManager.RemoveMap(mapID);
 
-                var folder = _folderManeger.GetMapFolderById(new ObjectId(_currentFolderID));
-                folder.idOfMapsInFolder.Remove(new ObjectId(model.Id));
-                _folderManeger.UpdateMapFolder(folder);
+                foreach(var f in _folderManeger.GetAllFolders())
+                {
+                    if (f.idOfMapsInFolder.Contains(mapID))
+                    {
+                        f.idOfMapsInFolder.Remove(mapID);
+                        _folderManeger.UpdateMapFolder(f);
+                    }
+                }             
 
                 return RedirectToAction("Index", "Home", new { id = _currentFolderID });
             }
@@ -497,6 +503,7 @@ namespace khmap.Controllers
         public ActionResult LaunchMap5(string id, string currentFolderID)
         {
             _currentFolderID = currentFolderID;
+            ViewBag.currentFolderID = currentFolderID;
             if (id != null && !_mapManager.IsMapExist(new ObjectId(id)))
             {
                 return RedirectToAction("index", "Home");
