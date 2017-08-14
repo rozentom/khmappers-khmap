@@ -80,7 +80,7 @@
 
             data: { currFolder: folderID },
             success: function () {
-                window.location.href = '/Home/Index/';
+                window.location.href = '/map/Home/Index/' + prevFolderID;
             },
             error: function () {
                 alert("Delete Failed!");
