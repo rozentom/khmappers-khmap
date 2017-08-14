@@ -40,11 +40,11 @@
                     <td class="col-md-2">
                         
 
-                        @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
+                   @*     @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" }) *@
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (item.Model["type"].ToString() != SharedCodedData.OWNED_SUPIRIOR)
                         {
-                            @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
+                    @*        @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })*@
                         }
                     </td>
                 </tr>
@@ -67,12 +67,13 @@
                         <i id="@id" onmousedown="onClickMap(document.getElementById('@i.ToString()').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i>          @*this is the folder "button"*@
 
                     <td class="col-md-2">
+                        @*
                         @Html.ActionLink(" ", "Index", "Map", new { id = map.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                        @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
                         @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
                         {
                             @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id, currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
+                            *@
                     </td>
                 </tr>
                 i++;
@@ -94,7 +95,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <button type="button" class="close" data-dismiss="modal">
+                <button type="button" class="close" data-dismiss="modal" onmousedown="closeMenu();">
                     &times;
                 </button>
                 <h4 class="modal-title">Move To Folder</h4>
@@ -146,13 +147,6 @@
 
                 </form>
             </div>
-            <div class="modal-footer">
-                <button type="submit" class="btn btn-primary" onclick="addNewFolder()">Add</button>
-                <button type="button" class="btn btn-primary"
-                        data-dismiss="modal">
-                    Close
-                </button>
-            </div>
         </div>
     </div>
 </div>
@@ -160,6 +154,10 @@
 @*}*@
 }
 <script>
+
+    function closeMenu() {
+        $("#moveModal").hide();
+    }
 
     var currentID;
     var isFolder;
@@ -319,6 +317,11 @@
         padding-left:5px;
         padding-right:5px;
         font-family:Arial,Arial, Helvetica, sans-serif;
+        
+    }
+    .menuItem:hover
+    {
+        font-weight:bold
     }
 
 
