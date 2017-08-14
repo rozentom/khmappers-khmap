@@ -69,41 +69,6 @@ namespace khmap.Controllers
              toadd.Creator = UserId;
          }**/
 
-       private MapFolder createSuppFolderLocaly(string whichSupp)
-        {
-            _mapFolderDataManager = new MapFolderDB(new Settings());
-
-            var id = User.Identity.GetUserId();
-            ObjectId UserId = new ObjectId(id);
-
-            MapPermissions mapPermissions = new MapPermissions();
-            mapPermissions.Owner = new KeyValuePair<ObjectId, MapPermissionType>(UserId, MapPermissionType.RW);
-            mapPermissions.Users = new Dictionary<ObjectId, MapPermissionType>();
-            mapPermissions.Groups = new Dictionary<ObjectId, MapPermissionType>();
-            mapPermissions.AllUsers = MapPermissionType.NA;
-
-            mapPermissions.Users.Add(UserId, MapPermissionType.RW);
-
-            MapFolder suppFolder = new MapFolder();
-            suppFolder.Name = "suppFolder" + whichSupp;
-            suppFolder.Creator = UserId;
-            suppFolder.CreationTime = DateTime.Now;
-            suppFolder.Description = "Supirior Folder "+ whichSupp;
-            suppFolder.Followers = new HashSet<ObjectId>();
-            suppFolder.Permissions = mapPermissions;
-            suppFolder.idOfMapsInFolder = new HashSet<ObjectId>();
-            suppFolder.idOfSubFolders = new HashSet<ObjectId>();
-            suppFolder.ParentDierctory = new ObjectId();
-            suppFolder.FirstFolderOfUser = UserId;
-            suppFolder.Model = new BsonDocument { { "type", whichSupp }, {"path", ""} };
-            var maps = new MapDB(new Settings()).GetAllMaps();
-            foreach (Map map in maps)
-            {
-                suppFolder.idOfMapsInFolder.Add(map.Id);
-            }
-            return suppFolder;
-
-        }
 
         public ActionResult MyFirstMapAndFolders()
         {
@@ -114,7 +79,7 @@ namespace khmap.Controllers
                 MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserOwned(UserId);
                 if(superiorMapFolder == null)
                 {
-                    superiorMapFolder = createSuppFolderLocaly(OWNED_SUPIRIOR);
+                  //  superiorMapFolder = createSuppFolderLocaly(OWNED_SUPIRIOR);
                     _mapFolderDataManager.AddFolder(superiorMapFolder);
                 }
                 var mapFolders = this._mapFolderDataManager.GetAllSubFolder(superiorMapFolder);
@@ -176,7 +141,7 @@ namespace khmap.Controllers
                 MapFolder superiorMapFolder = _mapFolderDataManager.GetSuperiorMapFolderOfUserShared(UserId);
                 if (superiorMapFolder == null)
                 {
-                    superiorMapFolder = createSuppFolderLocaly(SHARED_SUPIRIOR);
+                 //   superiorMapFolder = createSuppFolderLocaly(SHARED_SUPIRIOR);
                     _mapFolderDataManager.AddFolder(superiorMapFolder);
                 }
                 var mapFolders = this._mapFolderDataManager.GetAllSubFolder(superiorMapFolder);
@@ -448,7 +413,10 @@ namespace khmap.Controllers
                 MapFolder folderToMove = _mapFolderDataManager.GetMapFolderById(new ObjectId(folderToMoveId));
                 MapFolder moveToFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(moveToFolderId));
                 MapFolder oldPrevFolder = _mapFolderDataManager.GetMapFolderById(folderToMove.ParentDierctory);
-
+                if (moveToFolder.Id.Equals(oldPrevFolder.Id))
+                {
+                    return;
+                }
                 oldPrevFolder.idOfSubFolders.Remove(folderToMove.Id);
                 folderToMove.ParentDierctory = moveToFolder.Id;
                 moveToFolder.idOfSubFolders.Add(folderToMove.Id);
@@ -482,7 +450,10 @@ namespace khmap.Controllers
                     }
                 }
             }
-
+            if (oldPrevFolder.Id.Equals(moveToFolder.Id))
+            {
+                return;
+            }
             oldPrevFolder.idOfMapsInFolder.Remove(mapToMove.Id);
             moveToFolder.idOfMapsInFolder.Add(mapToMove.Id);
 
@@ -494,9 +465,21 @@ namespace khmap.Controllers
 
         public void deleteFolder(string currFolder)
         {
+
             MapFolderDB folderManeger = new MapFolderDB(new Settings());
             ObjectId currFolderID = new ObjectId(currFolder);
             MapFolder currentFolder = folderManeger.GetMapFolderById(currFolderID);
+            try
+            {
+                foreach (ObjectId idOfSubFolder in currentFolder.idOfSubFolders)
+                {
+                    deleteFolder(idOfSubFolder.ToString());
+                }
+            }
+            catch
+            {
+
+            }
             ObjectId prevFolderID = currentFolder.ParentDierctory;
             MapFolder prevFolder = folderManeger.GetMapFolderById(prevFolderID);
             foreach(ObjectId objID in prevFolder.idOfSubFolders)
@@ -508,7 +491,7 @@ namespace khmap.Controllers
             }
             prevFolder.idOfSubFolders.Remove(currFolderID);
             folderManeger.UpdateMapFolder(prevFolder);
-            folderManeger.RemoveMapFolderById(currFolderID);
+            folderManeger.RemoveMapFolderById(currFolderID);            
             ViewBag.go2 = prevFolderID.ToString();
         }
 

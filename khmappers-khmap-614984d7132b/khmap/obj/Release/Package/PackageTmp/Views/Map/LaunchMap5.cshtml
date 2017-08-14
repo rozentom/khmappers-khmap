@@ -2951,7 +2951,9 @@
                         <li class="dropdown">
                             <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-expanded="false">File <span class="caret"></span></a>
                             <ul class="dropdown-menu" role="menu">
-                                <li>@Html.ActionLink("New", "LaunchMap5", "Map", new { id="" }, null)</li>
+                                <li>
+                                    <a data-toggle="tooltip" data-placement="bottom" onclick="location.reload();">New</a>
+                                </li>
                                 @*<li><a href="#">Open</a></li>*@
                                 <li><a href="#" class="rwPermissionLink" onclick="save()">Save</a></li>
                                 <li class="divider"></li>
@@ -2994,6 +2996,19 @@
                                 <li><a href="#" onclick="showAboutModal()">About Khmap</a></li>
                             </ul>
                         </li>
+                        <li>
+                            <div style="width:400px">
+                                @using (Html.BeginForm("index", "Search"))
+                                {
+                                    <div class="input-group" style="margin-top:10px">
+                                        @Html.TextBox("text", null, new { @class = "form-control", @placeholder = "Search" })
+                                        <div class="input-group-btn">
+                                            <button class="btn btn-default" style="height:34px" type="submit"><i class="glyphicon glyphicon-search"></i></button>
+                                        </div>
+                                    </div>
+                                }
+                            </div>
+                        </li>
                     </ul>
 
                     <ul class="nav navbar-nav navbar-right">
@@ -3007,7 +3022,7 @@
 
             <div class="btn-toolbar" role="toolbar" style="margin: 1px; padding-top: 6px; padding-bottom: 6px; padding-left: 6px">
                 <div class="btn-group">
-                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="New" onclick="location.href='@Url.Action("LaunchMap5", "Map", new { id = ""})'"><i class="fa fa-file-o"></i></button>
+                    <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="New" onclick="location.reload();"><i class="fa fa-file-o"></i></button>
                     <button type="button" class="btn btn-default" data-toggle="tooltip" data-placement="bottom" title="Open" onclick="myDiagram.commandHandler.redo()"><i class="fa fa-folder-open-o"></i></button>
                     <button type="button" id="saveBtn" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Save" onclick="save()"><i class="fa fa-save"></i></button>
                     <button type="button" id="saveAsBtn" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Save As New Map" onclick="saveAs()"></button>

@@ -360,7 +360,7 @@ namespace khmap.Controllers
                     }
                 }             
 
-                return RedirectToAction("Index", "Home", new { id = _currentFolderID });
+                return RedirectToAction("Index", "Home");
             }
             catch
             {

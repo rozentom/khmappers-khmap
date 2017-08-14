@@ -147,7 +147,7 @@
 
             data: { parentID: folderID, folderName: folderName, folderDescription: folderDescription },
             success: function () {
-                window.location.href = '/Home/Index/' + folderID;
+                location.reload();
             },
             error: function () {
                 $("#loginModal").modal('hide');
