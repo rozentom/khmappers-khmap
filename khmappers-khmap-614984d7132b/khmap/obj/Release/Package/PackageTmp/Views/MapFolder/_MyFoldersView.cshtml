@@ -42,7 +42,7 @@
 
                         @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
                         @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                        @if (item.Creator.ToString() == User.Identity.GetUserId())
+                        @if (item.Model["type"].ToString() != SharedCodedData.OWNED_SUPIRIOR)
                         {
                             @Html.ActionLink(" ", "Delete", "MapFolder", new { id = item.Id }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
                         }
