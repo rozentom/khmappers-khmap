@@ -90,7 +90,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:33:41</publishTime>
     </File>
     <File Include="bin/WebApplication2.dll">
-      <publishTime>08/14/2017 08:44:57</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="bin/WebGrease.dll">
       <publishTime>08/11/2017 18:33:41</publishTime>
@@ -876,7 +876,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:34:42</publishTime>
     </File>
     <File Include="Views/Home/Index.cshtml">
-      <publishTime>08/14/2017 08:42:57</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="Views/Home/_SaveMap.cshtml">
       <publishTime>08/11/2017 18:34:42</publishTime>
@@ -909,7 +909,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:34:42</publishTime>
     </File>
     <File Include="Views/Map/LaunchMap5.cshtml">
-      <publishTime>08/13/2017 14:03:15</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="Views/Map/LaunchMap5_test.cshtml">
       <publishTime>08/11/2017 18:34:42</publishTime>
@@ -927,7 +927,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:34:43</publishTime>
     </File>
     <File Include="Views/MapFolder/Delete.cshtml">
-      <publishTime>08/11/2017 18:34:43</publishTime>
+      <publishTime>08/14/2017 13:20:50</publishTime>
     </File>
     <File Include="Views/MapFolder/Details.cshtml">
       <publishTime>08/11/2017 18:34:43</publishTime>
@@ -942,10 +942,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:34:43</publishTime>
     </File>
     <File Include="Views/MapFolder/_MyFoldersView.cshtml">
-      <publishTime>08/11/2017 18:34:42</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="Views/MapFolder/_MySharedFoldersView.cshtml">
-      <publishTime>08/11/2017 18:34:42</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="Views/MapPermission/AddUserToMap.cshtml">
       <publishTime>08/11/2017 18:34:43</publishTime>
@@ -978,7 +978,7 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/11/2017 18:34:43</publishTime>
     </File>
     <File Include="Views/Search/Index.cshtml">
-      <publishTime>08/11/2017 20:02:14</publishTime>
+      <publishTime>08/14/2017 12:58:06</publishTime>
     </File>
     <File Include="Views/Shared/Error.cshtml">
       <publishTime>08/11/2017 18:33:41</publishTime>

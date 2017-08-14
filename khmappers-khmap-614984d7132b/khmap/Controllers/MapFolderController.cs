@@ -413,17 +413,16 @@ namespace khmap.Controllers
                 MapFolder folderToMove = _mapFolderDataManager.GetMapFolderById(new ObjectId(folderToMoveId));
                 MapFolder moveToFolder = _mapFolderDataManager.GetMapFolderById(new ObjectId(moveToFolderId));
                 MapFolder oldPrevFolder = _mapFolderDataManager.GetMapFolderById(folderToMove.ParentDierctory);
-                if (moveToFolder.Id.Equals(oldPrevFolder.Id))
+                if (!moveToFolder.Id.Equals(oldPrevFolder.Id))
                 {
-                    return;
-                }
                 oldPrevFolder.idOfSubFolders.Remove(folderToMove.Id);
                 folderToMove.ParentDierctory = moveToFolder.Id;
                 moveToFolder.idOfSubFolders.Add(folderToMove.Id);
 
                 _mapFolderDataManager.UpdateMapFolder(folderToMove);
                 _mapFolderDataManager.UpdateMapFolder(moveToFolder);
-                _mapFolderDataManager.UpdateMapFolder(oldPrevFolder);
+                _mapFolderDataManager.UpdateMapFolder(oldPrevFolder);               
+                }
             }
         }
 
