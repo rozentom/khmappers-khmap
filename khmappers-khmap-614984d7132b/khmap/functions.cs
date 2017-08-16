@@ -27,164 +27,207 @@ namespace khmap
 
         public static string removeDupSpace(string s)
         {
-            string ans = "";
-            int spaceCnt = 0;
-            foreach(char c in s)
+            try
             {
-                if(c==' ' && spaceCnt > 0)
+                string ans = "";
+                int spaceCnt = 0;
+                foreach (char c in s)
                 {
-                    continue;
-                }
-                else if(c==' ')
-                {
-                    spaceCnt++;
-                }
-                else
-                {
-                    spaceCnt = 0;
-                }
-                ans = ans + c;
-            }
-            return ans;
-        }
-        public static List<string> text2rules(string text)
-        {
-            List<string> rules = new List<string>();
-            string[] array = text.Split(';');
-            foreach (string s in array)
-            {
-                string rule = s;
-                if (rule.ElementAt(rule.Length - 1) == ' ')
-                {
-                    rule = rule.Substring(0, rule.Length - 1);
-                }
-                if (!rule.Equals("\n"))
-                {
-                    rules.Add(rule);
-                }
-            }
-            return rules;
-        }
-        public static List<string> conmplex2simple(List<string> complexRules)
-        {
-            List<string> simpleRules = new List<string>();
-            foreach(string r in complexRules)
-            {
-                string rule = r;
-                while(rule.Contains("and") || rule.Contains("or"))
-                {
-                    int andIndex = rule.IndexOf("and");
-                    int orIndex = rule.IndexOf("or");
-                    int splitIndex = -1;
-                    int skipSize = -1;
-                    if (andIndex>-1 && andIndex < orIndex)
+                    if (c == ' ' && spaceCnt > 0)
                     {
-                        splitIndex = andIndex;
-                        skipSize = 3;
+                        continue;
+                    }
+                    else if (c == ' ')
+                    {
+                        spaceCnt++;
                     }
                     else
                     {
-                        splitIndex = orIndex;
-                        skipSize = 2;
+                        spaceCnt = 0;
                     }
-                    string prevAndOr = rule.Substring(0, splitIndex-1);
-                    simpleRules.Add(prevAndOr);
-                    int lastIndexOfSpace = prevAndOr.LastIndexOf(" ");
-                    string firstPartOfNewRule = rule.Substring(0, lastIndexOfSpace);
-                    string secondPartOfNewRule = rule.Substring(splitIndex + skipSize);
-                    rule = firstPartOfNewRule + secondPartOfNewRule;
+                    ans = ans + c;
                 }
-                simpleRules.Add(rule);
+                return ans;
             }
-            return simpleRules;
+            catch(Exception e)
+            {
+                throw new Exception();
+            }
+        }
+        public static List<string> text2rules(string text)
+        {
+            try
+            {
+                List<string> rules = new List<string>();
+                string[] array = text.Split(';');
+                foreach (string s in array)
+                {
+                    string rule = s;
+                    if (rule.ElementAt(rule.Length - 1) == ' ')
+                    {
+                        rule = rule.Substring(0, rule.Length - 1);
+                    }
+                    if (!rule.Equals("\n"))
+                    {
+                        rules.Add(rule);
+                    }
+                }
+                return rules;
+            }
+            catch(Exception e)
+            {
+                throw new Exception();
+            }
+        }
+        public static List<string> complex2simple(List<string> complexRules)
+        {
+            try
+            {
+                List<string> simpleRules = new List<string>();
+                foreach (string r in complexRules)
+                {
+                    string rule = r;
+                    while (rule.Contains("and") || rule.Contains("or") || rule.Contains(","))
+                    {
+                        int andIndex = rule.IndexOf("and");
+                        int orIndex = rule.IndexOf("or");
+                        int commaIndex = rule.IndexOf(",");
+                        int splitIndex = -1;
+                        int skipSize = -1;
+                        if (andIndex > -1 && (andIndex < orIndex || orIndex < 0) && (andIndex < commaIndex || commaIndex < 0))
+                        {
+                            splitIndex = andIndex;
+                            skipSize = 3;
+                        }
+                        if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
+                        {
+                            splitIndex = orIndex;
+                            skipSize = 2;
+                        }
+                        else
+                        {
+                            splitIndex = commaIndex;
+                            skipSize = 1;
+                        }
+                        string prevAndOr = rule.Substring(0, splitIndex - 1);
+                        simpleRules.Add(prevAndOr);
+                        int lengthOfPart1 = sizeOfPart1(rule);
+                        string firstPartOfNewRule = rule.Substring(0, lengthOfPart1);
+                        string secondPartOfNewRule = rule.Substring(splitIndex + skipSize);
+                        rule = firstPartOfNewRule + secondPartOfNewRule;
+                    }
+                    simpleRules.Add(rule);
+                }
+                return simpleRules;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
         }
 
         private static int sizeOfPart1(string rule1)
         {
-            int lengthOfPart1 = -1;
-            if (rule1.Contains(SharedCodedData.achivedBy))
+            try
             {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) + SharedCodedData.achivedBy.Length;
+
+
+                int lengthOfPart1 = -1;
+                if (rule1.Contains(SharedCodedData.achivedBy))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) + SharedCodedData.achivedBy.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.associatedWIth))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.associatedWIth) + SharedCodedData.associatedWIth.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.consistsOF))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.consistsOF) + SharedCodedData.consistsOF.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.extandedBy))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.extandedBy) + SharedCodedData.extandedBy.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.minus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.minus) + SharedCodedData.minus.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.minusminus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.minusminus) + SharedCodedData.minusminus.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.plus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.plus) + SharedCodedData.plus.Length;
+                }
+                else if (rule1.Contains(SharedCodedData.plusplus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.plusplus) + SharedCodedData.plusplus.Length;
+                }
+                return lengthOfPart1;
             }
-            else if (rule1.Contains(SharedCodedData.associatedWIth))
+            catch (Exception e)
             {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.associatedWIth) + SharedCodedData.associatedWIth.Length;
+                throw new Exception();
             }
-            else if (rule1.Contains(SharedCodedData.consistsOF))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.consistsOF) + SharedCodedData.consistsOF.Length;
-            }
-            else if (rule1.Contains(SharedCodedData.extandedBy))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.extandedBy) + SharedCodedData.extandedBy.Length;
-            }
-            else if (rule1.Contains(SharedCodedData.minus))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.minus) + SharedCodedData.minus.Length;
-            }
-            else if (rule1.Contains(SharedCodedData.minusminus))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.minusminus) + SharedCodedData.minusminus.Length;
-            }
-            else if (rule1.Contains(SharedCodedData.plus))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.plus) + SharedCodedData.plus.Length;
-            }
-            else if (rule1.Contains(SharedCodedData.plusplus))
-            {
-                lengthOfPart1 = rule1.IndexOf(SharedCodedData.plusplus) + SharedCodedData.plusplus.Length;
-            }
-            return lengthOfPart1;
         }
 
         public static List<string> simple2complex(List<string> simpleRules)
         {
-            List<string> complexRules = new List<string>();
-            List<string> rulesToRemove = new List<string>();
-
-            foreach (string rule1 in simpleRules)
+            try
             {
-                if (rulesToRemove.Contains(rule1))
+                List<string> complexRules = new List<string>();
+                List<string> rulesToRemove = new List<string>();
+
+                foreach (string rule1 in simpleRules)
                 {
-                    continue;
-                }
-                string newRule = rule1;
-                int lengthOfPart1 = sizeOfPart1(rule1);
-                if (lengthOfPart1 < 0)
-                {
-                    complexRules.Add(rule1);
-                    continue;
-                }
-                string part1 = rule1.Substring(0, lengthOfPart1);
-                foreach(string rule2 in simpleRules)
-                {
-                    if (rule1.Equals(rule2))
+                    if (rulesToRemove.Contains(rule1))
                     {
                         continue;
                     }
-                    if (rule2.Contains(part1))
+                    string newRule = rule1;
+                    int lengthOfPart1 = sizeOfPart1(rule1);
+                    if (lengthOfPart1 < 0)
                     {
-                        newRule = newRule + " ," + rule2.Substring(lengthOfPart1+1);
-                        rulesToRemove.Add(rule2);
+                        complexRules.Add(rule1);
+                        continue;
                     }
+                    string part1 = rule1.Substring(0, lengthOfPart1);
+                    foreach (string rule2 in simpleRules)
+                    {
+                        if (rule1.Equals(rule2))
+                        {
+                            continue;
+                        }
+                        if (rule2.Contains(part1))
+                        {
+                            newRule = newRule + " ," + rule2.Substring(lengthOfPart1 + 1);
+                            rulesToRemove.Add(rule2);
+                        }
+                    }
+
+                    if (newRule.Contains(","))
+                    {
+                        string wordToAdd = "and";
+                        if (rule1.Contains(SharedCodedData.achivedBy) || rule1.Contains(SharedCodedData.extandedBy))
+                        {
+                            wordToAdd = "or";
+                        }
+                        int index = newRule.LastIndexOf(",");
+                        newRule = newRule.Substring(0, index) + wordToAdd + newRule.Substring(index + 1);
+                    }
+                    complexRules.Add(newRule);
+
                 }
 
-                if (newRule.Contains(","))
-                {
-                    string wordToAdd = "and";
-                    if(rule1.Contains(SharedCodedData.achivedBy) || rule1.Contains(SharedCodedData.extandedBy))
-                    {
-                        wordToAdd = "or";
-                    }
-                    int index = newRule.LastIndexOf(",");
-                    newRule = newRule.Substring(0, index) + wordToAdd + newRule.Substring(index + 1);
-                }
-                complexRules.Add(newRule);
 
+                return complexRules;
             }
-
-
-            return complexRules;
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
         }
 
         //  x achivedBy a
@@ -194,106 +237,129 @@ namespace khmap
 
         public static List<string> model2List(string currentModel)
         {
-            var modelAsBsonDocument = BsonDocument.Parse(currentModel);
-            List<string> rules = new List<string>();
-            Dictionary<string, string> key2text = new Dictionary<string, string>();
-            List<string> nodesThatWerentLinked = new List<string>();
-
-
-            foreach (var ruleInModelArray in modelAsBsonDocument["nodeDataArray"].AsBsonArray)
+            try
             {
-                string key = ruleInModelArray["key"].ToString();
-                string type = ruleInModelArray["category"].ToString();
-                string text = ruleInModelArray["text"].ToString();
-                string value = type + " " + text;
-                key2text.Add(key, value);
-                nodesThatWerentLinked.Add(value);
-            }
-            foreach (var link in modelAsBsonDocument["linkDataArray"].AsBsonArray)
-            {
-                string fromAsKey = null;
-                string toAsKey = null;
+                var modelAsBsonDocument = BsonDocument.Parse(currentModel);
+                List<string> rules = new List<string>();
+                Dictionary<string, string> key2text = new Dictionary<string, string>();
+                List<string> nodesThatWerentLinked = new List<string>();
 
-                try
+
+                foreach (var ruleInModelArray in modelAsBsonDocument["nodeDataArray"].AsBsonArray)
                 {
-                    fromAsKey = link["from"].ToString();
-                    toAsKey = link["to"].ToString();
+                    string key = ruleInModelArray["key"].ToString();
+                    string type = ruleInModelArray["category"].ToString();
+                    string text = ruleInModelArray["text"].ToString();
+                    string value = type + " " + text;
+                    key2text.Add(key, value);
+                    nodesThatWerentLinked.Add(value);
                 }
-                catch
+                foreach (var link in modelAsBsonDocument["linkDataArray"].AsBsonArray)
                 {
+                    string fromAsKey = null;
+                    string toAsKey = null;
 
-                }      
-                string linkKey = link["text"].ToString();
-
-                string ruleAns = "";
-
-                if (fromAsKey != null)
-                {
-                    string fromAsText = key2text[fromAsKey];
-                    ruleAns = ruleAns + fromAsText + " ";
-                    ruleAns = ruleAns + linksToText[linkKey];
-                    if (toAsKey != null && !linkKey.Equals("?"))
+                    try
                     {
-                        string toAsText = key2text[toAsKey];
-                        ruleAns = ruleAns + " " + toAsText;
-                        rules.Add(ruleAns);
-                        nodesThatWerentLinked.Remove(fromAsText);
-                        nodesThatWerentLinked.Remove(toAsText);
+                        fromAsKey = link["from"].ToString();
+                        toAsKey = link["to"].ToString();
+                    }
+                    catch
+                    {
+
+                    }
+                    string linkKey = link["text"].ToString();
+
+                    string ruleAns = "";
+
+                    if (fromAsKey != null)
+                    {
+                        string fromAsText = key2text[fromAsKey];
+                        ruleAns = ruleAns + fromAsText + " ";
+                        ruleAns = ruleAns + linksToText[linkKey];
+                        if (toAsKey != null && !linkKey.Equals("?"))
+                        {
+                            string toAsText = key2text[toAsKey];
+                            ruleAns = ruleAns + " " + toAsText;
+                            rules.Add(ruleAns);
+                            nodesThatWerentLinked.Remove(fromAsText);
+                            nodesThatWerentLinked.Remove(toAsText);
+                        }
+                        else
+                        {
+                            string fromRule = fromAsText;
+                            if (!rules.Contains(fromRule) && nodesThatWerentLinked.Contains(fromAsText))
+                            {
+                                rules.Add(fromRule);
+                                nodesThatWerentLinked.Remove(fromAsText);
+                            }
+                        }
                     }
                     else
                     {
-                        string fromRule = fromAsText;
-                        if (!rules.Contains(fromRule) && nodesThatWerentLinked.Contains(fromAsText))
+                        if (toAsKey != null)
                         {
-                            rules.Add(fromRule);
-                            nodesThatWerentLinked.Remove(fromAsText);
+                            string toAsText = key2text[toAsKey];
+                            string toRule = toAsText;
+                            if (!rules.Contains(toRule) && nodesThatWerentLinked.Contains(toAsText))
+                            {
+                                rules.Add(toRule);
+                                nodesThatWerentLinked.Remove(toAsText);
+                            }
                         }
                     }
                 }
-                else
+                foreach (string s in nodesThatWerentLinked)
                 {
-                    if (toAsKey != null)
-                    {
-                        string toAsText = key2text[toAsKey];
-                        string toRule = toAsText;
-                        if (!rules.Contains(toRule) && nodesThatWerentLinked.Contains(toAsText))
-                        {
-                            rules.Add(toRule);
-                            nodesThatWerentLinked.Remove(toAsText);
-                        }
-                    }
+                    rules.Add(s);
                 }
+                return rules;
             }
-            foreach(string s in nodesThatWerentLinked)
+            catch (Exception e)
             {
-                rules.Add(s);
+                throw new Exception();
             }
-            return rules;
         }
 
         public static string list2text(List<string> rules)
         {
-            string text = "";
-            foreach(var rule in rules)
+            try
             {
-                text = text + rule + ";" + "\n";
+
+
+                string text = "";
+                foreach (var rule in rules)
+                {
+                    text = text + rule + ";" + "\n";
+                }
+                return text;
             }
-            return text;
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
         }
 
         public static List<string> fixBackSleshN(List<string> rules)
         {
-            List<string> ansRules = new List<string>();
-            foreach(string r in rules)
+            try
             {
-                string rule = r;
-                if(rule.IndexOf("\n") == 0)
+                List<string> ansRules = new List<string>();
+                foreach (string r in rules)
                 {
-                    rule = rule.Substring(1);
+                    string rule = r;
+                    if (rule.IndexOf("\n") == 0)
+                    {
+                        rule = rule.Substring(1);
+                    }
+                    ansRules.Add(rule);
                 }
-                ansRules.Add(rule);
+                return ansRules;
             }
-            return ansRules;
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
         }
     }
 

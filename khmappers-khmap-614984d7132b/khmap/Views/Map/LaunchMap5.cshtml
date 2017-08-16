@@ -2971,6 +2971,29 @@
             });
         }
 
+        function complex2simple(){
+
+            var text = $('#modelAsText').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("complex2simple", "Map")',
+                //dataType: "json",
+                data: { text: text },
+                success: function (res) {
+                    // document.getElementById("modelAsText").value = res
+                    $('#modelAsText').val(res);
+                    //alert(res);
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
+
+        
+
 </script>
 
 </head>
@@ -3071,8 +3094,13 @@
                         simple to complex
                     </button>
                 </div>
+                <div style="float:right">
+                    <button onmousedown="complex2simple();">
+                        complex to simple
+                    </button>
+                </div>
             </div>
-
+            
         </nav>
     </div>
     <!--END menu bar -->
