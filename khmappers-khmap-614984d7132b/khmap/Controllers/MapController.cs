@@ -705,5 +705,12 @@ namespace khmap.Controllers
             return map != null;
         }
 
+        public string model2Text(string currentModel)
+        {
+            List<string> list = functions.model2List(currentModel);
+            string ans = functions.list2text(list);
+            return ans;
+        }
+
     }
 }

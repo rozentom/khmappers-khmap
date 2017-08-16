@@ -1,7 +1,9 @@
-﻿using System;
+﻿using MongoDB.Bson;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Web;
+using System.Web.Helpers;
 
 namespace khmap
 {
@@ -99,12 +101,115 @@ namespace khmap
 
             return complexRules;
         }
+
+        //  x achivedBy a
+        // x achivedBy b
+        // x achivedBy c
+        // x achivedBy d
+
+        public static List<string> model2List(string currentModel)
+        {
+            var modelAsBsonDocument = BsonDocument.Parse(currentModel);
+            List<string> rules = new List<string>();
+            Dictionary<string, string> key2text = new Dictionary<string, string>();
+            List<string> nodesThatWerentLinked = new List<string>();
+            Dictionary<string, string> linksToText = new Dictionary<string, string>();
+            linksToText.Add("achieved by", "is achived by");
+            linksToText.Add("consists of", "is consisted of");
+            linksToText.Add("extended by", "is extended by");
+            linksToText.Add(" ", "is assosiated with");
+            linksToText.Add("", "is assosiated with");
+            linksToText.Add("?", "?");
+            linksToText.Add("++", "conttributes[positively]");
+            linksToText.Add("+", "conttributes[wildly]");
+            linksToText.Add("--", "conttributes[negatively]");
+            linksToText.Add("-", "conttributes[natrually]");
+
+            foreach (var ruleInModelArray in modelAsBsonDocument["nodeDataArray"].AsBsonArray)
+            {
+                string key = ruleInModelArray["key"].ToString();
+                string type = ruleInModelArray["category"].ToString();
+                string text = ruleInModelArray["text"].ToString();
+                string value = type + " " + text;
+                key2text.Add(key, value);
+                nodesThatWerentLinked.Add(value);
+            }
+            foreach (var link in modelAsBsonDocument["linkDataArray"].AsBsonArray)
+            {
+                string fromAsKey = null;
+                string toAsKey = null;
+
+                try
+                {
+                    fromAsKey = link["from"].ToString();
+                    toAsKey = link["to"].ToString();
+                }
+                catch
+                {
+
+                }      
+                string linkKey = link["text"].ToString();
+
+                string ruleAns = "";
+
+                if (fromAsKey != null)
+                {
+                    string fromAsText = key2text[fromAsKey];
+                    ruleAns = ruleAns + fromAsText + " ";
+                    ruleAns = ruleAns + linksToText[linkKey];
+                    if (toAsKey != null && !linkKey.Equals("?"))
+                    {
+                        string toAsText = key2text[toAsKey];
+                        ruleAns = ruleAns + " " + toAsText;
+                        rules.Add(ruleAns);
+                        nodesThatWerentLinked.Remove(fromAsText);
+                        nodesThatWerentLinked.Remove(toAsText);
+                    }
+                    else
+                    {
+                        string fromRule = fromAsText;
+                        if (!rules.Contains(fromRule) && nodesThatWerentLinked.Contains(fromAsText))
+                        {
+                            rules.Add(fromRule);
+                            nodesThatWerentLinked.Remove(fromAsText);
+                        }
+                    }
+                }
+                else
+                {
+                    if (toAsKey != null)
+                    {
+                        string toAsText = key2text[toAsKey];
+                        string toRule = toAsText;
+                        if (!rules.Contains(toRule) && nodesThatWerentLinked.Contains(toAsText))
+                        {
+                            rules.Add(toRule);
+                            nodesThatWerentLinked.Remove(toAsText);
+                        }
+                    }
+                }
+            }
+            foreach(string s in nodesThatWerentLinked)
+            {
+                rules.Add(s);
+            }
+            return rules;
+        }
+
+        public static string list2text(List<string> rules)
+        {
+            string text = "";
+            foreach(var rule in rules)
+            {
+                text = text + rule + ";" + "\n";
+            }
+            return text;
+        }
     }
 
-  //  x achivedBy a
-   // x achivedBy b
-   // x achivedBy c
-   // x achivedBy d
+
+
+
 
 }
 
