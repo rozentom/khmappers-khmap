@@ -712,5 +712,15 @@ namespace khmap.Controllers
             return ans;
         }
 
+        public string simple2complex(string text)
+        {
+            text = functions.removeDupSpace(text);
+            List<string> simpleRules = functions.text2rules(text);
+            List<string> complexRules = functions.simple2complex(simpleRules);
+            complexRules = functions.fixBackSleshN(complexRules);
+            string ans = functions.list2text(complexRules);
+            return ans;
+        }
+
     }
 }
