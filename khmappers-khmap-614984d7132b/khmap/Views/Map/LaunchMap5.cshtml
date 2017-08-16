@@ -165,9 +165,9 @@
            $("ContextMenuButton",
                 $(go.TextBlock, "Filter Radius"),
                 { click: function (e, obj) { showFilterMenu(obj); } }));
-        
+
         var LinkMenu =
-           $(go.Adornment, "Vertical",            
+           $(go.Adornment, "Vertical",
              $("ContextMenuButton",
                  $(go.TextBlock, "Properties", { margin: 3 }),
                  { click: function (e, obj) { showModal(obj); } }));
@@ -291,7 +291,7 @@
                 new go.Binding("figure", "figure").makeTwoWay(),
                 new go.Binding("fill", "fill").makeTwoWay(),
                 new go.Binding("stroke", "stroke").makeTwoWay(),
-                new go.Binding("strokeWidth", "strokeWidth").makeTwoWay()                
+                new go.Binding("strokeWidth", "strokeWidth").makeTwoWay()
               ),
               $(go.TextBlock,
                 {
@@ -950,6 +950,7 @@
     function save() {
         saveDiagramProperties();  // do this first, before writing to JSON
         var currentModel = myDiagram.model.toJson();
+        alert(currentModel);
         //$('#mySavedModel').val(currentModel);
         myDiagram.isModified = false;
 
@@ -979,17 +980,17 @@
 
         //alert(mModel);
     }
-        function saveAs() 
+        function saveAs()
         {
             saveDiagramProperties();  // do this first, before writing to JSON
             var currentModel = myDiagram.model.toJson();
             //$('#mySavedModel').val(currentModel);
-            myDiagram.isModified = false;           
+            myDiagram.isModified = false;
             $('#saveMapModal').modal('show');
-            $('#saveNewMap').find('input#Model').val(currentModel);                                    
+            $('#saveNewMap').find('input#Model').val(currentModel);
          }
             //alert(mModel);
-        
+
 
 
     function saveAsImg(type, ext) {
@@ -1229,14 +1230,14 @@
 
         loadComments();
     }
-    
+
     var FilterObject;
     function showFilterMenu(obj) {
         if (obj.part.adornedObject!==FilterObject||FilterObject===null)
         {
             document.getElementById('radiusLength').value=1;
             $('#radius-error-input').html("");
-        }            
+        }
         FilterObject = obj.part.adornedObject;
         $('#FilterRadius').modal('show');
     }
@@ -1252,7 +1253,7 @@
         //$('#typeFeature').text(type);
         //$('#mapFeature').text(mapNameGlobal);
         $('#descriptionFeature').val(node.description);
-        node.key ? $("#descriptionFeature").prop('disabled', false) : $("#descriptionFeature").prop('disabled', false);        
+        node.key ? $("#descriptionFeature").prop('disabled', false) : $("#descriptionFeature").prop('disabled', false);
         // style
         $("#colorFill").spectrum("set", node.fill);
         $("#colorStroke").spectrum("set", node.stroke);
@@ -2759,7 +2760,7 @@
         {
             if(document.getElementById('AllV').checked===false && document.getElementById(categoryValue+"V").checked===false)
             {
-                var iter=myDiagram.findNodesByExample({category:categoryValue});              
+                var iter=myDiagram.findNodesByExample({category:categoryValue});
                 while(iter.next())
                 {
                     first=iter.value;
@@ -2779,38 +2780,38 @@
             }
             else
             {
-                var iter=myDiagram.findNodesByExample({category:categoryValue});             
+                var iter=myDiagram.findNodesByExample({category:categoryValue});
                 while(iter.next())
                 {
                     first=iter.value;
                     first.visible=true;
-                }                      
+                }
             }
-                
+
         }
 
         function changeLinkView(categoryValue)
         {
             if( document.getElementById('AllV').checked===false && document.getElementById(categoryValue+"V").checked===false)
             {
-                var iter=myDiagram.findLinksByExample({category:categoryValue});              
+                var iter=myDiagram.findLinksByExample({category:categoryValue});
                 while(iter.next())
                 {
                     first=iter.value;
-                    var taskChecked=document.getElementById("TaskV").checked;        
-                    var qualityChecked=document.getElementById("QualityV").checked;        
+                    var taskChecked=document.getElementById("TaskV").checked;
+                    var qualityChecked=document.getElementById("QualityV").checked;
                     if(first.fromNode!==null)
-                    {   
+                    {
                         var hasOtherlinkTypeThatIsViewable=false;
                         var LinkConnectedIter=first.fromNode.linksConnected; //iterator of all the links that connected to this node.
                         while(LinkConnectedIter.next()&&!hasOtherlinkTypeThatIsViewable)
-                        {   
+                        {
                             var currLink=LinkConnectedIter.value;
                             var linkType=currLink.category;
                             if(linkType!==categoryValue && document.getElementById(linkType+'V').checked)
                                 hasOtherlinkTypeThatIsViewable=true;
                         }
-                        
+
                         if (!hasOtherlinkTypeThatIsViewable&&!taskChecked && !qualityChecked )
                             first.fromNode.visible=false;
                         if(!hasOtherlinkTypeThatIsViewable&&taskChecked && !qualityChecked)
@@ -2821,14 +2822,14 @@
                                 first.fromNode.visible=false;
                         if(taskChecked && qualityChecked)
                         {}
-                                
+
                     }
                     if(first.toNode!==null)
-                    {   
+                    {
                         var hasOtherlinkTypeThatIsViewable=false;
                         var LinkConnectedIter=first.toNode.linksConnected; //iterator of all the links that connected to this node.
                         while(LinkConnectedIter.next()&&!hasOtherlinkTypeThatIsViewable)
-                        {   
+                        {
                             var currLink=LinkConnectedIter.value;
                             var linkType=currLink.category;
                             if(linkType!==categoryValue && document.getElementById(linkType+'V').checked)
@@ -2846,38 +2847,38 @@
                         if(taskChecked && qualityChecked)
                         {}
                     }
-                    first.visible=false;  
-                   
+                    first.visible=false;
+
                 }
             }
             else
             {
-                var iter=myDiagram.findLinksByExample({category:categoryValue});             
+                var iter=myDiagram.findLinksByExample({category:categoryValue});
                 while(iter.next())
                 {
                     first=iter.value;
                     if(first.fromNode!==null)
-                    {   
+                    {
                         first.fromNode.visible=true;
                     }
                     if(first.toNode!==null)
-                    {   
+                    {
                         first.toNode.visible=true;
                     }
-                    first.visible=true;  
-                }            
+                    first.visible=true;
+                }
             }
-                
+
         }
 
         function filterViewByRadius(node,number)
         {
-            //var node = obj.part.adornedObject;   
+            //var node = obj.part.adornedObject;
             document.getElementById('AchievedByV').checked=false;
             document.getElementById('ConsistsOfV').checked=false;
             document.getElementById('ExtendedByV').checked=false;
             document.getElementById('AssociationV').checked=false;
-            document.getElementById('ContributionV').checked=false;            
+            document.getElementById('ContributionV').checked=false;
             document.getElementById("QualityV").checked=false;
             document.getElementById("TaskV").checked=false;
             document.getElementById('AllV').checked=false;
@@ -2889,42 +2890,65 @@
         function filterViewByRadiusRec(node,number)
         {
             if(number===0)
-                return;            
+                return;
             var outLinkIter=node.findLinksOutOf();
-            var intoLinkIter=node.findLinksInto();            
+            var intoLinkIter=node.findLinksInto();
             while(outLinkIter.next())
-            {   
+            {
                 var currLink=outLinkIter.value;
                 currLink.toNode.visible=true;
                 currLink.visible=true;
                 filterViewByRadiusRec(currLink.toNode,number-1);
             }
             while(intoLinkIter.next())
-            {   
+            {
                 var currLink=intoLinkIter.value;
                 currLink.fromNode.visible=true;
                 currLink.visible=true;
                 filterViewByRadiusRec(currLink.fromNode,number-1);
-            }                                                                
+            }
         }
 
         function validRandiusRangeCheck()
         {
             if(document.getElementById('radiusLength').value>=1)
-            {   
+            {
                 $('#radius-error-input').html("");
                 filterViewByRadius(FilterObject,document.getElementById('radiusLength').value);
                 $('#FilterRadius').modal('hide');
             }
             else
             {
-                //alert("The Filter Radius View Range Must Be A Positive number.\nPlease Enter A Valid Number.");               
+                //alert("The Filter Radius View Range Must Be A Positive number.\nPlease Enter A Valid Number.");
                 $('#radius-error-input').html("   Error:The Filter Radius View Range Must Be A Positive Number.<br>Please Enter A Valid Number.");
             }
-        
+
         }
     /* ------------------------------------ End Talkback -------------------------------------------- */
 
+
+
+        function model2Text(){
+
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("model2Text", "Map")',
+                //dataType: "json",
+                data: { currentModel: currentModel },
+                success: function (res) {
+                   // document.getElementById("modelAsText").value = res
+                    $('#modelAsText').val(res);
+                    //alert(res);
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
 
 </script>
 
@@ -3016,18 +3040,25 @@
                     <input type="checkbox" id="AssociationV" onchange="changeLinkView('Association')" name="Association">Association
                     <input type="checkbox" id="ContributionV" onchange="changeLinkView('Contribution')" name="Contribution">Contribution
                 </div>
+                <div style="float:right">
+                    <button onmousedown="model2Text();">
+                        Convert To Text
+                    </button>
+                </div>
             </div>
 
         </nav>
     </div>
     <!--END menu bar -->
-  @*  <div>
-        <textarea class="scrollabletextbox" name="note" style="width: 40%; height: 100%; float:right;">
+
+
+    <div>
+        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 40%; height: 100%; float:right">
            
         </textarea>
     </div>
-      *@
-    <div id="PaletteAndDiagram" style="width: 100%; height: 100%; float:left;">
+      
+    <div id="PaletteAndDiagram" style="width: 60%; height: 100%; float:left;">
         <div id="sideBar">
             <div class="handle">Map Shapes</div>
             <div id="myPalette"></div>
