@@ -2950,6 +2950,27 @@
             });
         }
 
+        function simple2complex(){
+
+            var text = $('#modelAsText').val();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("simple2complex", "Map")',
+                //dataType: "json",
+                data: { text: text },
+                success: function (res) {
+                    // document.getElementById("modelAsText").value = res
+                    $('#modelAsText').val(res);
+                    //alert(res);
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
+
 </script>
 
 </head>
@@ -3043,6 +3064,11 @@
                 <div style="float:right">
                     <button onmousedown="model2Text();">
                         Convert To Text
+                    </button>
+                </div>
+                <div style="float:right">
+                    <button onmousedown="simple2complex();">
+                        simple to complex
                     </button>
                 </div>
             </div>
