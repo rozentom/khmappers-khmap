@@ -99,7 +99,7 @@ namespace khmap
                             splitIndex = andIndex;
                             skipSize = 3;
                         }
-                        if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
+                        else if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
                         {
                             splitIndex = orIndex;
                             skipSize = 2;
@@ -215,7 +215,7 @@ namespace khmap
                             wordToAdd = "or";
                         }
                         int index = newRule.LastIndexOf(",");
-                        newRule = newRule.Substring(0, index) + wordToAdd + newRule.Substring(index + 1);
+                        newRule = newRule.Substring(0, index) + wordToAdd + " " + newRule.Substring(index + 1);
                     }
                     complexRules.Add(newRule);
 
