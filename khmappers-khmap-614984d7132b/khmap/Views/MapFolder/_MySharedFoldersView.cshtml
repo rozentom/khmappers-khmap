@@ -34,7 +34,7 @@
                         <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
                         }
                         <label id="@s" style="display:none">@id</label>
-                        <i id="@id" onmousedown="onClickFolder(document.getElementById('@s').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @name</button></i>          @*this is the folder "button"*@
+                        <i id="@id" onmousedown="onClickFolderShared(document.getElementById('@s').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
                      @*   @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })*@
@@ -52,7 +52,7 @@
                 <tr>
                     <td class="col-md-9">
                         <label id="@s" style="display:none">@id</label>
-                        <i id="@id" onmousedown="onClickMap(document.getElementById('@s').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i> 
+                        <i id="@id" onmousedown="onClickMapShared(document.getElementById('@s').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i> 
                    @*     @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null" }, new { title = "Load " + map.Name })*@
                     </td>
                 @*
@@ -73,12 +73,12 @@
 @*}*@
 
 <script>
-    var currentID;
-    var isFolder;
+    var currentIDShared;
+    var isFolderShared;
 
-    function onClickMap(id, event, num) {
-        currentID = id;
-        isFolder = false;
+    function onClickMapShared(id, event, num) {
+        currentIDShared = id;
+        isFolderShared = false;
       //  alert(id);
         var element = document.getElementById(id);
       //  alert(element.innerText);
@@ -103,11 +103,11 @@
         }
     }
 
-    function onClickFolder(id, event, num) {
-        currentID = id;
-        isFolder = true;
+    function onClickFolderShared(id, event, num) {
+        currentIDShared = id;
+        isFolderShared = true;
         //alert(currentID);
-        var element = document.getElementById(currentID);
+        var element = document.getElementById(currentIDShared);
         //alert("1");
         //alert(element.innerText);
 
@@ -133,18 +133,18 @@
     $(document).ready(function () {
         $(document).click(function (e) {
             if (e.button == 0) {
-                $("#menu").fadeOut(80);
+                $("#menuShared").fadeOut(80);
             }
         })
     })
 
     $(document).ready(function () {
         $("#detailsMenuButtonShared").click(function () {
-            if (isFolder) {
-                window.location.href = '@Url.Action("Details", "MapFolder", new {id = "ID"})'.replace("ID", currentID);
+            if (isFolderShared) {
+                window.location.href = '@Url.Action("Details", "MapFolder", new {id = "ID"})'.replace("ID", currentIDShared);
             }
             else {
-                window.location.href = '@Url.Action("Index", "Map", new {id = "ID"})'.replace("ID", currentID);
+                window.location.href = '@Url.Action("Index", "Map", new {id = "ID"})'.replace("ID", currentIDShared);
             }
         })
     })
