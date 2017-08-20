@@ -1074,7 +1074,7 @@
 
             //console.log('myMap: ' + myMap);
 
-            //alert(myMap);
+            alert(myMap);
 
             document.getElementById("mySavedModel").value = myMap;
             myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
@@ -2992,7 +2992,27 @@
             });
         }
 
-        
+        function text2graph(){
+            var text = $('#modelAsText').val();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("text2graph", "Map")',
+                //dataType: "json",
+                data: { text: text },
+                success: function (res) {
+                    var myMap = res;
+                    document.getElementById("mySavedModel").value = myMap;
+                    myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                    alert(res);
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
+
+
 
 </script>
 
@@ -3099,6 +3119,12 @@
                         complex to simple
                     </button>
                 </div>
+                <div style="float:right">
+                    <button onmousedown="text2graph();">
+                        text to graph
+                    </button>
+                </div>
+                
             </div>
             
         </nav>

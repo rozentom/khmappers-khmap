@@ -502,6 +502,7 @@ namespace khmap.Controllers
 
         public ActionResult LaunchMap5(string id, string currentFolderID)
         {
+            ViewBag.res = null;
             _currentFolderID = currentFolderID;
             ViewBag.currentFolderID = currentFolderID;
             if (id != null && !_mapManager.IsMapExist(new ObjectId(id)))
@@ -729,6 +730,17 @@ namespace khmap.Controllers
             string ans = functions.list2text(simpleRules);
             return ans;
 
+        }
+
+        public string text2graph(string text)
+        {
+            text = functions.removeDupSpace(text);
+            List<string> complexRules = functions.text2rules(text);
+            List<string> simpleRules = functions.complex2simple(complexRules);
+            simpleRules = functions.fixBackSleshN(simpleRules);
+            BsonDocument ans =  functions.simple2graph(simpleRules);
+            ViewBag.res = ans;
+            return ans.ToJson().ToString();
         }
 
     }
