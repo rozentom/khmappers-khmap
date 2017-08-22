@@ -20,5 +20,29 @@ namespace khmap
         public static string plus = "conttributes[wildly]";
         public static string minusminus = "conttributes[negatively]";
         public static string minus = "conttributes[natrually]";
+
+        public static Dictionary<string, string> toCategory = new Dictionary<string, string>()
+        {
+            {achivedBy, "AchievedBy" },
+            {consistsOF, "ConsistsOf" },
+            {extandedBy, "ExtendedBy" },
+            {associatedWIth, "Association" },
+            {plus, "Contribution" },
+            {plusplus, "Contribution" },
+            {minus, "Contribution" },
+            {minusminus, "Contribution" }
+        };
+
+        public static Dictionary<string, string> toText = new Dictionary<string, string>()
+        {
+            {achivedBy, "achieved by" },
+            {consistsOF, "consists of" },
+            {extandedBy, "extended by" },
+            {associatedWIth, "" },
+            {plus, "+" },
+            {plusplus, "++" },
+            {minus, "-" },
+            {minusminus, "--" }
+        };
     }
 }

@@ -99,7 +99,7 @@ namespace khmap
                             splitIndex = andIndex;
                             skipSize = 3;
                         }
-                        if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
+                        else if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
                         {
                             splitIndex = orIndex;
                             skipSize = 2;
@@ -172,6 +172,95 @@ namespace khmap
                 throw new Exception();
             }
         }
+        private static int sizeOfFirstNode(string rule1)
+        {
+            try
+            {
+                int lengthOfPart1 = -1;
+                if (rule1.Contains(SharedCodedData.achivedBy))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) -1;
+                }
+                else if (rule1.Contains(SharedCodedData.associatedWIth))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.associatedWIth) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.consistsOF))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.consistsOF) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.extandedBy))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.extandedBy) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.minus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.minus) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.minusminus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.minusminus) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.plus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.plus) - 1;
+                }
+                else if (rule1.Contains(SharedCodedData.plusplus))
+                {
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.plusplus) - 1;
+                }
+                return lengthOfPart1;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
+        }
+
+        private static string getLinkText(string rule1)
+        {
+            try
+            {
+                string linkText = "";
+                if (rule1.Contains(SharedCodedData.achivedBy))
+                {
+                    linkText = SharedCodedData.achivedBy;
+                }
+                else if (rule1.Contains(SharedCodedData.associatedWIth))
+                {
+                    linkText = SharedCodedData.associatedWIth;
+                }
+                else if (rule1.Contains(SharedCodedData.consistsOF))
+                {
+                    linkText = SharedCodedData.consistsOF;
+                }
+                else if (rule1.Contains(SharedCodedData.extandedBy))
+                {
+                    linkText = SharedCodedData.extandedBy;
+                }
+                else if (rule1.Contains(SharedCodedData.minus))
+                {
+                    linkText = SharedCodedData.minus;
+                }
+                else if (rule1.Contains(SharedCodedData.minusminus))
+                {
+                    linkText = SharedCodedData.minusminus;
+                }
+                else if (rule1.Contains(SharedCodedData.plus))
+                {
+                    linkText = SharedCodedData.plus;
+                }
+                else if (rule1.Contains(SharedCodedData.plusplus))
+                {
+                    linkText = SharedCodedData.plusplus;
+                }
+                return linkText;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
+        }
 
         public static List<string> simple2complex(List<string> simpleRules)
         {
@@ -215,7 +304,7 @@ namespace khmap
                             wordToAdd = "or";
                         }
                         int index = newRule.LastIndexOf(",");
-                        newRule = newRule.Substring(0, index) + wordToAdd + newRule.Substring(index + 1);
+                        newRule = newRule.Substring(0, index) + wordToAdd + " " + newRule.Substring(index + 1);
                     }
                     complexRules.Add(newRule);
 
@@ -230,11 +319,115 @@ namespace khmap
             }
         }
 
-        //  x achivedBy a
-        // x achivedBy b
-        // x achivedBy c
-        // x achivedBy d
+        private static int addNode(Dictionary<string, int> nodes, BsonArray nodeDataArray, string currNode, int AvailableKey)
+        {
 
+            string currNodeText = "";
+            bool isTask = currNode.ElementAt(0) == 'T' || currNode.ElementAt(0) == 't';
+            if (isTask)
+            {
+                currNodeText = currNode.Substring(5);
+            }
+            else
+            {
+                currNodeText = currNode.Substring(8);
+            }
+            if (!nodes.Keys.Contains(currNode))
+            {
+                nodes.Add(currNode, AvailableKey);
+                string category = "Quality";
+                if (isTask)
+                {
+                    category = "Task";
+                }
+                BsonDocument node = new BsonDocument
+                {
+                    { "category", category},
+                    { "text", currNodeText},
+                    {"fill", "#ffffff" },
+                    {"stroke", "#000000" },
+                    {"strokeWidth", "1" },
+                    {"description", "Add a Description"},
+                    { "key", AvailableKey.ToString()},
+                    {"refs", new BsonDocument() },
+                    {"ctxs", new BsonDocument() },
+
+                };
+                nodeDataArray.Add(node);
+                AvailableKey--;
+            }
+            return AvailableKey;
+        }
+
+        public static BsonDocument simple2graph(List<string> simpleRules)
+        {
+            int AvailableKey = -1;
+            Dictionary<string, int> nodes = new Dictionary<string, int>();
+            BsonArray nodeDataArray = new BsonArray();
+            BsonArray linkDataArray = new BsonArray();
+
+            //adding the nodes
+            foreach (string rule in simpleRules)
+            {
+                int indexOfSecondNode = sizeOfPart1(rule);
+                if (indexOfSecondNode >= 0)
+                {
+                    ///add first node
+                    int lengthOfFirstNode = sizeOfFirstNode(rule);
+                    string firtNode = rule.Substring(0, lengthOfFirstNode);
+                    AvailableKey = addNode(nodes, nodeDataArray, firtNode, AvailableKey);
+
+                    ////add second node
+                    indexOfSecondNode++;
+                    string secondNode = rule.Substring(indexOfSecondNode);
+                    AvailableKey = addNode(nodes, nodeDataArray, secondNode, AvailableKey);                   
+                }
+                else
+                {
+                    AvailableKey = addNode(nodes, nodeDataArray, rule, AvailableKey);
+                }
+            }
+
+            ///adding the links
+            foreach(string rule in simpleRules)
+            {
+                string linkTextKey = getLinkText(rule);
+                if (!linkTextKey.Equals(""))
+                {
+                    int lengthOfFirstNode = sizeOfFirstNode(rule);
+                    string firtNode = rule.Substring(0, lengthOfFirstNode);
+                    int indexOfSecondNode = sizeOfPart1(rule) + 1;
+                    string secondNode = rule.Substring(indexOfSecondNode);
+
+                    BsonDocument linkDoc = new BsonDocument()
+                    {
+                        {"category", SharedCodedData.toCategory[linkTextKey] },
+                        {"text", SharedCodedData.toText[linkTextKey] },
+                        {"routing", new BsonDocument()
+                            {
+                                {"class", "go.EnumValue"},
+                                {"classType", "Link" },
+                                {"name", "Normal"}
+                            }
+                        },
+                        {"description", "Add a Description"},
+                        {"from", nodes[firtNode] },
+                        {"to", nodes[secondNode] },
+                        {"refs", new BsonDocument() },
+                        {"ctxs", new BsonDocument() },
+                    };
+                    linkDataArray.Add(linkDoc);
+                }
+            }
+
+            BsonDocument model = new BsonDocument()
+            {
+                {"class", "go.GraphLinksModel" },
+                {"nodeDataArray", nodeDataArray },
+                {"linkDataArray", linkDataArray}
+            };
+            return model;
+        }
         public static List<string> model2List(string currentModel)
         {
             try
