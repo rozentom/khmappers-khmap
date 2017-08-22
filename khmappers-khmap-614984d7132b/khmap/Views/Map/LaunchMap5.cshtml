@@ -3012,6 +3012,43 @@
             });
         }
 
+        var flag = 0;
+        var textWidth = 0;
+        var textHeigt = 0;
+        var graphWidth = 0;
+        var graphHeight = 0;
+        function changePos(){
+            var graph = $('#PaletteAndDiagram');
+            var text = $('#modelAsText');
+            if(flag%2===0){
+                if(flag===0){
+                    graphWidth = graph.width();
+                }
+                else{
+                    graphWidth = graph.width()+1;
+                }
+                graphHeight = graph.height();
+                textWidth = text.width();
+                textHeigt = text.height();
+
+                graph.width('100%');
+                graph.height('60%');
+                text.width('100%');
+                text.height('40%');
+                flag++;
+            }
+            else{
+                graph.width(graphWidth-1);
+                graph.height(graphHeight);
+                text.width(textWidth);
+                text.height(textHeigt);
+                flag++;
+                text.css('float','right');
+                graph.css('float','left');
+
+            }
+        }
+
 
 
 </script>
@@ -3124,6 +3161,11 @@
                         text to graph
                     </button>
                 </div>
+                <div style="float:right">
+                    <button onmousedown="changePos();">
+                        Change Position
+                    </button>
+                </div>
                 
             </div>
             
@@ -3132,11 +3174,7 @@
     <!--END menu bar -->
 
 
-    <div>
-        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 40%; height: 100%; float:right">
-           
-        </textarea>
-    </div>
+
       
     <div id="PaletteAndDiagram" style="width: 60%; height: 100%; float:left;">
         <div id="sideBar">
@@ -3180,7 +3218,9 @@
 
     </div>
 
-
+    <div>
+        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 40%; height: 100%; float:right"></textarea>
+    </div>
     @*<a data-toggle="modal" href="#myModal">Write a Review</a>*@
 
     <!-- Modal -->
