@@ -500,7 +500,7 @@ namespace khmap.Controllers
         }
 
 
-        public ActionResult LaunchMap5(string id, string currentFolderID)
+        public ActionResult LaunchMap5(string id, string currentFolderID, string searchedWord)
         {
             ViewBag.res = null;
             _currentFolderID = currentFolderID;
@@ -534,6 +534,40 @@ namespace khmap.Controllers
                 ViewBag.userPermission = userPermissions;
 
                 var map = _mapManager.GetMapById(new ObjectId(id));
+
+                /////centering searched word if exists
+                if(searchedWord!=null && !searchedWord.Equals(""))
+                {
+                    var nodes = map.Model["nodeDataArray"];
+                    foreach (var node in nodes.AsBsonArray)
+                    {
+                        string nodeText = node["text"].ToString();
+                        if (nodeText.Equals(searchedWord))
+                        {
+                            var modelData = map.Model["modelData"];
+                            string position = modelData["position"].ToString();
+                            var posArray = position.Split(' ');
+                            double p1 = double.Parse(posArray[0]);
+                            double p2 = double.Parse(posArray[1]);
+
+                            double nodeP1 = p1 * -1 * 2 * 0.6 * 0.5 + p1;
+                            if (p1 > -700)
+                            {
+                                nodeP1 = p1 * -1 * 2 * 0.5 + p1;
+                            }
+                            double nodeP2 = p2 * -1 * 2 * 0.5 + p2;
+
+                            var links = map.Model["linkDataArray"];
+                            foreach(var link in links.AsBsonArray)
+                            {
+                                link["points"] = "";
+                            }
+                            node["loc"] = nodeP1+ " "+ nodeP2;
+                            node["fill"] = "#FFFF00";
+                        }
+                    }
+                }
+
                 ViewBag.isSaved = true;
                 ViewBag.myMap = map.Model.ToJson().ToString();
 
