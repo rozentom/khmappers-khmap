@@ -252,6 +252,37 @@
             }
         });
 
+        myDiagram.contextMenu =
+            $(go.Adornment, "Vertical",
+                $("ContextMenuButton",
+                    $(go.TextBlock, "change position"),
+                        { click: function(e, obj) {
+                            changePos();
+                    } }),
+
+              $("ContextMenuButton",
+                    $(go.TextBlock, "graph to text"),
+                        { click: function(e, obj) {
+                            model2Text();
+                        } }),
+                $("ContextMenuButton",
+                    $(go.TextBlock, "text to graph"),
+                        { click: function(e, obj) {
+                            text2graph();
+                        } }),
+                $("ContextMenuButton",
+                    $(go.TextBlock, "simple text to complex"),
+                        { click: function(e, obj) {
+                            simple2complex();
+                        } }),
+                $("ContextMenuButton",
+                    $(go.TextBlock, "complex text to simple"),
+                        { click: function(e, obj) {
+                            complex2simple();
+                        } })
+
+        );
+
         //myDiagram.nodeTemplate =
         myDiagram.nodeTemplateMap.add("Task",
           $(go.Node, "Spot",
@@ -3141,6 +3172,8 @@
                     <input type="checkbox" id="AssociationV" onchange="changeLinkView('Association')" name="Association">Association
                     <input type="checkbox" id="ContributionV" onchange="changeLinkView('Contribution')" name="Contribution">Contribution
                 </div>
+
+                @*
                 <div style="float:right">
                     <button onmousedown="model2Text();">
                         Convert To Text
@@ -3166,7 +3199,7 @@
                         Change Position
                     </button>
                 </div>
-                
+                *@
             </div>
             
         </nav>

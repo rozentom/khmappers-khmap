@@ -75,7 +75,7 @@ namespace khmap
                     {
                         rule = rule.Substring(1);
                     }
-                    if (!rule.Equals("\n"))
+                    if (!rule.Equals(""))
                     {
                         rules.Add(rule);
                     }
