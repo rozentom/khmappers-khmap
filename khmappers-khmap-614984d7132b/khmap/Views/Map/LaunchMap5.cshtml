@@ -981,7 +981,7 @@
     function save() {
         saveDiagramProperties();  // do this first, before writing to JSON
         var currentModel = myDiagram.model.toJson();
-        alert(currentModel);
+        //alert(currentModel);
         //$('#mySavedModel').val(currentModel);
         myDiagram.isModified = false;
 
@@ -1105,7 +1105,7 @@
 
             //console.log('myMap: ' + myMap);
 
-            alert(myMap);
+            //alert(myMap);
 
             document.getElementById("mySavedModel").value = myMap;
             myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
@@ -3034,7 +3034,7 @@
                     var myMap = res;
                     document.getElementById("mySavedModel").value = myMap;
                     myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
-                    alert(res);
+                    //alert(res);
                 },
                 error: function () {
                     alert("couldn't convert");
