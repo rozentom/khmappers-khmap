@@ -545,18 +545,14 @@ namespace khmap.Controllers
                         if (nodeText.Equals(searchedWord))
                         {
                             var modelData = map.Model["modelData"];
-                            string position = modelData["position"].ToString();
+                            string position = "-453.5 -379";
+                            modelData["position"] = position;
                             var posArray = position.Split(' ');
                             double p1 = double.Parse(posArray[0]);
                             double p2 = double.Parse(posArray[1]);
 
-                            double nodeP1 = p1 * -1 * 2 * 0.6 * 0.5 + p1;
-                            if (p1 > -700)
-                            {
-                                nodeP1 = p1 * -1 * 2 * 0.5 + p1;
-                            }
+                            double nodeP1 = p1 * -1 * 2 * 0.5 + p1;
                             double nodeP2 = p2 * -1 * 2 * 0.5 + p2;
-
                             var links = map.Model["linkDataArray"];
                             foreach(var link in links.AsBsonArray)
                             {
