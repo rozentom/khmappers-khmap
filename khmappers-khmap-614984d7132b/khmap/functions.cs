@@ -63,9 +63,17 @@ namespace khmap
                 foreach (string s in array)
                 {
                     string rule = s;
-                    if (rule.ElementAt(rule.Length - 1) == ' ')
+                    if(rule.Length == 0)
+                    {
+                        continue;
+                    }
+                    else if (rule.ElementAt(rule.Length - 1) == ' ')
                     {
                         rule = rule.Substring(0, rule.Length - 1);
+                    }
+                    if(rule.ElementAt(0) == '\n')
+                    {
+                        rule = rule.Substring(1);
                     }
                     if (!rule.Equals("\n"))
                     {
@@ -399,6 +407,43 @@ namespace khmap
                     int indexOfSecondNode = sizeOfPart1(rule) + 1;
                     string secondNode = rule.Substring(indexOfSecondNode);
 
+                    if (firtNode.Contains("Task") && secondNode.Contains("Task"))
+                    {
+                        if (!(linkTextKey.Equals(SharedCodedData.achivedBy) ||
+                            linkTextKey.Equals(SharedCodedData.extandedBy) ||
+                            linkTextKey.Equals(SharedCodedData.consistsOF)))
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    else if (firtNode.Contains("Task") && secondNode.Contains("Quality"))
+                    {
+                        if (linkTextKey.Equals(SharedCodedData.achivedBy) ||
+                            linkTextKey.Equals(SharedCodedData.extandedBy) ||
+                            linkTextKey.Equals(SharedCodedData.consistsOF))
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    else if (firtNode.Contains("Task") && secondNode.Contains("Quality"))
+                    {
+                        if (!linkTextKey.Equals(SharedCodedData.associatedWIth))
+                        {
+                            throw new Exception();
+                        }
+                    }
+                    else if (firtNode.Contains("Quality") && secondNode.Contains("Quality"))
+                    {
+                        if (linkTextKey.Equals(SharedCodedData.achivedBy) ||
+                            linkTextKey.Equals(SharedCodedData.extandedBy) ||
+                            linkTextKey.Equals(SharedCodedData.consistsOF) ||
+                            linkTextKey.Equals(SharedCodedData.associatedWIth))
+                        {
+                            throw new Exception();
+                        }
+                    }
+
+
                     BsonDocument linkDoc = new BsonDocument()
                     {
                         {"category", SharedCodedData.toCategory[linkTextKey] },
@@ -518,12 +563,13 @@ namespace khmap
         {
             try
             {
-
-
                 string text = "";
                 foreach (var rule in rules)
                 {
-                    text = text + rule + ";" + "\n";
+                    if (!isOnlySpaces(rule))
+                    {
+                        text = text + rule + ";" + "\n";
+                    }
                 }
                 return text;
             }
@@ -553,6 +599,18 @@ namespace khmap
             {
                 throw new Exception();
             }
+        }
+
+        public static bool isOnlySpaces(string s)
+        {
+            foreach(char c in s)
+            {
+                if(c!=' ')
+                {
+                    return false;
+                }
+            }
+            return true;
         }
     }
 
