@@ -105,12 +105,12 @@ namespace khmap
                         if (andIndex > -1 && (andIndex < orIndex || orIndex < 0) && (andIndex < commaIndex || commaIndex < 0))
                         {
                             splitIndex = andIndex;
-                            skipSize = 3;
+                            skipSize = 4;
                         }
                         else if (orIndex > -1 && (orIndex < andIndex || andIndex < 0) && (orIndex < commaIndex || commaIndex < 0))
                         {
                             splitIndex = orIndex;
-                            skipSize = 2;
+                            skipSize = 3;
                         }
                         else
                         {
@@ -122,7 +122,7 @@ namespace khmap
                         int lengthOfPart1 = sizeOfPart1(rule);
                         string firstPartOfNewRule = rule.Substring(0, lengthOfPart1);
                         string secondPartOfNewRule = rule.Substring(splitIndex + skipSize);
-                        rule = firstPartOfNewRule + secondPartOfNewRule;
+                        rule = firstPartOfNewRule +" "+ secondPartOfNewRule;
                     }
                     simpleRules.Add(rule);
                 }
@@ -275,14 +275,13 @@ namespace khmap
             try
             {
                 List<string> complexRules = new List<string>();
-                List<string> rulesToRemove = new List<string>();
+                List<string> nodes1ToRemove = new List<string>();
+                List<string> rulesToRemoveAsNode2 = new List<string>();
+
 
                 foreach (string rule1 in simpleRules)
                 {
-                    if (rulesToRemove.Contains(rule1))
-                    {
-                        continue;
-                    }
+
                     string newRule = rule1;
                     int lengthOfPart1 = sizeOfPart1(rule1);
                     if (lengthOfPart1 < 0)
@@ -291,16 +290,21 @@ namespace khmap
                         continue;
                     }
                     string part1 = rule1.Substring(0, lengthOfPart1);
+                    if (nodes1ToRemove.Contains(part1))
+                    {
+                        continue;
+                    }
                     foreach (string rule2 in simpleRules)
                     {
                         if (rule1.Equals(rule2))
                         {
                             continue;
                         }
-                        if (rule2.Contains(part1))
+                        if (rule2.Contains(part1) && !rulesToRemoveAsNode2.Contains(rule2))
                         {
                             newRule = newRule + " ," + rule2.Substring(lengthOfPart1 + 1);
-                            rulesToRemove.Add(rule2);
+                            rulesToRemoveAsNode2.Add(rule2);
+                            nodes1ToRemove.Add(part1);
                         }
                     }
 
