@@ -547,12 +547,10 @@ namespace khmap.Controllers
                             var modelData = map.Model["modelData"];
                             string position = "-453.5 -379";
                             modelData["position"] = position;
-                            var posArray = position.Split(' ');
-                            double p1 = double.Parse(posArray[0]);
-                            double p2 = double.Parse(posArray[1]);
+                            _mapManager.UpdateMap(map);
 
-                            double nodeP1 = p1 * -1 * 2 * 0.5 + p1;
-                            double nodeP2 = p2 * -1 * 2 * 0.5 + p2;
+                            double nodeP1 = 453.5;
+                            double nodeP2 = 379;
                             var links = map.Model["linkDataArray"];
                             foreach(var link in links.AsBsonArray)
                             {

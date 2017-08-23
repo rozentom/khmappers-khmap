@@ -129,6 +129,6 @@ C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\We
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\WebApplication2.dll
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\WebApplication2.pdb
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\Newtonsoft.Json.dll
+C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.dll
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.pdb
-C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
