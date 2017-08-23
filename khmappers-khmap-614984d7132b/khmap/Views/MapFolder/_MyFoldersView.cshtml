@@ -205,11 +205,13 @@
     function onClickMap(id, event, num) {
         currentID = id;
         isFolder = false;
+        var folderID = @Html.Raw(Json.Encode(ViewBag.currFolderIDString));        
+        //alert(folderID);
         var element = document.getElementById(id);
         element.oncontextmenu = function () { return false;}
         switch (event.which) {
             case 1:
-                window.location.href = '@Url.Action("LaunchMap5", "Map", new {id = "ID", currentFolderID = "null" })'.replace("ID", id);
+                window.location.href = '@Url.Action("LaunchMap5", "Map", new {id = "ID", currentFolderID = ViewBag.currFolderIDString})'.replace("ID", id);
                 break;
             case 2:
                 console.log('Middle Mouse button pressed.');
