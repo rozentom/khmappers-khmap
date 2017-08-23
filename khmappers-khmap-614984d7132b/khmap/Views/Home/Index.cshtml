@@ -33,12 +33,12 @@
             else
             {
                 <li role="presentation" class="active"><a href="#MapAndFolderView" aria-controls="MapAndFolderView" role="tab" data-toggle="tab">My Folders</a></li>
-                <li role="presentation"><a href="#shared" aria-controls="shared" role="tab" data-toggle="tab">Shared Folders</a></li>
+                <li role="presentation"><a href="#shared" aria-controls="shared" role="tab" data-toggle="tab">My Shared Folders</a></li>
             }
-              
+              @*
             <li role="presentation"><a href="#MyMaps" aria-controls="MyMaps" role="tab" data-toggle="tab">My Maps</a></li>
             <li role="presentation"><a href="#SharedMaps" aria-controls="SharedMaps" role="tab" data-toggle="tab">Shared Maps</a></li>
-        
+        *@
 
         </ul>
         <div class="tab-content" id="UsersView" style="max-height:220px;overflow-y:auto;">
@@ -53,11 +53,11 @@
                 <div role="tabpanel" class="tab-pane active" id="shared">@{ Html.RenderAction("OpenFolderShared", "MapFolder", new {id = ViewBag.sharedFolderID }); }</div>
             }
 
-       
+       @*
     <div role="tabpanel" class="tab-pane" id="MyMaps">@{ Html.RenderAction("MyMaps", "Map"); }</div>
 
     <div role="tabpanel" class="tab-pane" id="SharedMaps">@{ Html.RenderAction("MySharedMaps", "Map"); }</div>
-            
+    *@        
         </div>
     </div>
 </div>
