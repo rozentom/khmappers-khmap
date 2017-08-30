@@ -95,7 +95,7 @@ namespace khmap
                 foreach (string r in complexRules)
                 {
                     string rule = r;
-                    while (rule.Contains("and") || rule.Contains("or") || rule.Contains(","))
+                    while (rule.Contains(" and ") || rule.Contains(" or ") || rule.Contains(","))
                     {
                         int andIndex = rule.IndexOf("and");
                         int orIndex = rule.IndexOf("or");

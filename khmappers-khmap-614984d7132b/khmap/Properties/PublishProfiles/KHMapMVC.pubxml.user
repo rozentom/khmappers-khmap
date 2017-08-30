@@ -942,10 +942,10 @@ by editing this MSBuild file. In order to learn more about this please visit htt
       <publishTime>08/27/2017 17:19:45</publishTime>
     </File>
     <File Include="Views/MapFolder/_MyFoldersView.cshtml">
-      <publishTime>08/27/2017 18:12:19</publishTime>
+      <publishTime>08/30/2017 09:43:41</publishTime>
     </File>
     <File Include="Views/MapFolder/_MySharedFoldersView.cshtml">
-      <publishTime>08/27/2017 18:21:48</publishTime>
+      <publishTime>08/30/2017 09:43:36</publishTime>
     </File>
     <File Include="Views/MapPermission/AddUserToMap.cshtml">
       <publishTime>08/27/2017 17:19:45</publishTime>

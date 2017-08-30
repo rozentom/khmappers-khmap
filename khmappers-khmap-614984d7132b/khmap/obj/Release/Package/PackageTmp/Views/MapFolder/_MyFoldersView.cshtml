@@ -252,11 +252,12 @@
     }
 
     $(document.body).mousedown(function(mouseEvent) {
-
-        $("#menu").css({
-            'top': mouseEvent.pageY-300,
-            'left':mouseEvent.pageX-150
-        });
+        if (mouseEvent.which === 3) {
+            $("#menu").css({
+                'top': mouseEvent.pageY-300,
+                'left':mouseEvent.pageX-150
+            });
+        }
     });
 
 
