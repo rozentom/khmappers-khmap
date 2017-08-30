@@ -785,5 +785,20 @@ namespace khmap.Controllers
             return ans.ToJson().ToString();
         }
 
+        public int getTypeAmount(string currentModel, string type)
+        {
+            BsonDocument document = BsonDocument.Parse(currentModel);
+            var nodeDataArray = document["nodeDataArray"].AsBsonArray;
+            int cnt = 0;
+            foreach (var node in nodeDataArray)
+            {
+                if (node["type"].ToString().Equals(type))
+                {
+                    cnt++;
+                }
+            }
+            return cnt;
+        }
+
     }
 }
