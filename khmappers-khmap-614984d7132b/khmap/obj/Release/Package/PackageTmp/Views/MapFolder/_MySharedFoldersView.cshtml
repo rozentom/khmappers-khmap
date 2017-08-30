@@ -15,6 +15,8 @@
             int i = 0;
             foreach (var item in Model)
             {
+                string id = item.Id.ToString();
+                string s = "0" + i.ToString();
                 string name;
                 if (i == 0 && ViewBag.prevFolder != null)
                 {
@@ -24,54 +26,139 @@
                 {
                     name = item.Name;
                 }
-                if (ViewBag.prevFolder != null && i > 0)
-                {
-                    <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
-                }
+               
                 <tr>
                     <td class="col-md-2">
-                        <i id="@item.Id" class="fa fa-folder" aria-hidden="true">@Html.ActionLink(name, "Index", "Home", new { id = item.Id.ToString() , ownedOrShared = "shared"}, new { })</i>          @*this is the folder "button"*@
+                        @if (ViewBag.prevFolder != null && i > 0)
+                        {
+                        <i>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp</i>
+                        }
+                        <label id="@s" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClickFolderShared(document.getElementById('@s').innerText, event, @i)" class="fa fa-folder" aria-hidden="true"><button class="btn-link"> @name</button></i>          @*this is the folder "button"*@
                     </td>
                     <td class="col-md-2">
-                        @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                        @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
+                     @*   @Html.ActionLink(" ", "Details", "MapFolder", new { id = item.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })*@
                     </td>
                 </tr>
                 i++;
             }
-        }
-        @foreach (var map in ViewBag.maps)
-        {
-                <tr>
-                    <td class="col-md-1">
-                        @*<span class="glyphicon glyphicon-star"></span>*@
-                        <i class="fa fa-sitemap"></i>
-                    </td>
-                    <td class="col-md-9">
-                        @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null"}, new { title = "Load " + map.Name })
-                    </td>
 
+            foreach (var map in ViewBag.maps)
+            {
+
+                string id = map.Id.ToString();
+                string s = "0" + i.ToString();
+
+                <tr>
+                    <td class="col-md-9">
+                        <label id="@s" style="display:none">@id</label>
+                        <i id="@id" onmousedown="onClickMapShared(document.getElementById('@s').innerText, event, @i)" class="fa fa-sitemap" aria-hidden="true"><button class="btn-link"> @map.Name</button></i> 
+                   @*     @Html.ActionLink(((Map)map).Name, "LaunchMap5", "Map", new { id = map.Id, currentFolderID = "null" }, new { title = "Load " + map.Name })*@
+                    </td>
+                @*
                     <td class="col-md-2">
                         @Html.ActionLink(" ", "Index", "Map", new { id = map.Id }, new { @class = "btn btn-info btn-xs glyphicon glyphicon-edit", title = "Details" })
-                        @*@Html.ActionLink(" ", "LaunchMap5", "Map", new { id = item.Id.ToString() }, new { @class = "btn btn-success btn-xs glyphicon glyphicon-ok", title = "Load" })*@
-                        @if (((Map)map).Creator.ToString() == User.Identity.GetUserId())
-                        {
-                            @Html.ActionLink(" ", "Delete", "Map", new { id = map.Id , currFolderID = ViewBag.currFolderIDString }, new { @class = "btn btn-danger btn-xs glyphicon glyphicon-trash", title = "Delete" })
-                        }
                     </td>
+                    *@
                 </tr>
-            
+                i++;
+            }
         }
 
     </table>
+
+<div id="menuShared">
+    <span id="detailsMenuButtonShared" class="menuItem">Details</span>
+</div>
 @*}*@
 
 <script>
-    function openFoler() {
+    var currentIDShared;
+    var isFolderShared;
 
+    function onClickMapShared(id, event, num) {
+        currentIDShared = id;
+        isFolderShared = false;
+      //  alert(id);
+        var element = document.getElementById(id);
+      //  alert(element.innerText);
+        element.oncontextmenu = function () { return false; }
+        //alert(element.innerText);
+        switch (event.which) {
+            case 1:
+                window.location.href = '@Url.Action("LaunchMap5", "Map", new {id = "ID", currentFolderID = "null" })'.replace("ID", id);
+                break;
+            case 2:
+                console.log('Middle Mouse button pressed.');
+                break;
+            case 3:
+                //alert("1");
+                $("#menuShared").css('left', element.offsetLeft + 43 + element.offsetWidth);
+                $("#menuShared").css('top', element.offsetTop + element.offsetHeight + (num + 1) * 30);
+                $("#menuShared").show();
+                //alert("2");
+                break;
+            default:
+                console.log('You have a strange Mouse!');
+        }
     }
 
+    function onClickFolderShared(id, event, num) {
+        currentIDShared = id;
+        isFolderShared = true;
+        //alert(currentID);
+        var element = document.getElementById(currentIDShared);
+        //alert("1");
+        //alert(element.innerText);
+
+        element.oncontextmenu = function () { return false; }
+        switch (event.which) {
+            case 1:
+                //alert("1");
+                window.location.href = '@Url.Action("Index", "Home", new {id = "ID", ownedOrShared = "shared" })'.replace("ID", id);
+                break;
+            case 2:
+                console.log('Middle Mouse button pressed.');
+                break;
+            case 3:
+             //   $("#menuShared").css('left', element.offsetLeft + 43 + element.offsetWidth);
+             //   $("#menuShared").css('top', element.offsetTop + element.offsetHeight + (num+1) * 30);
+                $("#menuShared").show();
+                break;
+            default:
+                console.log('You have a strange Mouse!');
+        }
+    }
+
+    $(document.body).mousedown(function (mouseEvent) {
+
+        $("#menuShared").css({
+            'top': mouseEvent.pageY - 250,
+            'left': mouseEvent.pageX - 150
+        });
+    });
+
+    $(document).ready(function () {
+        $(document).click(function (e) {
+            if (e.button == 0) {
+                $("#menuShared").hide();
+            }
+        })
+    })
+
+    $(document).ready(function () {
+        $("#detailsMenuButtonShared").click(function () {
+            if (isFolderShared) {
+                window.location.href = '@Url.Action("Details", "MapFolder", new {id = "ID"})'.replace("ID", currentIDShared);
+            }
+            else {
+                window.location.href = '@Url.Action("Index", "Map", new {id = "ID"})'.replace("ID", currentIDShared);
+            }
+        })
+    })
+
 </script>
+
 
 
 <style>
@@ -89,4 +176,30 @@
     table tr {
         width: auto !important;
     }
+
+    #menuShared
+    {
+        background-color:#CDCDCD;
+        border:2px solid #6A6A6A;
+        border-radius:5px;
+        box-shadow:5px 5px 10px #474747;
+        width:130px;
+        padding-top:5px;
+        padding-bottom:5px;
+        display:none;
+        position:absolute;
+    }
+    .menuItem
+    {
+        padding-left:5px;
+        padding-right:5px;
+        font-family:Arial,Arial, Helvetica, sans-serif;
+        
+    }
+    .menuItem:hover
+    {
+        font-weight:bold
+    }
+
+
 </style>

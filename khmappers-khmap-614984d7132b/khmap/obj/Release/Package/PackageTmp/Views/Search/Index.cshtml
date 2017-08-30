@@ -21,7 +21,7 @@
                 @foreach (var item in Model.Maps)
                 {
                     <div>
-                        <div style="position: relative"><strong>@Html.ActionLink(item.Name, "LaunchMap5", "Map", new { id = item.Id }, null)</strong></div>
+                        <div style="position: relative"><strong>@Html.ActionLink(item.Name, "LaunchMap5", "Map", new { id = item.Id , searchedWord = Model.SearchText}, null)</strong></div>
                         <div><small>Created on @item.CreationTime</small></div>
                     </div>
                     <hr style="margin:23px 0px 0px 0px;" />

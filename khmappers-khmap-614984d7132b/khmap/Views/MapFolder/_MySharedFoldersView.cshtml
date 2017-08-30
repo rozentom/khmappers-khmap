@@ -131,11 +131,12 @@
     }
 
     $(document.body).mousedown(function (mouseEvent) {
-
-        $("#menuShared").css({
-            'top': mouseEvent.pageY - 250,
-            'left': mouseEvent.pageX - 150
-        });
+        if (mouseEvent.which === 3) {
+            $("#menuShared").css({
+                'top': mouseEvent.pageY - 250,
+                'left': mouseEvent.pageX - 150
+            });
+        }
     });
 
     $(document).ready(function () {
