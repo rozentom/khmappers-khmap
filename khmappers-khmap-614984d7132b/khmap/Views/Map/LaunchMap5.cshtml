@@ -40,13 +40,39 @@
 
     <script id="code">
 
+        $(document).ready(function(){
+            $("#PaletteAndDiagram").click(function (e) {
+                if (e.button == 0) {
+                    model2Text();
+                }
+            })
+            $("#modelAsText").keyup(function(event){
+                    text2graph2();
+            });
+        });
+
+        function myKeyPress(e){
+            var keynum;
+
+            if(window.event) { // IE
+                keynum = e.keyCode;
+            } else if(e.which){ // Netscape/Firefox/Opera
+                keynum = e.which;
+            }
+            alert(String.fromCharCode(keynum));
+        }
+
+
     var isSaved = '@ViewBag.isSaved';
     var mapNameGlobal = '@Model.Name';
     var mapIdGlobal = '@Model.Id';
 
     @*var userPermission = ('@ViewBag.userPermission' == '@MapPermissionType.RW')*@
 
-    function init() {
+        function init() {
+
+
+
 
         var $ = go.GraphObject.make;  // for conciseness in defining templates
         myDiagram =
@@ -961,6 +987,8 @@
                 ])
             });
     }
+
+
 
     function TopRotatingTool() {
         go.RotatingTool.call(this);
@@ -3045,6 +3073,33 @@
             });
         }
 
+        function text2graph2(){
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+            var text = $('#modelAsText').val();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("text2graph", "Map")',
+                //dataType: "json",
+                data: { text: text, currentModel: currentModel },
+                success: function (res) {
+                    var myMap = res;
+                    var temp = go.Model.fromJson(res);
+                    temp = temp.toJson();
+                    if(currentModel!=temp){
+                        //alert(temp);
+                        //alert(currentModel);
+                        document.getElementById("mySavedModel").value = myMap;
+                        myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                    }
+                    //alert(res);
+                },
+                error: function () {
+                },
+                async: false
+            });
+        }
+
         var flag = 0;
         var textWidth = 0;
         var textHeigt = 0;
@@ -3081,6 +3136,7 @@
 
             }
         }
+
 
 
 

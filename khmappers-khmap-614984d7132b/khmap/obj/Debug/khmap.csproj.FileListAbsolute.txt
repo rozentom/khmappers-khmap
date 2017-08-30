@@ -132,3 +132,14 @@ C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\Ne
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.dll
 C:\Users\Tomer\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.pdb
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\WebApplication2.dll.config
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\WebApplication2.dll
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\WebApplication2.pdb
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\Newtonsoft.Json.dll
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\System.Web.Http.dll
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\System.Net.Http.Formatting.dll
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\System.Web.Http.xml
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\bin\System.Net.Http.Formatting.xml
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\khmap.csprojResolveAssemblyReference.cache
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.dll
+C:\Users\User\Desktop\khmappers-khmap\khmappers-khmap-614984d7132b\khmap\obj\Debug\WebApplication2.pdb
