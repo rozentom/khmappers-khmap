@@ -738,24 +738,30 @@ namespace khmap.Controllers
         {
             List<string> list = functions.model2List(currentModel);
             string ans = functions.list2text(list);
+            ans = functions.removeDupLines(ans);
             return ans;
         }
 
         public string simple2complex(string text)
         {
             text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
             List<string> simpleRules = functions.text2rules(text);
             List<string> complexRules = functions.simple2complex(simpleRules);
             complexRules = functions.fixBackSleshN(complexRules);
             string ans = functions.list2text(complexRules);
+            ans = functions.removeDupLines(ans);
             return ans;
         }
         public string complex2simple(string text)
         {
+            text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);
             string ans = functions.list2text(simpleRules);
+            ans = functions.removeDupLines(ans);
             return ans;
 
         }
@@ -764,6 +770,8 @@ namespace khmap.Controllers
         {
             BsonDocument document = BsonDocument.Parse(currentModel);
             text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
+            text = functions.removeDupLines(text);
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);

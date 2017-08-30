@@ -49,7 +49,7 @@ namespace khmap
                 }
                 return ans;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception();
             }
@@ -63,7 +63,7 @@ namespace khmap
                 foreach (string s in array)
                 {
                     string rule = s;
-                    if(rule.Length == 0)
+                    if (rule.Length == 0)
                     {
                         continue;
                     }
@@ -71,7 +71,7 @@ namespace khmap
                     {
                         rule = rule.Substring(0, rule.Length - 1);
                     }
-                    if(rule.ElementAt(0) == '\n')
+                    if (rule.ElementAt(0) == '\n')
                     {
                         rule = rule.Substring(1);
                     }
@@ -82,7 +82,7 @@ namespace khmap
                 }
                 return rules;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception();
             }
@@ -122,7 +122,7 @@ namespace khmap
                         int lengthOfPart1 = sizeOfPart1(rule);
                         string firstPartOfNewRule = rule.Substring(0, lengthOfPart1);
                         string secondPartOfNewRule = rule.Substring(splitIndex + skipSize);
-                        rule = firstPartOfNewRule +" "+ secondPartOfNewRule;
+                        rule = firstPartOfNewRule + " " + secondPartOfNewRule;
                     }
                     simpleRules.Add(rule);
                 }
@@ -187,7 +187,7 @@ namespace khmap
                 int lengthOfPart1 = -1;
                 if (rule1.Contains(SharedCodedData.achivedBy))
                 {
-                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) -1;
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) - 1;
                 }
                 else if (rule1.Contains(SharedCodedData.associatedWIth))
                 {
@@ -392,7 +392,7 @@ namespace khmap
                     ////add second node
                     indexOfSecondNode++;
                     string secondNode = rule.Substring(indexOfSecondNode);
-                    AvailableKey = addNode(nodes, nodeDataArray, secondNode, AvailableKey);                   
+                    AvailableKey = addNode(nodes, nodeDataArray, secondNode, AvailableKey);
                 }
                 else
                 {
@@ -401,7 +401,7 @@ namespace khmap
             }
 
             ///adding the links
-            foreach(string rule in simpleRules)
+            foreach (string rule in simpleRules)
             {
                 string linkTextKey = getLinkText(rule);
                 if (!linkTextKey.Equals(""))
@@ -607,9 +607,9 @@ namespace khmap
 
         public static bool isOnlySpaces(string s)
         {
-            foreach(char c in s)
+            foreach (char c in s)
             {
-                if(c!=' ')
+                if (c != ' ')
                 {
                     return false;
                 }
@@ -621,7 +621,7 @@ namespace khmap
         {
             var prevNodeDataArray = prevGraph["nodeDataArray"].AsBsonArray;
             var newNodeDataArray = newGraph["nodeDataArray"].AsBsonArray;
-            foreach(var oldNode in prevNodeDataArray)
+            foreach (var oldNode in prevNodeDataArray)
             {
                 string oldNodeName = oldNode["text"].ToString();
                 foreach (var newNode in newNodeDataArray)
@@ -636,7 +636,51 @@ namespace khmap
             return newGraph;
         }
 
+        internal static string removeDupBackSleshN(string s)
+        {
+            try
+            {
+                string ans = "";
+                int spaceCnt = 0;
+                foreach (char c in s)
+                {
+                    if (c == '\n' && spaceCnt > 0)
+                    {
+                        continue;
+                    }
+                    else if (c == '\n')
+                    {
+                        spaceCnt++;
+                    }
+                    else
+                    {
+                        spaceCnt = 0;
+                    }
+                    ans = ans + c;
+                }
+                return ans;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
+        }
+
+        public static string removeDupLines(string text)
+        {
+            var lines = text.Split('\n');
+            string ans = "";
+            foreach (string line in lines)
+            {
+                if (!ans.Contains(line))
+                {
+                    ans = ans + line + "\n";
+                }
+            }
+            return ans;
+        }
     }
+
 
 
 
