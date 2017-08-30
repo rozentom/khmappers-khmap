@@ -760,13 +760,15 @@ namespace khmap.Controllers
 
         }
 
-        public string text2graph(string text)
+        public string text2graph(string text, string currentModel)
         {
+            BsonDocument document = BsonDocument.Parse(currentModel);
             text = functions.removeDupSpace(text);
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);
             BsonDocument ans =  functions.simple2graph(simpleRules);
+            ans = functions.setGraphLocationsByBson(document, ans);
             ViewBag.res = ans;
             return ans.ToJson().ToString();
         }

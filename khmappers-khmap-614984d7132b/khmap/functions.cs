@@ -616,6 +616,26 @@ namespace khmap
             }
             return true;
         }
+
+        internal static BsonDocument setGraphLocationsByBson(BsonDocument prevGraph, BsonDocument newGraph)
+        {
+            var prevNodeDataArray = prevGraph["nodeDataArray"].AsBsonArray;
+            var newNodeDataArray = newGraph["nodeDataArray"].AsBsonArray;
+            foreach(var oldNode in prevNodeDataArray)
+            {
+                string oldNodeName = oldNode["text"].ToString();
+                foreach (var newNode in newNodeDataArray)
+                {
+                    string newNodeName = newNode["text"].ToString();
+                    if (newNodeName.Equals(oldNodeName))
+                    {
+                        newNode["loc"] = oldNode["loc"].ToString();
+                    }
+                }
+            }
+            return newGraph;
+        }
+
     }
 
 
