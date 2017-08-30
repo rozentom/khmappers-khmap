@@ -534,7 +534,7 @@ namespace khmap.Controllers
                 ViewBag.userPermission = userPermissions;
 
                 var map = _mapManager.GetMapById(new ObjectId(id));
-
+                int count = 0;
                 /////centering searched word if exists
                 if(searchedWord!=null && !searchedWord.Equals(""))
                 {
@@ -542,21 +542,25 @@ namespace khmap.Controllers
                     foreach (var node in nodes.AsBsonArray)
                     {
                         string nodeText = node["text"].ToString();
-                        if (nodeText.Equals(searchedWord))
+                        if (nodeText.Contains(searchedWord))
                         {
                             var modelData = map.Model["modelData"];
                             string position = "-453.5 -379";
                             modelData["position"] = position;
                             _mapManager.UpdateMap(map);
 
-                            double nodeP1 = 453.5;
-                            double nodeP2 = 379;
+                            double nodeP1 = 0;
+                            double nodeP2 = 0;
                             var links = map.Model["linkDataArray"];
                             foreach(var link in links.AsBsonArray)
                             {
                                 link["points"] = "";
                             }
-                            node["loc"] = nodeP1+ " "+ nodeP2;
+                            if (count == 0)
+                            {
+                                node["loc"] = nodeP1 + " " + nodeP2;
+                                count++;
+                            }
                             node["fill"] = "#FFFF00";
                         }
                     }
