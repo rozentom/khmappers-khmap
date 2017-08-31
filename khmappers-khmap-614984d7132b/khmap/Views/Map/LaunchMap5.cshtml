@@ -3228,6 +3228,26 @@
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Cut (Ctrl+X)" onclick="myDiagram.commandHandler.cutSelection()"><i class="fa fa-scissors"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Copy (Ctrl+C)" onclick="myDiagram.commandHandler.copySelection()"><i class="fa fa-copy"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Paste (Ctrl+V)" onclick="myDiagram.commandHandler.pasteSelection()"><i class="fa fa-paste"></i></button>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <a href="#" data-toggle="dropdown" style="height:30px" role="button" aria-expanded="false"> <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li class="dropdown-submenu">
+                                    <a href="#">Export</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" onclick="saveAsImg('image/png', '.png')">PNG Image</a></li>
+                                        <li><a href="#" onclick="saveAsImg('image/jpeg', '.jpg')">JPEG Image</a></li>
+                                        @*<li><a href="#" onclick="saveAsSVG('', '.svg')">SVG Image</a></li>*@
+                                        <li><a href="#" onclick="saveAsJSON('', '.json')">JSON File</a></li>
+                                    </ul>
+                                </li>
+                                <li class=""><a href="#" onclick="showLoadMapFileModal()">Import</a></li>
+                                <li class=""><a href="#" onclick="simple2complex()">To Complex</a></li>
+                                <li class=""><a href="#" onclick="complex2simple()">To Simple</a></li>
+                                <li class=""><a href="#" onclick="changePos()">Change Position</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
                 <div class="btn-group">
                     View Only:
@@ -3253,7 +3273,7 @@
                         To graph
                     </button>
                 </div>
-                 *@
+                 
                 <div style="float:right">
                     <button onmousedown="simple2complex();">
                         To Complex
@@ -3270,7 +3290,7 @@
                         Change Position
                     </button>
                 </div>
-                
+                *@
             </div>
             
         </nav>
