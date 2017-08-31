@@ -335,14 +335,19 @@ namespace khmap
         {
 
             string currNodeText = "";
-            bool isTask = currNode.ElementAt(0) == 'T' || currNode.ElementAt(0) == 't';
+            bool isTask = currNode.Substring(0, 4).ToUpper().Equals("TASK");
+            bool isQuality = currNode.Length>=7 && currNode.Substring(0, 7).ToUpper().Equals("QUALITY");
             if (isTask)
             {
                 currNodeText = currNode.Substring(5);
             }
-            else
+            else if (isQuality) 
             {
                 currNodeText = currNode.Substring(8);
+            }
+            else
+            {
+                throw new Exception();
             }
             if (!nodes.Keys.Contains(currNode))
             {
@@ -677,6 +682,7 @@ namespace khmap
                     ans = ans + line + "\n";
                 }
             }
+            ans = ans.Substring(0, ans.Length - 1);
             return ans;
         }
     }

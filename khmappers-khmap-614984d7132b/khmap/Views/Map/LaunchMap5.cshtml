@@ -45,11 +45,16 @@
                 if (e.button == 0) {
                     model2Text();
                 }
-            })
-            $("#modelAsText").keyup(function(event){
+            })  
+            $("#modelAsText").keypress(function(event){
+                var key = String.fromCharCode(event.which); 
+                if(key==';'){
                     text2graph2();
+                }
             });
         });
+
+
 
         function myKeyPress(e){
             var keynum;
