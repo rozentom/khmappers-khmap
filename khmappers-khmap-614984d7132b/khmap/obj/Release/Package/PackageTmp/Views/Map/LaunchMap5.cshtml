@@ -40,13 +40,44 @@
 
     <script id="code">
 
+        $(document).ready(function(){
+            $("#PaletteAndDiagram").click(function (e) {
+                if (e.button == 0) {
+                    model2Text();
+                }
+            })  
+            $("#modelAsText").keypress(function(event){
+                var key = String.fromCharCode(event.which); 
+                if(key==';'){
+                    text2graph2();
+                }
+            });
+        });
+
+
+
+        function myKeyPress(e){
+            var keynum;
+
+            if(window.event) { // IE
+                keynum = e.keyCode;
+            } else if(e.which){ // Netscape/Firefox/Opera
+                keynum = e.which;
+            }
+            alert(String.fromCharCode(keynum));
+        }
+
+
     var isSaved = '@ViewBag.isSaved';
     var mapNameGlobal = '@Model.Name';
     var mapIdGlobal = '@Model.Id';
 
     @*var userPermission = ('@ViewBag.userPermission' == '@MapPermissionType.RW')*@
 
-    function init() {
+        function init() {
+
+
+
 
         var $ = go.GraphObject.make;  // for conciseness in defining templates
         myDiagram =
@@ -961,6 +992,8 @@
                 ])
             });
     }
+
+
 
     function TopRotatingTool() {
         go.RotatingTool.call(this);
@@ -3024,12 +3057,14 @@
         }
 
         function text2graph(){
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
             var text = $('#modelAsText').val();
             $.ajax({
                 type: 'POST',
                 url: '@Url.Action("text2graph", "Map")',
                 //dataType: "json",
-                data: { text: text },
+                data: { text: text, currentModel: currentModel },
                 success: function (res) {
                     var myMap = res;
                     document.getElementById("mySavedModel").value = myMap;
@@ -3038,6 +3073,33 @@
                 },
                 error: function () {
                     alert("couldn't convert");
+                },
+                async: false
+            });
+        }
+
+        function text2graph2(){
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+            var text = $('#modelAsText').val();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("text2graph", "Map")',
+                //dataType: "json",
+                data: { text: text, currentModel: currentModel },
+                success: function (res) {
+                    var myMap = res;
+                    var temp = go.Model.fromJson(res);
+                    temp = temp.toJson();
+                    if(currentModel!=temp){
+                        //alert(temp);
+                        //alert(currentModel);
+                        document.getElementById("mySavedModel").value = myMap;
+                        myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                    }
+                    //alert(res);
+                },
+                error: function () {
                 },
                 async: false
             });
@@ -3079,6 +3141,7 @@
 
             }
         }
+
 
 
 
@@ -3165,6 +3228,26 @@
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Cut (Ctrl+X)" onclick="myDiagram.commandHandler.cutSelection()"><i class="fa fa-scissors"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Copy (Ctrl+C)" onclick="myDiagram.commandHandler.copySelection()"><i class="fa fa-copy"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Paste (Ctrl+V)" onclick="myDiagram.commandHandler.pasteSelection()"><i class="fa fa-paste"></i></button>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <a href="#" data-toggle="dropdown" style="height:30px" role="button" aria-expanded="false"> <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li class="dropdown-submenu">
+                                    <a href="#">Export</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" onclick="saveAsImg('image/png', '.png')">PNG Image</a></li>
+                                        <li><a href="#" onclick="saveAsImg('image/jpeg', '.jpg')">JPEG Image</a></li>
+                                        @*<li><a href="#" onclick="saveAsSVG('', '.svg')">SVG Image</a></li>*@
+                                        <li><a href="#" onclick="saveAsJSON('', '.json')">JSON File</a></li>
+                                    </ul>
+                                </li>
+                                <li class=""><a href="#" onclick="showLoadMapFileModal()">Import</a></li>
+                                <li class=""><a href="#" onclick="simple2complex()">To Complex</a></li>
+                                <li class=""><a href="#" onclick="complex2simple()">To Simple</a></li>
+                                <li class=""><a href="#" onclick="changePos()">Change Position</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
                 <div class="btn-group">
                     View Only:
@@ -3178,12 +3261,19 @@
                     <input type="checkbox" id="ContributionV" onchange="changeLinkView('Contribution')" name="Contribution">Contribution
                 </div>
 
-                
+                @*
                 <div style="float:right">
                     <button onmousedown="model2Text();">
                         To Text
                     </button>
                 </div>
+
+                <div style="float:right">
+                    <button onmousedown="text2graph();">
+                        To graph
+                    </button>
+                </div>
+                 
                 <div style="float:right">
                     <button onmousedown="simple2complex();">
                         To Complex
@@ -3194,17 +3284,13 @@
                         To Simple
                     </button>
                 </div>
-                <div style="float:right">
-                    <button onmousedown="text2graph();">
-                        To graph
-                    </button>
-                </div>
+
                 <div style="float:right">
                     <button onmousedown="changePos();">
                         Change Position
                     </button>
                 </div>
-                
+                *@
             </div>
             
         </nav>

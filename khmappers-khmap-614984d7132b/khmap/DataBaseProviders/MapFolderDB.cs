@@ -232,6 +232,11 @@ namespace khmap.DataBaseProviders
             return folder != null;
         }
 
+        public void RemoveAllFolders()
+        {
+            _database.GetCollection<MapFolder>(_collectionName).Drop();
+        }
+
         //conection to the db
         private MongoDatabase Connect()
         {
@@ -240,6 +245,7 @@ namespace khmap.DataBaseProviders
             var database = server.GetDatabase(_settings.DatabaseName);
             return database;
         }
+
 
     }
 }
