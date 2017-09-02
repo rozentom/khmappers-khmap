@@ -191,6 +191,7 @@
     <Compile Include="DataBaseProviders\ReferenceDB.cs" />
     <Compile Include="DataBaseProviders\Settings.cs" />
     <Compile Include="DataBaseProviders\UserDB.cs" />
+    <Compile Include="ForTests.cs" />
     <Compile Include="functions.cs" />
     <Compile Include="Global.asax.cs">
       <DependentUpon>Global.asax</DependentUpon>

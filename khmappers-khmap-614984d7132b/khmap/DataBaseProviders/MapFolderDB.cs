@@ -25,9 +25,12 @@ namespace khmap.DataBaseProviders
             _collectionName = _settings.MapFoldersCollectionName;
             _database = Connect();
         }
-                                //methodes
+        //methodes
 
-
+        public void RemoveAllFolders()
+        {
+            _database.GetCollection<MapFolder>(_collectionName).Drop();
+        }
         //adding a folder to the DB
         public void AddFolder( MapFolder Folder)
         {
