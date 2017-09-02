@@ -783,6 +783,13 @@ namespace khmap.Controllers
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);
+            text = functions.list2text(simpleRules);
+            text = functions.fixBackSleshInName(text);
+            text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
+            text = functions.removeDupLines(text);
+            simpleRules = functions.text2rules(text);
+            simpleRules = functions.fixBackSleshN(simpleRules);
             BsonDocument ans =  functions.simple2graph(simpleRules);
             ans = functions.setGraphLocationsByBson(document, ans);
             ViewBag.res = ans;
