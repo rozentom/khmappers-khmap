@@ -673,7 +673,7 @@ namespace khmap
 
         public static string removeDupLines(string text)
         {
-            var lines = text.Split('\n');
+            /*var lines = text.Split('\n');
             string ans = "";
             foreach (string line in lines)
             {
@@ -683,6 +683,19 @@ namespace khmap
                 }
             }
             ans = ans.Substring(0, ans.Length - 1);
+            */
+            string ans = "";
+            foreach (char c in text)
+            {
+                if (c != '\n')
+                {
+                    ans = ans + c;
+                }
+                if (c == ';')
+                {
+                    ans = ans + "\n";
+                }
+            }
             return ans;
         }
     }
