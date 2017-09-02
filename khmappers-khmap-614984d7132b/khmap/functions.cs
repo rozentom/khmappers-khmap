@@ -673,17 +673,26 @@ namespace khmap
 
         public static string removeDupLines(string text)
         {
-            /*var lines = text.Split('\n');
+            var lines = text.Split('\n');
             string ans = "";
+            bool flag = false;
             foreach (string line in lines)
             {
                 if (!ans.Contains(line))
                 {
                     ans = ans + line + "\n";
+                    flag = true;
                 }
             }
-            ans = ans.Substring(0, ans.Length - 1);
-            */
+            if (flag)
+            {
+                ans = ans.Substring(0, ans.Length - 1);
+            }
+            return ans;
+        }
+
+        public static string fixBackSleshInName(string text)
+        {
             string ans = "";
             foreach (char c in text)
             {
