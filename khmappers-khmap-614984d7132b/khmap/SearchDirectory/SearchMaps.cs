@@ -64,7 +64,7 @@ namespace khmap.SearchDirectory
                 var nodes = item.Model["nodeDataArray"];
                 foreach (var node in nodes.AsBsonArray)
                 {
-                    if (node["text"].ToString().Contains(mapName.ToLower()) && !maps.Contains(item))
+                    if (node["text"].ToString().ToLower().Contains(mapName.ToLower()) && !maps.Contains(item))
                     {
                         maps.Add(item);
                     }

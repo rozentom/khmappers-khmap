@@ -544,9 +544,6 @@ namespace khmap.Controllers
                         string nodeText = node["text"].ToString();
                         if (nodeText.Contains(searchedWord))
                         {
-                            var modelData = map.Model["modelData"];
-                            string position = "-453.5 -379";
-                            modelData["position"] = position;
                             _mapManager.UpdateMap(map);
 
                             double nodeP1 = 0;
@@ -558,10 +555,10 @@ namespace khmap.Controllers
                             }
                             if (count == 0)
                             {
-                                node["loc"] = nodeP1 + " " + nodeP2;
+                                node["loc"] = "";
                                 count++;
                             }
-                            node["fill"] = "#FFFF00";
+                            //node["fill"] = "#FFFF00";
                         }
                     }
                 }
