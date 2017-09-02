@@ -12,14 +12,14 @@ namespace khmap
         public static string NOT_SUPIRIOR_BUT_SHARED = "shared";
         public static string NOT_SUPIRIOR_BUT_OWNED = "owned";
 
-        public static string achivedBy = "is achived by";
-        public static string consistsOF = "is consisted of";
+        public static string achivedBy = "is achieved by";
+        public static string consistsOF = "consists of";
         public static string extandedBy = "is extended by";
         public static string associatedWIth = "is assosiated with";
-        public static string plusplus = "conttributes[positively]";
-        public static string plus = "conttributes[wildly]";
-        public static string minusminus = "conttributes[negatively]";
-        public static string minus = "conttributes[natrually]";
+        public static string plusplus = "contributes[positively]";
+        public static string plus = "contributes[wildly]";
+        public static string minusminus = "contributes[negatively]";
+        public static string minus = "contributes[natrually]";
 
         public static Dictionary<string, string> toCategory = new Dictionary<string, string>()
         {

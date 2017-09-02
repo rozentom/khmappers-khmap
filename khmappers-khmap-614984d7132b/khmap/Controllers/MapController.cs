@@ -534,7 +534,7 @@ namespace khmap.Controllers
                 ViewBag.userPermission = userPermissions;
 
                 var map = _mapManager.GetMapById(new ObjectId(id));
-
+                int count = 0;
                 /////centering searched word if exists
                 if(searchedWord!=null && !searchedWord.Equals(""))
                 {
@@ -542,21 +542,25 @@ namespace khmap.Controllers
                     foreach (var node in nodes.AsBsonArray)
                     {
                         string nodeText = node["text"].ToString();
-                        if (nodeText.Equals(searchedWord))
+                        if (nodeText.Contains(searchedWord))
                         {
                             var modelData = map.Model["modelData"];
                             string position = "-453.5 -379";
                             modelData["position"] = position;
                             _mapManager.UpdateMap(map);
 
-                            double nodeP1 = 453.5;
-                            double nodeP2 = 379;
+                            double nodeP1 = 0;
+                            double nodeP2 = 0;
                             var links = map.Model["linkDataArray"];
                             foreach(var link in links.AsBsonArray)
                             {
                                 link["points"] = "";
                             }
-                            node["loc"] = nodeP1+ " "+ nodeP2;
+                            if (count == 0)
+                            {
+                                node["loc"] = nodeP1 + " " + nodeP2;
+                                count++;
+                            }
                             node["fill"] = "#FFFF00";
                         }
                     }
@@ -738,37 +742,62 @@ namespace khmap.Controllers
         {
             List<string> list = functions.model2List(currentModel);
             string ans = functions.list2text(list);
+            ans = functions.removeDupLines(ans);
             return ans;
         }
 
         public string simple2complex(string text)
         {
             text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
             List<string> simpleRules = functions.text2rules(text);
             List<string> complexRules = functions.simple2complex(simpleRules);
             complexRules = functions.fixBackSleshN(complexRules);
             string ans = functions.list2text(complexRules);
+            ans = functions.removeDupLines(ans);
             return ans;
         }
         public string complex2simple(string text)
         {
+            text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);
             string ans = functions.list2text(simpleRules);
+            ans = functions.removeDupLines(ans);
             return ans;
 
         }
 
-        public string text2graph(string text)
+        public string text2graph(string text, string currentModel)
         {
+            BsonDocument document = BsonDocument.Parse(currentModel);
             text = functions.removeDupSpace(text);
+            text = functions.removeDupBackSleshN(text);
+            text = functions.removeDupLines(text);
             List<string> complexRules = functions.text2rules(text);
             List<string> simpleRules = functions.complex2simple(complexRules);
             simpleRules = functions.fixBackSleshN(simpleRules);
             BsonDocument ans =  functions.simple2graph(simpleRules);
+            ans = functions.setGraphLocationsByBson(document, ans);
             ViewBag.res = ans;
             return ans.ToJson().ToString();
+        }
+
+        public int getTypeAmount(string currentModel, string type)
+        {
+            BsonDocument document = BsonDocument.Parse(currentModel);
+            var nodeDataArray = document["nodeDataArray"].AsBsonArray;
+            int cnt = 0;
+            foreach (var node in nodeDataArray)
+            {
+                if (node["type"].ToString().Equals(type))
+                {
+                    cnt++;
+                }
+            }
+            return cnt;
         }
 
     }

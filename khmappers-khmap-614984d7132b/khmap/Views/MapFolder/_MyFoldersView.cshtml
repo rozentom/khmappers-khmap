@@ -217,8 +217,8 @@
                 console.log('Middle Mouse button pressed.');
                 break;
             case 3:
-                $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
-                $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+                //$("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                //$("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
                 $("#menu").show();
                 break;
             default:
@@ -241,14 +241,25 @@
                     console.log('Middle Mouse button pressed.');
                     break;
                 case 3:
-                    $("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
-                    $("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
+
+                    //$("#menu").css('left', element.offsetLeft+43+element.offsetWidth);
+                    //$("#menu").css('top', element.offsetTop+element.offsetHeight+num*30);
                     $("#menu").show();
                     break;
                 default:
                     console.log('You have a strange Mouse!');
             }
     }
+
+    $(document.body).mousedown(function(mouseEvent) {
+        if (mouseEvent.which === 3) {
+            $("#menu").css({
+                'top': mouseEvent.pageY-300,
+                'left':mouseEvent.pageX-150
+            });
+        }
+    });
+
 
     $(document).ready(function(){
         $(document).click(function (e) {

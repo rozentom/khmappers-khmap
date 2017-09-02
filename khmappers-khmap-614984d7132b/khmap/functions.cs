@@ -49,7 +49,7 @@ namespace khmap
                 }
                 return ans;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception();
             }
@@ -63,7 +63,7 @@ namespace khmap
                 foreach (string s in array)
                 {
                     string rule = s;
-                    if(rule.Length == 0)
+                    if (rule.Length == 0)
                     {
                         continue;
                     }
@@ -71,7 +71,7 @@ namespace khmap
                     {
                         rule = rule.Substring(0, rule.Length - 1);
                     }
-                    if(rule.ElementAt(0) == '\n')
+                    if (rule.ElementAt(0) == '\n')
                     {
                         rule = rule.Substring(1);
                     }
@@ -82,7 +82,7 @@ namespace khmap
                 }
                 return rules;
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 throw new Exception();
             }
@@ -95,7 +95,7 @@ namespace khmap
                 foreach (string r in complexRules)
                 {
                     string rule = r;
-                    while (rule.Contains("and") || rule.Contains("or") || rule.Contains(","))
+                    while (rule.Contains(" and ") || rule.Contains(" or ") || rule.Contains(","))
                     {
                         int andIndex = rule.IndexOf("and");
                         int orIndex = rule.IndexOf("or");
@@ -122,7 +122,7 @@ namespace khmap
                         int lengthOfPart1 = sizeOfPart1(rule);
                         string firstPartOfNewRule = rule.Substring(0, lengthOfPart1);
                         string secondPartOfNewRule = rule.Substring(splitIndex + skipSize);
-                        rule = firstPartOfNewRule +" "+ secondPartOfNewRule;
+                        rule = firstPartOfNewRule + " " + secondPartOfNewRule;
                     }
                     simpleRules.Add(rule);
                 }
@@ -187,7 +187,7 @@ namespace khmap
                 int lengthOfPart1 = -1;
                 if (rule1.Contains(SharedCodedData.achivedBy))
                 {
-                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) -1;
+                    lengthOfPart1 = rule1.IndexOf(SharedCodedData.achivedBy) - 1;
                 }
                 else if (rule1.Contains(SharedCodedData.associatedWIth))
                 {
@@ -335,14 +335,19 @@ namespace khmap
         {
 
             string currNodeText = "";
-            bool isTask = currNode.ElementAt(0) == 'T' || currNode.ElementAt(0) == 't';
+            bool isTask = currNode.Substring(0, 4).ToUpper().Equals("TASK");
+            bool isQuality = currNode.Length>=7 && currNode.Substring(0, 7).ToUpper().Equals("QUALITY");
             if (isTask)
             {
                 currNodeText = currNode.Substring(5);
             }
-            else
+            else if (isQuality) 
             {
                 currNodeText = currNode.Substring(8);
+            }
+            else
+            {
+                throw new Exception();
             }
             if (!nodes.Keys.Contains(currNode))
             {
@@ -392,7 +397,7 @@ namespace khmap
                     ////add second node
                     indexOfSecondNode++;
                     string secondNode = rule.Substring(indexOfSecondNode);
-                    AvailableKey = addNode(nodes, nodeDataArray, secondNode, AvailableKey);                   
+                    AvailableKey = addNode(nodes, nodeDataArray, secondNode, AvailableKey);
                 }
                 else
                 {
@@ -401,7 +406,7 @@ namespace khmap
             }
 
             ///adding the links
-            foreach(string rule in simpleRules)
+            foreach (string rule in simpleRules)
             {
                 string linkTextKey = getLinkText(rule);
                 if (!linkTextKey.Equals(""))
@@ -607,16 +612,81 @@ namespace khmap
 
         public static bool isOnlySpaces(string s)
         {
-            foreach(char c in s)
+            foreach (char c in s)
             {
-                if(c!=' ')
+                if (c != ' ')
                 {
                     return false;
                 }
             }
             return true;
         }
+
+        internal static BsonDocument setGraphLocationsByBson(BsonDocument prevGraph, BsonDocument newGraph)
+        {
+            var prevNodeDataArray = prevGraph["nodeDataArray"].AsBsonArray;
+            var newNodeDataArray = newGraph["nodeDataArray"].AsBsonArray;
+            foreach (var oldNode in prevNodeDataArray)
+            {
+                string oldNodeName = oldNode["text"].ToString();
+                foreach (var newNode in newNodeDataArray)
+                {
+                    string newNodeName = newNode["text"].ToString();
+                    if (newNodeName.Equals(oldNodeName))
+                    {
+                        newNode["loc"] = oldNode["loc"].ToString();
+                    }
+                }
+            }
+            return newGraph;
+        }
+
+        internal static string removeDupBackSleshN(string s)
+        {
+            try
+            {
+                string ans = "";
+                int spaceCnt = 0;
+                foreach (char c in s)
+                {
+                    if (c == '\n' && spaceCnt > 0)
+                    {
+                        continue;
+                    }
+                    else if (c == '\n')
+                    {
+                        spaceCnt++;
+                    }
+                    else
+                    {
+                        spaceCnt = 0;
+                    }
+                    ans = ans + c;
+                }
+                return ans;
+            }
+            catch (Exception e)
+            {
+                throw new Exception();
+            }
+        }
+
+        public static string removeDupLines(string text)
+        {
+            var lines = text.Split('\n');
+            string ans = "";
+            foreach (string line in lines)
+            {
+                if (!ans.Contains(line))
+                {
+                    ans = ans + line + "\n";
+                }
+            }
+            ans = ans.Substring(0, ans.Length - 1);
+            return ans;
+        }
     }
+
 
 
 
