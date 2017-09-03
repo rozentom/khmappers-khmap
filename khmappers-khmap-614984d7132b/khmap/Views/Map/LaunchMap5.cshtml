@@ -45,7 +45,7 @@
                 if (e.button == 0) {
                     model2Text();
                 }
-            })  
+            })
             $("#modelAsText").keyup(function(event){
                 if(event.keyCode === 186)
                 {
@@ -3142,7 +3142,29 @@
             }
         }
 
+        function createTreeView(){
 
+            var treeView = jQuery('#treeView');
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("graph2Names", "Map")',
+                //dataType: "json",
+                data: { currentModel: currentModel },
+                success: function (res) {
+                    //res should be document in with keys of task, quality and all the links.
+                    //for each the value is an bson array where each value matches a label
+                    //example->{"task":["t1", "t2", "t3"...]..., "consists of":["t1, t2", "t3, t4"]....}
+                    alert(res);
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
 
 
 </script>
@@ -3291,6 +3313,13 @@
                     </button>
                 </div>
                 *@
+                <div style="float:right">
+                    <button onmousedown="createTreeView();">
+                        createTreeView
+                    </button>
+                </div>
+
+                
             </div>
             
         </nav>
@@ -3345,6 +3374,7 @@
     <div>
         <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 39%; height: 100%; float:right"></textarea>
     </div>
+    <div id="treeView"></div>
     @*<a data-toggle="modal" href="#myModal">Write a Review</a>*@
 
     <!-- Modal -->

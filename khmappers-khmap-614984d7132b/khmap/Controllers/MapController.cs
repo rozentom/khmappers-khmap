@@ -793,20 +793,11 @@ namespace khmap.Controllers
             return ans.ToJson().ToString();
         }
 
-        public int getTypeAmount(string currentModel, string type)
+        public string graph2Names(string currentModel)
         {
-            BsonDocument document = BsonDocument.Parse(currentModel);
-            var nodeDataArray = document["nodeDataArray"].AsBsonArray;
-            int cnt = 0;
-            foreach (var node in nodeDataArray)
-            {
-                if (node["type"].ToString().Equals(type))
-                {
-                    cnt++;
-                }
-            }
-            return cnt;
+            List<string> rules = functions.model2List(currentModel);
+            BsonDocument rulesDoc = functions.simple2Names(rules);
+            return rulesDoc.ToJson().ToString();
         }
-
     }
 }
