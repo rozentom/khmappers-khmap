@@ -47,8 +47,8 @@
                 }
             })  
             $("#modelAsText").keyup(function(event){
-                var key = String.fromCharCode(event.which); 
-                if(key==';'){
+                if(event.keyCode === 186)
+                {
                     text2graph2();
                 }
             });
