@@ -46,7 +46,7 @@
                     model2Text();
                 }
             })  
-            $("#modelAsText").keypress(function(event){
+            $("#modelAsText").keyup(function(event){
                 var key = String.fromCharCode(event.which); 
                 if(key==';'){
                     text2graph2();
