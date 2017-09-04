@@ -736,10 +736,25 @@ namespace khmap
                     //lst.Add(firstNode);
                     //lst.Add(secondNode);
                     string labelName = "";
-                    if (linkText.Equals(SharedCodedData.minus) || linkText.Equals(SharedCodedData.minusminus) || linkText.Equals(SharedCodedData.plus) || linkText.Equals(SharedCodedData.plusplus))
+                    if (linkText.Equals(SharedCodedData.minus))
                     {
                         linkText = "contribution";
-                        labelName = rule;
+                        labelName = firstNode + ", " + secondNode + ", -";
+                    }
+                    else if (linkText.Equals(SharedCodedData.minusminus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", --";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", +";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plusplus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", ++";
                     }
                     else
                     {

@@ -44,6 +44,7 @@
             $("#PaletteAndDiagram").click(function (e) {
                 if (e.button == 0) {
                     model2Text();
+                    createTreeView();
                 }
             })
             $("#modelAsText").keyup(function(event){
@@ -991,6 +992,9 @@
 
                 ])
             });
+
+        //model2Text();
+        //createTreeView();
     }
 
 
@@ -2895,7 +2899,8 @@
                 {
                     first=iter.value;
                     //var fromNodeKey = first.fromNode.data.text;
-                    //alert(fromNodeKey);
+                    //                    alert(first);
+                    //alert(first);
                     var taskChecked=document.getElementById("TaskV").checked;
                     var qualityChecked=document.getElementById("QualityV").checked;
                     if(first.fromNode!==null)
@@ -2910,16 +2915,16 @@
                                 hasOtherlinkTypeThatIsViewable=true;
                         }
 
-                        if (!hasOtherlinkTypeThatIsViewable&&!taskChecked && !qualityChecked )
-                            first.fromNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable&&taskChecked && !qualityChecked)
-                            if(first.fromNode.category!=="Task" )
-                                first.fromNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable&&!taskChecked && qualityChecked)
-                            if(first.fromNode.category!=="Quality")
-                                first.fromNode.visible=false;
-                        if(taskChecked && qualityChecked)
-                        {}
+                        //if (!hasOtherlinkTypeThatIsViewable&&!taskChecked && !qualityChecked )
+                        //    first.fromNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable&&taskChecked && !qualityChecked)
+                        //    if(first.fromNode.category!=="Task" )
+                        //        first.fromNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable&&!taskChecked && qualityChecked)
+                        //    if(first.fromNode.category!=="Quality")
+                        //        first.fromNode.visible=false;
+                        //if(taskChecked && qualityChecked)
+                        //{}
 
                     }
                     if(first.toNode!==null)
@@ -2934,16 +2939,16 @@
                                 hasOtherlinkTypeThatIsViewable=true;
                         }
 
-                        if (!hasOtherlinkTypeThatIsViewable && !taskChecked && !qualityChecked )
-                            first.toNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable && taskChecked && !qualityChecked)
-                            if( first.toNode.category!=="Task")
-                                first.toNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable && !taskChecked && qualityChecked)
-                            if( first.toNode.category!=="Quality")
-                                first.toNode.visible=false;
-                        if(taskChecked && qualityChecked)
-                        {}
+                        //if (!hasOtherlinkTypeThatIsViewable && !taskChecked && !qualityChecked )
+                        //    first.toNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable && taskChecked && !qualityChecked)
+                        //    if( first.toNode.category!=="Task")
+                        //        first.toNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable && !taskChecked && qualityChecked)
+                        //    if( first.toNode.category!=="Quality")
+                        //        first.toNode.visible=false;
+                        //if(taskChecked && qualityChecked)
+                        //{}
                     }
                     first.visible=false;
 
@@ -3158,10 +3163,10 @@
                 textWidth = text.width();
                 textHeigt = text.height();
 
-                graph.width('100%');
-                graph.height('60%');
-                text.width('100%');
-                text.height('40%');
+                graph.width('42%');
+                graph.height('100%');
+                text.width('30%');
+                text.height('100%');
                 flag++;
             }
             else{
@@ -3199,40 +3204,58 @@
                     //example->{"task":["t1", "t2", "t3"...]..., "consists of":["t1, t2", "t3, t4"]....}
                     var jsonRes = JSON.parse(res);
                     document.getElementById('container').innerHTML = '';
-                    @*
+
+
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Tasks</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '<input type="checkbox" id="AllCheckBox" checked="checked"><label for="AllCheckBox">All</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#AllCheckBox").click(function(){
+                        jQuery("#AllV").click();
+                    });
+                    var node = document.createElement('div');
+                    node.innerHTML = '<label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Tasks</label>';
+                    //node.innerHTML = '<input type="checkbox" id="TasksCheckBox"><label for="TasksCheckBox">Tasks</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    //jQuery("#TasksCheckBox").click(function(){
+                    //    jQuery("#TaskV").click();
+                    //});
+                    
                     for(var i in jsonRes.task){
                         var text = jsonRes.task[i]
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
+                        //node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var checkBox = jQuery('#checkTask'+i+'');
-
-                        //changeSingleLinkView
-                        //alert(checkBox.attr("name"));
-                        //alert(i);
                     }
 
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Qualities</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<label>Qualities</label>';
+                    //node.innerHTML = '<input type="checkbox" id="QualitiesCheckBox"><label for="QualitiesCheckBox">Qualities</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    //jQuery("#QualitiesCheckBox").click(function(){
+                    //    jQuery("#QualityV").click();
+                    //});
+                    
                     for(var i in jsonRes.quality){
                         var text = jsonRes.quality[i]
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="checkQuality' + i + '" name="'+title+'"><label for="checkQuality' + i + '">'+ title +'</label>';
+                        //node.innerHTML = '<input type="checkbox" id="checkQuality' + i + '" name="'+title+'"><label for="checkQuality' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
-                        var checkBox = jQuery('#checkQuality'+i+'');
                         //alert(checkBox.attr("name"));
                         //alert(i);
                     }
-                    *@
+                    
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Achieved By</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" id="AchievedByCheckBox"><label for="AchievedByCheckBox">Achieved By</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#AchievedByCheckBox").click(function(){
+                        jQuery("#AchievedByV").click();
+                    });
+
                     for(var i in jsonRes["is achieved by"]){
                         var text = (jsonRes["is achieved by"])[i]["labelName"];
                         var firstNode = (jsonRes["is achieved by"])[i]["firstNode"];
@@ -3242,14 +3265,18 @@
 
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         helpMethod('AchievedBy',firstNode, secNode, 'checkAchieviedBy'+i);
                     }
                     
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Consists Of</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ConsistsOfCheckBox"><label for="ConsistsOfCheckBox">Consists Of</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#ConsistsOfCheckBox").click(function(){
+                        jQuery("#ConsistsOfV").click();
+                    });
+                    
                     var consistsOF = "consists of";
                     for(var i in jsonRes[consistsOF]){
                         //alert(i);
@@ -3260,34 +3287,43 @@
                         //alert(secNode);
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         helpMethod('ConsistsOf',firstNode, secNode, 'consistsOF'+i);
 
                     }
-                    
+
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Extended By</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ExtendedByCheckBox"><label for="ExtendedByCheckBox">Extended By</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#ExtendedByCheckBox").click(function(){
+                        jQuery("#ExtendedByV").click();
+                    });
+
                     for(var i in jsonRes["is extended by"]){
                         var text = (jsonRes["is extended by"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["is extended by"])[i]["firstNode"];
                         var secNode = (jsonRes["is extended by"])[i]["secondNode"];
                         helpMethod('ExtendedBy',firstNode, secNode, 'extendedBy'+i);
 
                     }
+
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Association</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="AssociationCheckBox"><label for="AssociationCheckBox">Association</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#AssociationCheckBox").click(function(){
+                        jQuery("#AssociationV").click();
+                    });
+
                     for(var i in jsonRes["is associated with"]){
                         var text = (jsonRes["is associated with"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["is associated with"])[i]["firstNode"];
                         var secNode = (jsonRes["is associated with"])[i]["secondNode"];
@@ -3295,13 +3331,17 @@
                     }
 
                     var node = document.createElement('div');
-                    node.innerHTML = '<u>Contribution</u>';
-                    document.getElementById('container').appendChild(node);
+                    node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ContributionCheckBox"><label for="ContributionCheckBox">Contribution</label>';
+                    document.getElementById('container').appendChild(node);                   
+                    jQuery("#ContributionCheckBox").click(function(){
+                        jQuery("#ContributionV").click();
+                    });
+
                     for(var i in jsonRes["contribution"]){
                         var text = (jsonRes["contribution"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '<input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["contribution"])[i]["firstNode"];
                         var secNode = (jsonRes["contribution"])[i]["secondNode"];
@@ -3421,9 +3461,9 @@
                         </li>
                     </ul>
                 </div>
-                <div class="btn-group">
+                <div class="btn-group" style="display:none">
                     View Only:
-                    <input type="checkbox" id="AllV" onchange="changeNodeView('Quality');changeNodeView('Task');changeLinkView('AchievedBy');changeLinkView('ConsistsOf');changeLinkView('ExtendedBy');changeLinkView('Association');changeLinkView('Contribution')" name="All" checked="checked">All
+                    <input type="checkbox" id="AllV" onchange="/*changeNodeView('Quality');changeNodeView('Task');*/changeLinkView('AchievedBy');changeLinkView('ConsistsOf');changeLinkView('ExtendedBy');changeLinkView('Association');changeLinkView('Contribution')" name="All" checked="checked">All
                     <input type="checkbox" id="TaskV" onchange="changeNodeView('Task')" name="Task">Task
                     <input type="checkbox" id="QualityV" onchange="changeNodeView('Quality')" name="Quality">Quality
                     <input type="checkbox" id="AchievedByV" onchange="changeLinkView('AchievedBy')" name="Achieved by">Achieved by
@@ -3462,13 +3502,13 @@
                         Change Position
                     </button>
                 </div>
-                *@
+                
                 <div style="float:right">
                     <button onmousedown="createTreeView();">
                         createTreeView
                     </button>
                 </div>
-
+                    *@
                 
             </div>
             
@@ -3479,7 +3519,7 @@
 
 
       
-    <div id="PaletteAndDiagram" style="width: 70%; height: 70%; float:left;">
+    <div id="PaletteAndDiagram" style="width: 77%; height: 70%; float:left;">
         <div id="sideBar">
             <div class="handle">Map Shapes</div>
             <div id="myPalette"></div>
@@ -3520,7 +3560,7 @@
         </div>
 
     </div>
-    <div id="container" style="width: 25%; height: 70%; float:right;">
+    <div id="container" style="overflow-y: scroll;  width: 21%; height: 70%; float:right;">
     </div>
     <div>
         <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 100%; height: 30%; float:right"></textarea>
