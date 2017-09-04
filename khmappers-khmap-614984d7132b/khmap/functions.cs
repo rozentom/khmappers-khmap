@@ -716,10 +716,7 @@ namespace khmap
                 {SharedCodedData.associatedWIth, new BsonArray() },
                 {SharedCodedData.consistsOF, new BsonArray() },
                 {SharedCodedData.extandedBy, new BsonArray() },
-                {SharedCodedData.minus, new BsonArray() },
-                {SharedCodedData.minusminus, new BsonArray() },
-                {SharedCodedData.plus, new BsonArray() },
-                {SharedCodedData.plusplus, new BsonArray() }
+                {"contribution", new BsonArray() },
             };
             
             foreach(string rule in simpleRules)
@@ -738,8 +735,16 @@ namespace khmap
                     //BsonArray lst = new BsonArray();
                     //lst.Add(firstNode);
                     //lst.Add(secondNode);
-                    string labelName = firstNode + ", " + secondNode;
-                    res[linkText].AsBsonArray.Add(labelName);
+                    if (linkText.Equals(SharedCodedData.minus) || linkText.Equals(SharedCodedData.minusminus) || linkText.Equals(SharedCodedData.plus) || linkText.Equals(SharedCodedData.plusplus))
+                    {
+                        string labelName = rule;
+                        res["contribution"].AsBsonArray.Add(labelName);
+                    }
+                    else
+                    {
+                        string labelName = firstNode + ", " + secondNode;
+                        res[linkText].AsBsonArray.Add(labelName);
+                    }
                 }
             }
             return res;
@@ -748,38 +753,45 @@ namespace khmap
 
         public static BsonArray simple2TQNames(List<string> simpleRules,string taskOrQuality, int taskOrQualityLength)//task = 4, quality = 7
         {
-            BsonArray res = new BsonArray();
-            foreach (string rule in simpleRules)
+            try
             {
-                int indexOfSecondNode = sizeOfPart1(rule);
-                if (indexOfSecondNode >= 0)
+                BsonArray res = new BsonArray();
+                foreach (string rule in simpleRules)
                 {
-                    ///get first node
-                    int lengthOfFirstNode = sizeOfFirstNode(rule);
-                    string firstNode = rule.Substring(0, lengthOfFirstNode);
-
-                    ////get second node
-                    indexOfSecondNode++;
-                    string secondNode = rule.Substring(indexOfSecondNode);
-
-                    if (!res.Contains(firstNode) && firstNode.Length>= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                    int indexOfSecondNode = sizeOfPart1(rule);
+                    if (indexOfSecondNode >= 0)
                     {
-                        res.Add(firstNode);
+                        ///get first node
+                        int lengthOfFirstNode = sizeOfFirstNode(rule);
+                        string firstNode = rule.Substring(0, lengthOfFirstNode);
+
+                        ////get second node
+                        indexOfSecondNode++;
+                        string secondNode = rule.Substring(indexOfSecondNode);
+
+                        if (!res.Contains(firstNode) && firstNode.Length >= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(firstNode);
+                        }
+                        if (!res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(secondNode);
+                        }
                     }
-                    if (!res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                    else
                     {
-                        res.Add(secondNode);
+                        if (!res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(rule);
+                        }
                     }
                 }
-                else
-                {
-                    if (!res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
-                    {
-                        res.Add(rule);
-                    }
-                }
+                return res;
             }
-            return res;
+            catch(Exception e)
+            {
+                throw new Exception();
+            }
         }
 
         public static BsonDocument simple2Names(List<string> simpleRules)

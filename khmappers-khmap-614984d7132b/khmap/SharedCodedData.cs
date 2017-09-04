@@ -15,11 +15,11 @@ namespace khmap
         public static string achivedBy = "is achieved by";
         public static string consistsOF = "consists of";
         public static string extandedBy = "is extended by";
-        public static string associatedWIth = "is assosiated with";
+        public static string associatedWIth = "is associated with";
         public static string plusplus = "contributes[positively]";
         public static string plus = "contributes[wildly]";
         public static string minusminus = "contributes[negatively]";
-        public static string minus = "contributes[natrually]";
+        public static string minus = "contributes[naturally]";
 
         public static Dictionary<string, string> toCategory = new Dictionary<string, string>()
         {

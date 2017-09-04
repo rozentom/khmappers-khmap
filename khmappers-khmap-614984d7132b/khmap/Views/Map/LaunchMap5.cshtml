@@ -2824,10 +2824,12 @@
         {
             if(document.getElementById('AllV').checked===false && document.getElementById(categoryValue+"V").checked===false)
             {
-                var iter=myDiagram.findNodesByExample({category:categoryValue});
+                var iter=myDiagram.findNodesByExample({text:"tomer"});
                 while(iter.next())
                 {
+                    //alert(iter.value);
                     first=iter.value;
+                    //alert(first.visible);
                     first.visible=false;
 
                 }
@@ -3157,7 +3159,118 @@
                     //res should be document in with keys of task, quality and all the links.
                     //for each the value is an bson array where each value matches a label
                     //example->{"task":["t1", "t2", "t3"...]..., "consists of":["t1, t2", "t3, t4"]....}
-                    alert(res);
+                    var jsonRes = JSON.parse(res);
+                    document.getElementById('container').innerHTML = '';
+                    
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Tasks</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes.task){                       
+                        var text = jsonRes.task[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#checkTask'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Qualities</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes.quality){                       
+                        var text = jsonRes.quality[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="checkQuality' + i + '" name="'+title+'"><label for="checkQuality' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#checkQuality'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+                    
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Achieved By</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["is achieved by"]){                       
+                        var text = (jsonRes["is achieved by"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#checkAchieviedBy'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Consists Of</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["consists of"]){                       
+                        var text = (jsonRes["consists of"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#consistsOF'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Consists Of</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["consists of"]){                       
+                        var text = (jsonRes["consists of"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#consistsOF'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Extended By</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["is extended by"]){                       
+                        var text = (jsonRes["is extended by"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#extendedBy'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Association</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["is associated with"]){                       
+                        var text = (jsonRes["is associated with"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#association'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+                   
+                    var node = document.createElement('div');
+                    node.innerHTML = '<u>Contribution</u>';       
+                    document.getElementById('container').appendChild(node); 
+                    for(var i in jsonRes["contribution"]){                       
+                        var text = (jsonRes["contribution"])[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '<input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';       
+                        document.getElementById('container').appendChild(node);    
+                        var checkBox = jQuery('#contribution'+i+'');
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
                 },
                 error: function () {
                     alert("couldn't convert");
@@ -3329,7 +3442,7 @@
 
 
       
-    <div id="PaletteAndDiagram" style="width: 60%; height: 100%; float:left;">
+    <div id="PaletteAndDiagram" style="width: 70%; height: 70%; float:left;">
         <div id="sideBar">
             <div class="handle">Map Shapes</div>
             <div id="myPalette"></div>
@@ -3370,11 +3483,13 @@
         </div>
 
     </div>
-
-    <div>
-        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 39%; height: 100%; float:right"></textarea>
+    <div id="container" style="width: 25%; height: 70%; float:right;">
     </div>
-    <div id="treeView"></div>
+    <div>
+        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 100%; height: 30%; float:right"></textarea>
+    </div>
+    @*<div id="treeView" style="width: 25%; height: 50%; float:left;"></div>*@
+
     @*<a data-toggle="modal" href="#myModal">Write a Review</a>*@
 
     <!-- Modal -->
