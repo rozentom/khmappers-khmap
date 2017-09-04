@@ -707,6 +707,144 @@ namespace khmap
             }
             return ans;
         }
+
+        public static BsonDocument simple2LinkNames(List<string> simpleRules)
+        {
+            BsonDocument res = new BsonDocument()
+            {
+                {SharedCodedData.achivedBy, new BsonArray() },
+                {SharedCodedData.associatedWIth, new BsonArray() },
+                {SharedCodedData.consistsOF, new BsonArray() },
+                {SharedCodedData.extandedBy, new BsonArray() },
+                {"contribution", new BsonArray() },
+            };
+            
+            foreach(string rule in simpleRules)
+            {
+                int indexOfSecondNode = sizeOfPart1(rule);
+                if (indexOfSecondNode >= 0)
+                {
+                    string linkText = getLinkText(rule);
+                    ///get first node
+                    int lengthOfFirstNode = sizeOfFirstNode(rule);
+                    string firstNode = rule.Substring(0, lengthOfFirstNode);
+
+                    ////get second node
+                    indexOfSecondNode++;
+                    string secondNode = rule.Substring(indexOfSecondNode);
+                    //BsonArray lst = new BsonArray();
+                    //lst.Add(firstNode);
+                    //lst.Add(secondNode);
+                    string labelName = "";
+                    if (linkText.Equals(SharedCodedData.minus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", -";
+                    }
+                    else if (linkText.Equals(SharedCodedData.minusminus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", --";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", +";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plusplus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNode + ", " + secondNode + ", ++";
+                    }
+                    else
+                    {
+                        labelName = firstNode + ", " + secondNode;
+                    }
+                    string firstNodeName = "";
+                    if (firstNode.Substring(0, 4).ToLower().Equals("task"))
+                    {
+                        firstNodeName = firstNode.Substring(5);
+                    }
+                    else
+                    {
+                        firstNodeName = firstNode.Substring(8);
+                    }
+                    string secNodeName = "";
+                    if (secondNode.Substring(0, 4).ToLower().Equals("task"))
+                    {
+                        secNodeName = secondNode.Substring(5);
+                    }
+                    else
+                    {
+                        secNodeName = secondNode.Substring(8);
+                    }
+                    BsonDocument node = new BsonDocument()
+                    {
+                        {"labelName",labelName },
+                        {"firstNode",firstNodeName },
+                        {"secondNode",secNodeName }
+                    };
+                    res[linkText].AsBsonArray.Add(node);
+                }
+            }
+            return res;
+        }
+
+
+        public static BsonArray simple2TQNames(List<string> simpleRules,string taskOrQuality, int taskOrQualityLength)//task = 4, quality = 7
+        {
+            try
+            {
+                BsonArray res = new BsonArray();
+                foreach (string rule in simpleRules)
+                {
+                    int indexOfSecondNode = sizeOfPart1(rule);
+                    if (indexOfSecondNode >= 0)
+                    {
+                        ///get first node
+                        int lengthOfFirstNode = sizeOfFirstNode(rule);
+                        string firstNode = rule.Substring(0, lengthOfFirstNode);
+
+                        ////get second node
+                        indexOfSecondNode++;
+                        string secondNode = rule.Substring(indexOfSecondNode);
+
+                        if (!res.Contains(firstNode) && firstNode.Length >= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(firstNode);
+                        }
+                        if (!res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(secondNode);
+                        }
+                    }
+                    else
+                    {
+                        if (!res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        {
+                            res.Add(rule);
+                        }
+                    }
+                }
+                return res;
+            }
+            catch(Exception e)
+            {
+                throw new Exception();
+            }
+        }
+
+        public static BsonDocument simple2Names(List<string> simpleRules)
+        {
+            BsonDocument res = simple2LinkNames(simpleRules);
+            BsonArray taskNames = simple2TQNames(simpleRules, "task", 4);
+            BsonArray qualityNames = simple2TQNames(simpleRules, "quality", 7);
+            BsonElement taskElement = new BsonElement("task", taskNames);
+            BsonElement qualityElement = new BsonElement("quality", qualityNames);
+            res.Add(taskElement);
+            res.Add(qualityElement);
+            return res;
+        }
     }
 
 
