@@ -735,16 +735,41 @@ namespace khmap
                     //BsonArray lst = new BsonArray();
                     //lst.Add(firstNode);
                     //lst.Add(secondNode);
+                    string labelName = "";
                     if (linkText.Equals(SharedCodedData.minus) || linkText.Equals(SharedCodedData.minusminus) || linkText.Equals(SharedCodedData.plus) || linkText.Equals(SharedCodedData.plusplus))
                     {
-                        string labelName = rule;
-                        res["contribution"].AsBsonArray.Add(labelName);
+                        linkText = "contribution";
+                        labelName = rule;
                     }
                     else
                     {
-                        string labelName = firstNode + ", " + secondNode;
-                        res[linkText].AsBsonArray.Add(labelName);
+                        labelName = firstNode + ", " + secondNode;
                     }
+                    string firstNodeName = "";
+                    if (firstNode.Substring(0, 4).ToLower().Equals("task"))
+                    {
+                        firstNodeName = firstNode.Substring(5);
+                    }
+                    else
+                    {
+                        firstNodeName = firstNode.Substring(8);
+                    }
+                    string secNodeName = "";
+                    if (secondNode.Substring(0, 4).ToLower().Equals("task"))
+                    {
+                        secNodeName = secondNode.Substring(5);
+                    }
+                    else
+                    {
+                        secNodeName = secondNode.Substring(8);
+                    }
+                    BsonDocument node = new BsonDocument()
+                    {
+                        {"labelName",labelName },
+                        {"firstNode",firstNodeName },
+                        {"secondNode",secNodeName }
+                    };
+                    res[linkText].AsBsonArray.Add(node);
                 }
             }
             return res;

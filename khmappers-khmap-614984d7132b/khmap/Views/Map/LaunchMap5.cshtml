@@ -2820,11 +2820,40 @@
         });
     }
 //------------------------------------View Only Methodes---------------------------------------------------------------------------------------------------
+        
+        
+        function changeSingleLinkView(categoryValue, node1Name, node2Name, checkBox)
+        {
+            var iter=myDiagram.findLinksByExample({category:categoryValue});
+            //alert(node1Name);
+            //alert(node2Name);
+            var ischecked = checkBox.is(":checked");
+            checkBox.prop('checked', !ischecked);
+            //alert(ischecked);
+            //alert(iter.value);
+            while(iter.next())
+            {
+                first=iter.value;
+                var fromNodeName = first.fromNode.data.text;
+                var toNodeName = first.toNode.data.text;
+                //alert(fromNodeName);
+                //alert(toNodeName);
+
+
+                if(fromNodeName!==null && toNodeName!==null && fromNodeName === node1Name && toNodeName === node2Name){
+                    first.visible= !ischecked;
+                    alert(imIN);
+                }
+            }
+            //alert(15);
+        }
+        
+        
         function changeNodeView(categoryValue)
         {
             if(document.getElementById('AllV').checked===false && document.getElementById(categoryValue+"V").checked===false)
             {
-                var iter=myDiagram.findNodesByExample({text:"tomer"});
+                var iter=myDiagram.findNodesByExample({category:categoryValue});
                 while(iter.next())
                 {
                     //alert(iter.value);
@@ -2864,6 +2893,8 @@
                 while(iter.next())
                 {
                     first=iter.value;
+                    //var fromNodeKey = first.fromNode.data.text;
+                    //alert(fromNodeKey);
                     var taskChecked=document.getElementById("TaskV").checked;
                     var qualityChecked=document.getElementById("QualityV").checked;
                     if(first.fromNode!==null)
@@ -3172,6 +3203,8 @@
                         node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';       
                         document.getElementById('container').appendChild(node);    
                         var checkBox = jQuery('#checkTask'+i+'');
+
+                        //changeSingleLinkView
                         //alert(checkBox.attr("name"));
                         //alert(i);
                     }
@@ -3194,13 +3227,22 @@
                     node.innerHTML = '<u>Achieved By</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["is achieved by"]){                       
-                        var text = (jsonRes["is achieved by"])[i]
+                        var text = (jsonRes["is achieved by"])[i]["labelName"];
+                        var firstNode = (jsonRes["is achieved by"])[i]["firstNode"];
+                        var secNode = (jsonRes["is achieved by"])[i]["secondNode"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';       
                         document.getElementById('container').appendChild(node);    
                         var checkBox = jQuery('#checkAchieviedBy'+i+'');
-                        //alert(checkBox.attr("name"));
+                        //checkBox.change()
+                        //alert(firstNode);
+                        //alert(secNode);
+                        $(document).on('change', '[id=checkAchieviedBy'+i+']', function() {
+                            changeSingleLinkView('AchievedBy',firstNode, secNode, checkBox);
+                        }); 
+                        //checkBox.live('change', 'input:checkbox', alert(2));
+                       // alert(checkBox.attr("name"));
                         //alert(i);
                     }
 
@@ -3208,7 +3250,7 @@
                     node.innerHTML = '<u>Consists Of</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["consists of"]){                       
-                        var text = (jsonRes["consists of"])[i]
+                        var text = (jsonRes["consists of"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';       
@@ -3222,7 +3264,7 @@
                     node.innerHTML = '<u>Consists Of</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["consists of"]){                       
-                        var text = (jsonRes["consists of"])[i]
+                        var text = (jsonRes["consists of"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';       
@@ -3235,7 +3277,7 @@
                     node.innerHTML = '<u>Extended By</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["is extended by"]){                       
-                        var text = (jsonRes["is extended by"])[i]
+                        var text = (jsonRes["is extended by"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';       
@@ -3248,7 +3290,7 @@
                     node.innerHTML = '<u>Association</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["is associated with"]){                       
-                        var text = (jsonRes["is associated with"])[i]
+                        var text = (jsonRes["is associated with"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';       
@@ -3262,7 +3304,7 @@
                     node.innerHTML = '<u>Contribution</u>';       
                     document.getElementById('container').appendChild(node); 
                     for(var i in jsonRes["contribution"]){                       
-                        var text = (jsonRes["contribution"])[i]
+                        var text = (jsonRes["contribution"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
                         node.innerHTML = '<input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';       
