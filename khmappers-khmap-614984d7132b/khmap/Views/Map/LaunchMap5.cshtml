@@ -3108,6 +3108,7 @@
                     var myMap = res;
                     document.getElementById("mySavedModel").value = myMap;
                     myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                    createTreeView();
                     //alert(res);
                 },
                 error: function () {
@@ -3135,6 +3136,7 @@
                         //alert(currentModel);
                         document.getElementById("mySavedModel").value = myMap;
                         myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                        createTreeView();
                     }
                     //alert(res);
                 },
