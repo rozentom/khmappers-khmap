@@ -39,6 +39,34 @@
     <title>KHmap-@Model.Name</title>
 
     <script id="code">
+        var firstTimeFlag = true;
+        $(document).ready(function(){
+            $("#PaletteAndDiagram").click(function (e) {
+                if (e.button == 0) {
+                    model2Text();
+                    createTreeView();
+                }
+            })
+            $("#modelAsText").keyup(function(event){
+                if(event.keyCode === 186)
+                {
+                    text2graph2();
+                }
+            });
+        });
+
+
+        function myKeyPress(e){
+            var keynum;
+
+            if(window.event) { // IE
+                keynum = e.keyCode;
+            } else if(e.which){ // Netscape/Firefox/Opera
+                keynum = e.which;
+            }
+            alert(String.fromCharCode(keynum));
+        }
+
 
     var isSaved = '@ViewBag.isSaved';
     var mapNameGlobal = '@Model.Name';
@@ -46,7 +74,10 @@
 
     @*var userPermission = ('@ViewBag.userPermission' == '@MapPermissionType.RW')*@
 
-    function init() {
+        function init() {
+
+
+
 
         var $ = go.GraphObject.make;  // for conciseness in defining templates
         myDiagram =
@@ -960,7 +991,12 @@
 
                 ])
             });
+
+        //model2Text();
+        //createTreeView();
     }
+
+
 
     function TopRotatingTool() {
         go.RotatingTool.call(this);
@@ -2787,6 +2823,36 @@
         });
     }
 //------------------------------------View Only Methodes---------------------------------------------------------------------------------------------------
+
+
+        function changeSingleLinkView(categoryValue, node1Name, node2Name, checkBoxName)
+        {
+            var checkBox = jQuery('#'+checkBoxName+'');
+            var iter=myDiagram.findLinksByExample({category:categoryValue});
+            //alert(node1Name);
+            //alert(node2Name);
+            var ischecked = checkBox.is(":checked");
+            //checkBox.prop('checked', !ischecked);
+            //alert(ischecked);
+            //alert(checkBoxName);
+            while(iter.next())
+            {
+                first=iter.value;
+                var fromNodeName = first.fromNode.data.text;
+                var toNodeName = first.toNode.data.text;
+                //alert(fromNodeName);
+                //alert(toNodeName);
+
+
+                if(fromNodeName!==null && toNodeName!==null && fromNodeName === node1Name && toNodeName === node2Name){
+                    first.visible= ischecked;
+                    alert(imIN);
+                }
+            }
+            //alert(15);
+        }
+
+
         function changeNodeView(categoryValue)
         {
             if(document.getElementById('AllV').checked===false && document.getElementById(categoryValue+"V").checked===false)
@@ -2794,7 +2860,9 @@
                 var iter=myDiagram.findNodesByExample({category:categoryValue});
                 while(iter.next())
                 {
+                    //alert(iter.value);
                     first=iter.value;
+                    //alert(first.visible);
                     first.visible=false;
 
                 }
@@ -2829,6 +2897,9 @@
                 while(iter.next())
                 {
                     first=iter.value;
+                    //var fromNodeKey = first.fromNode.data.text;
+                    //                    alert(first);
+                    //alert(first);
                     var taskChecked=document.getElementById("TaskV").checked;
                     var qualityChecked=document.getElementById("QualityV").checked;
                     if(first.fromNode!==null)
@@ -2843,16 +2914,16 @@
                                 hasOtherlinkTypeThatIsViewable=true;
                         }
 
-                        if (!hasOtherlinkTypeThatIsViewable&&!taskChecked && !qualityChecked )
-                            first.fromNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable&&taskChecked && !qualityChecked)
-                            if(first.fromNode.category!=="Task" )
-                                first.fromNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable&&!taskChecked && qualityChecked)
-                            if(first.fromNode.category!=="Quality")
-                                first.fromNode.visible=false;
-                        if(taskChecked && qualityChecked)
-                        {}
+                        //if (!hasOtherlinkTypeThatIsViewable&&!taskChecked && !qualityChecked )
+                        //    first.fromNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable&&taskChecked && !qualityChecked)
+                        //    if(first.fromNode.category!=="Task" )
+                        //        first.fromNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable&&!taskChecked && qualityChecked)
+                        //    if(first.fromNode.category!=="Quality")
+                        //        first.fromNode.visible=false;
+                        //if(taskChecked && qualityChecked)
+                        //{}
 
                     }
                     if(first.toNode!==null)
@@ -2867,16 +2938,16 @@
                                 hasOtherlinkTypeThatIsViewable=true;
                         }
 
-                        if (!hasOtherlinkTypeThatIsViewable && !taskChecked && !qualityChecked )
-                            first.toNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable && taskChecked && !qualityChecked)
-                            if( first.toNode.category!=="Task")
-                                first.toNode.visible=false;
-                        if(!hasOtherlinkTypeThatIsViewable && !taskChecked && qualityChecked)
-                            if( first.toNode.category!=="Quality")
-                                first.toNode.visible=false;
-                        if(taskChecked && qualityChecked)
-                        {}
+                        //if (!hasOtherlinkTypeThatIsViewable && !taskChecked && !qualityChecked )
+                        //    first.toNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable && taskChecked && !qualityChecked)
+                        //    if( first.toNode.category!=="Task")
+                        //        first.toNode.visible=false;
+                        //if(!hasOtherlinkTypeThatIsViewable && !taskChecked && qualityChecked)
+                        //    if( first.toNode.category!=="Quality")
+                        //        first.toNode.visible=false;
+                        //if(taskChecked && qualityChecked)
+                        //{}
                     }
                     first.visible=false;
 
@@ -3024,20 +3095,51 @@
         }
 
         function text2graph(){
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
             var text = $('#modelAsText').val();
             $.ajax({
                 type: 'POST',
                 url: '@Url.Action("text2graph", "Map")',
                 //dataType: "json",
-                data: { text: text },
+                data: { text: text, currentModel: currentModel },
                 success: function (res) {
                     var myMap = res;
                     document.getElementById("mySavedModel").value = myMap;
                     myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                    createTreeView();
                     //alert(res);
                 },
                 error: function () {
                     alert("couldn't convert");
+                },
+                async: false
+            });
+        }
+
+        function text2graph2(){
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+            var text = $('#modelAsText').val();
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("text2graph", "Map")',
+                //dataType: "json",
+                data: { text: text, currentModel: currentModel },
+                success: function (res) {
+                    var myMap = res;
+                    var temp = go.Model.fromJson(res);
+                    temp = temp.toJson();
+                    if(currentModel!=temp){
+                        //alert(temp);
+                        //alert(currentModel);
+                        document.getElementById("mySavedModel").value = myMap;
+                        myDiagram.model = go.Model.fromJson(document.getElementById("mySavedModel").value);
+                        createTreeView();
+                    }
+                    //alert(res);
+                },
+                error: function () {
                 },
                 async: false
             });
@@ -3062,10 +3164,10 @@
                 textWidth = text.width();
                 textHeigt = text.height();
 
-                graph.width('100%');
-                graph.height('60%');
-                text.width('100%');
-                text.height('40%');
+                graph.width('42%');
+                graph.height('100%');
+                text.width('30%');
+                text.height('100%');
                 flag++;
             }
             else{
@@ -3080,6 +3182,184 @@
             }
         }
 
+        function helpMethod(category, firstNode, secNode, checkBoxName){
+            $(document).on('change', '[id='+checkBoxName+']', function() {
+                changeSingleLinkView(category, firstNode, secNode, checkBoxName);
+            });
+        }
+
+        function createTreeView(){
+
+            var treeView = jQuery('#treeView');
+            saveDiagramProperties();  // do this first, before writing to JSON
+            var currentModel = myDiagram.model.toJson();
+
+            $.ajax({
+                type: 'POST',
+                url: '@Url.Action("graph2Names", "Map")',
+                //dataType: "json",
+                data: { currentModel: currentModel },
+                success: function (res) {
+                    //res should be document in with keys of task, quality and all the links.
+                    //for each the value is an bson array where each value matches a label
+                    //example->{"task":["t1", "t2", "t3"...]..., "consists of":["t1, t2", "t3, t4"]....}
+                    var jsonRes = JSON.parse(res);
+                    document.getElementById('container').innerHTML = '';
+
+                    var taskCnt = jsonRes.task.length;
+                    var qualityCnt = jsonRes.quality.length;
+                    var achievedByCnt = jsonRes["is achieved by"].length;
+                    var consistsOfCnt = jsonRes["consists of"].length;
+                    var extenedByCnt = jsonRes["is extended by"].length;
+                    var assocciationCnt = jsonRes["is associated with"].length;
+                    var contributionCnt = jsonRes["contribution"].length;
+
+
+                    var allCnt = taskCnt+qualityCnt+achievedByCnt+consistsOfCnt+extenedByCnt+assocciationCnt+contributionCnt;
+
+                    var nodeAll = document.createElement('div');
+                    nodeAll.innerHTML = '<input type="checkbox" id="AllCheckBox" checked="checked"><label for="AllCheckBox">All ('+allCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeAll);                   
+                    jQuery("#AllCheckBox").click(function(){
+                        jQuery("#AllV").click();
+                    });
+                    var nodeTasks = document.createElement('div');
+                    //node.innerHTML = '<input type="checkbox" id="TasksCheckBox"><label for="TasksCheckBox">Tasks</label>';
+                    nodeTasks.innerHTML = '<label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Tasks ('+taskCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeTasks);                   
+                    //jQuery("#TasksCheckBox").click(function(){
+                    //    jQuery("#TaskV").click();
+                    //});
+                    for(var i in jsonRes.task){
+                        var text = jsonRes.task[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
+                        //node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        var checkBox = jQuery('#checkTask'+i+'');
+                    }
+
+                    var nodeQuality = document.createElement('div');
+                    nodeQuality.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<label>Qualities ('+qualityCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeQuality);                   
+                    //jQuery("#QualitiesCheckBox").click(function(){
+                    //    jQuery("#QualityV").click();
+                    //});
+                    for(var i in jsonRes.quality){
+                        var text = jsonRes.quality[i]
+                        var title   = text;
+                        var node = document.createElement('div');
+                        //node.innerHTML = '<input type="checkbox" id="checkQuality' + i + '" name="'+title+'"><label for="checkQuality' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        //alert(checkBox.attr("name"));
+                        //alert(i);
+                    }
+                    
+                    var nodeAchievedBy = document.createElement('div');
+                    nodeAchievedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" id="AchievedByCheckBox"><label for="AchievedByCheckBox">Achieved By ('+achievedByCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeAchievedBy);                   
+                    jQuery("#AchievedByCheckBox").click(function(){
+                        jQuery("#AchievedByV").click();
+                    });
+
+                    for(var i in jsonRes["is achieved by"]){
+                        var text = (jsonRes["is achieved by"])[i]["labelName"];
+                        var firstNode = (jsonRes["is achieved by"])[i]["firstNode"];
+                        var secNode = (jsonRes["is achieved by"])[i]["secondNode"];
+                        //alert(firstNode);
+                        //alert(secNode);
+
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        helpMethod('AchievedBy',firstNode, secNode, 'checkAchieviedBy'+i);
+                    }
+                    
+                    var nodeConsistsOF = document.createElement('div');
+                    nodeConsistsOF.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ConsistsOfCheckBox"><label for="ConsistsOfCheckBox">Consists Of ('+consistsOfCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeConsistsOF);                   
+                    jQuery("#ConsistsOfCheckBox").click(function(){
+                        jQuery("#ConsistsOfV").click();
+                    });
+                    var consistsOF = "consists of";
+                    for(var i in jsonRes[consistsOF]){
+                        //alert(i);
+                        var text = (jsonRes[consistsOF])[i]["labelName"];
+                        var firstNode = (jsonRes[consistsOF])[i]["firstNode"];
+                        var secNode = (jsonRes[consistsOF])[i]["secondNode"];
+                        //alert(firstNode);
+                        //alert(secNode);
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        helpMethod('ConsistsOf',firstNode, secNode, 'consistsOF'+i);
+
+                    }
+
+                    var nodeExtendedBy = document.createElement('div');
+                    nodeExtendedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ExtendedByCheckBox"><label for="ExtendedByCheckBox">Extended By ('+extenedByCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeExtendedBy);                   
+                    jQuery("#ExtendedByCheckBox").click(function(){
+                        jQuery("#ExtendedByV").click();
+                    });
+                    for(var i in jsonRes["is extended by"]){
+                        var text = (jsonRes["is extended by"])[i]["labelName"];
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        var firstNode = (jsonRes["is extended by"])[i]["firstNode"];
+                        var secNode = (jsonRes["is extended by"])[i]["secondNode"];
+                        helpMethod('ExtendedBy',firstNode, secNode, 'extendedBy'+i);
+
+                    }
+
+                    var nodeAssocciation = document.createElement('div');
+                    nodeAssocciation.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="AssociationCheckBox"><label for="AssociationCheckBox">Association ('+assocciationCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeAssocciation);                   
+                    jQuery("#AssociationCheckBox").click(function(){
+                        jQuery("#AssociationV").click();
+                    });
+                    for(var i in jsonRes["is associated with"]){
+                        var text = (jsonRes["is associated with"])[i]["labelName"];
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        var firstNode = (jsonRes["is associated with"])[i]["firstNode"];
+                        var secNode = (jsonRes["is associated with"])[i]["secondNode"];
+                        helpMethod('Association',firstNode, secNode, 'association'+i);
+                    }
+
+                    var nodeContribution = document.createElement('div');
+                    nodeContribution.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ContributionCheckBox"><label for="ContributionCheckBox">Contribution ('+contributionCnt+')</label>';
+                    document.getElementById('container').appendChild(nodeContribution);                   
+                    jQuery("#ContributionCheckBox").click(function(){
+                        jQuery("#ContributionV").click();
+                    });
+                    
+                    for(var i in jsonRes["contribution"]){
+                        var text = (jsonRes["contribution"])[i]["labelName"];
+                        var title   = text;
+                        var node = document.createElement('div');
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';
+                        document.getElementById('container').appendChild(node);
+                        var firstNode = (jsonRes["contribution"])[i]["firstNode"];
+                        var secNode = (jsonRes["contribution"])[i]["secondNode"];
+                        helpMethod('Contribution',firstNode, secNode, 'contribution'+i);
+                    }
+                       
+                },
+                error: function () {
+                    alert("couldn't convert");
+                },
+                async: false
+            });
+        }
 
 
 </script>
@@ -3165,10 +3445,30 @@
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Cut (Ctrl+X)" onclick="myDiagram.commandHandler.cutSelection()"><i class="fa fa-scissors"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Copy (Ctrl+C)" onclick="myDiagram.commandHandler.copySelection()"><i class="fa fa-copy"></i></button>
                     <button type="button" class="btn btn-default rwPermissionBtn" data-toggle="tooltip" data-placement="bottom" title="Paste (Ctrl+V)" onclick="myDiagram.commandHandler.pasteSelection()"><i class="fa fa-paste"></i></button>
+                    <ul class="nav navbar-nav">
+                        <li class="dropdown">
+                            <a href="#" data-toggle="dropdown" style="height:30px" role="button" aria-expanded="false"> <span class="caret"></span></a>
+                            <ul class="dropdown-menu" role="menu">
+                                <li class="dropdown-submenu">
+                                    <a href="#">Export</a>
+                                    <ul class="dropdown-menu">
+                                        <li><a href="#" onclick="saveAsImg('image/png', '.png')">PNG Image</a></li>
+                                        <li><a href="#" onclick="saveAsImg('image/jpeg', '.jpg')">JPEG Image</a></li>
+                                        @*<li><a href="#" onclick="saveAsSVG('', '.svg')">SVG Image</a></li>*@
+                                        <li><a href="#" onclick="saveAsJSON('', '.json')">JSON File</a></li>
+                                    </ul>
+                                </li>
+                                <li class=""><a href="#" onclick="showLoadMapFileModal()">Import</a></li>
+                                <li class=""><a href="#" onclick="simple2complex()">To Complex</a></li>
+                                <li class=""><a href="#" onclick="complex2simple()">To Simple</a></li>
+                                <li class=""><a href="#" onclick="changePos()">Change Position</a></li>
+                            </ul>
+                        </li>
+                    </ul>
                 </div>
-                <div class="btn-group">
+                <div class="btn-group" style="display:none">
                     View Only:
-                    <input type="checkbox" id="AllV" onchange="changeNodeView('Quality');changeNodeView('Task');changeLinkView('AchievedBy');changeLinkView('ConsistsOf');changeLinkView('ExtendedBy');changeLinkView('Association');changeLinkView('Contribution')" name="All" checked="checked">All
+                    <input type="checkbox" id="AllV" onchange="/*changeNodeView('Quality');changeNodeView('Task');*/changeLinkView('AchievedBy');changeLinkView('ConsistsOf');changeLinkView('ExtendedBy');changeLinkView('Association');changeLinkView('Contribution')" name="All" checked="checked">All
                     <input type="checkbox" id="TaskV" onchange="changeNodeView('Task')" name="Task">Task
                     <input type="checkbox" id="QualityV" onchange="changeNodeView('Quality')" name="Quality">Quality
                     <input type="checkbox" id="AchievedByV" onchange="changeLinkView('AchievedBy')" name="Achieved by">Achieved by
@@ -3178,12 +3478,19 @@
                     <input type="checkbox" id="ContributionV" onchange="changeLinkView('Contribution')" name="Contribution">Contribution
                 </div>
 
-                
+                @*
                 <div style="float:right">
                     <button onmousedown="model2Text();">
                         To Text
                     </button>
                 </div>
+
+                <div style="float:right">
+                    <button onmousedown="text2graph();">
+                        To graph
+                    </button>
+                </div>
+                 
                 <div style="float:right">
                     <button onmousedown="simple2complex();">
                         To Complex
@@ -3194,16 +3501,19 @@
                         To Simple
                     </button>
                 </div>
-                <div style="float:right">
-                    <button onmousedown="text2graph();">
-                        To graph
-                    </button>
-                </div>
+
                 <div style="float:right">
                     <button onmousedown="changePos();">
                         Change Position
                     </button>
                 </div>
+                
+                <div style="float:right">
+                    <button onmousedown="createTreeView();">
+                        createTreeView
+                    </button>
+                </div>
+                    *@
                 
             </div>
             
@@ -3214,7 +3524,7 @@
 
 
       
-    <div id="PaletteAndDiagram" style="width: 60%; height: 100%; float:left;">
+    <div id="PaletteAndDiagram" style="width: 77%; height: 70%; float:left;">
         <div id="sideBar">
             <div class="handle">Map Shapes</div>
             <div id="myPalette"></div>
@@ -3255,10 +3565,13 @@
         </div>
 
     </div>
-
-    <div>
-        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 39%; height: 100%; float:right"></textarea>
+    <div id="container" style="overflow-y: scroll;  width: 21%; height: 70%; float:right;">
     </div>
+    <div>
+        <textarea id="modelAsText" class="wideTextArea" name="note" style="width: 100%; height: 30%; float:right"></textarea>
+    </div>
+    @*<div id="treeView" style="width: 25%; height: 50%; float:left;"></div>*@
+
     @*<a data-toggle="modal" href="#myModal">Write a Review</a>*@
 
     <!-- Modal -->

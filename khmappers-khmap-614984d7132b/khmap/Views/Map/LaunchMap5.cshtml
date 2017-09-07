@@ -3218,14 +3218,14 @@
                     var allCnt = taskCnt+qualityCnt+achievedByCnt+consistsOfCnt+extenedByCnt+assocciationCnt+contributionCnt;
 
                     var nodeAll = document.createElement('div');
-                    nodeAll.innerHTML = '<input type="checkbox" id="AllCheckBox" checked="checked"><label for="AllCheckBox">All ('+allCnt+')</label>';
+                    nodeAll.innerHTML = '<input type="checkbox" id="AllCheckBox" checked="checked"><font size="2" for="AllCheckBox">All ('+allCnt+')</label>';
                     document.getElementById('container').appendChild(nodeAll);                   
                     jQuery("#AllCheckBox").click(function(){
                         jQuery("#AllV").click();
                     });
                     var nodeTasks = document.createElement('div');
                     //node.innerHTML = '<input type="checkbox" id="TasksCheckBox"><label for="TasksCheckBox">Tasks</label>';
-                    nodeTasks.innerHTML = '<label>&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Tasks ('+taskCnt+')</label>';
+                    nodeTasks.innerHTML = '<font size="2">&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp Tasks ('+taskCnt+')</label>';
                     document.getElementById('container').appendChild(nodeTasks);                   
                     //jQuery("#TasksCheckBox").click(function(){
                     //    jQuery("#TaskV").click();
@@ -3234,14 +3234,14 @@
                         var text = jsonRes.task[i]
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <font size="2">'+ title +'</label>';
                         //node.innerHTML = '<input type="checkbox" id="checkTask' + i + '" name="'+title+'"><label for="checkTask' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var checkBox = jQuery('#checkTask'+i+'');
                     }
 
                     var nodeQuality = document.createElement('div');
-                    nodeQuality.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<label>Qualities ('+qualityCnt+')</label>';
+                    nodeQuality.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<font size="2">Qualities ('+qualityCnt+')</label>';
                     document.getElementById('container').appendChild(nodeQuality);                   
                     //jQuery("#QualitiesCheckBox").click(function(){
                     //    jQuery("#QualityV").click();
@@ -3251,14 +3251,14 @@
                         var title   = text;
                         var node = document.createElement('div');
                         //node.innerHTML = '<input type="checkbox" id="checkQuality' + i + '" name="'+title+'"><label for="checkQuality' + i + '">'+ title +'</label>';
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <label>'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <font size="2">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         //alert(checkBox.attr("name"));
                         //alert(i);
                     }
                     
                     var nodeAchievedBy = document.createElement('div');
-                    nodeAchievedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" id="AchievedByCheckBox"><label for="AchievedByCheckBox">Achieved By ('+achievedByCnt+')</label>';
+                    nodeAchievedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp<input type="checkbox" id="AchievedByCheckBox"><font size="2" for="AchievedByCheckBox">Achieved By ('+achievedByCnt+')</label>';
                     document.getElementById('container').appendChild(nodeAchievedBy);                   
                     jQuery("#AchievedByCheckBox").click(function(){
                         jQuery("#AchievedByV").click();
@@ -3273,13 +3273,13 @@
 
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><label for="checkAchieviedBy' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="checkAchieviedBy' + i + '" name="'+title+'"><font size="2" for="checkAchieviedBy' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         helpMethod('AchievedBy',firstNode, secNode, 'checkAchieviedBy'+i);
                     }
                     
                     var nodeConsistsOF = document.createElement('div');
-                    nodeConsistsOF.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ConsistsOfCheckBox"><label for="ConsistsOfCheckBox">Consists Of ('+consistsOfCnt+')</label>';
+                    nodeConsistsOF.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ConsistsOfCheckBox"><font size="2" for="ConsistsOfCheckBox">Consists Of ('+consistsOfCnt+')</label>';
                     document.getElementById('container').appendChild(nodeConsistsOF);                   
                     jQuery("#ConsistsOfCheckBox").click(function(){
                         jQuery("#ConsistsOfV").click();
@@ -3294,14 +3294,14 @@
                         //alert(secNode);
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><label for="consistsOF' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="consistsOF' + i + '" name="'+title+'"><font size="2" for="consistsOF' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         helpMethod('ConsistsOf',firstNode, secNode, 'consistsOF'+i);
 
                     }
 
                     var nodeExtendedBy = document.createElement('div');
-                    nodeExtendedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ExtendedByCheckBox"><label for="ExtendedByCheckBox">Extended By ('+extenedByCnt+')</label>';
+                    nodeExtendedBy.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ExtendedByCheckBox"><font size="2" for="ExtendedByCheckBox">Extended By ('+extenedByCnt+')</label>';
                     document.getElementById('container').appendChild(nodeExtendedBy);                   
                     jQuery("#ExtendedByCheckBox").click(function(){
                         jQuery("#ExtendedByV").click();
@@ -3310,7 +3310,7 @@
                         var text = (jsonRes["is extended by"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><label for="extendedBy' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="extendedBy' + i + '" name="'+title+'"><font size="2" for="extendedBy' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["is extended by"])[i]["firstNode"];
                         var secNode = (jsonRes["is extended by"])[i]["secondNode"];
@@ -3319,7 +3319,7 @@
                     }
 
                     var nodeAssocciation = document.createElement('div');
-                    nodeAssocciation.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="AssociationCheckBox"><label for="AssociationCheckBox">Association ('+assocciationCnt+')</label>';
+                    nodeAssocciation.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="AssociationCheckBox"><font size="2" for="AssociationCheckBox">Association ('+assocciationCnt+')</label>';
                     document.getElementById('container').appendChild(nodeAssocciation);                   
                     jQuery("#AssociationCheckBox").click(function(){
                         jQuery("#AssociationV").click();
@@ -3328,7 +3328,7 @@
                         var text = (jsonRes["is associated with"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="association' + i + '" name="'+title+'"><label for="association' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="association' + i + '" name="'+title+'"><font size="2" for="association' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["is associated with"])[i]["firstNode"];
                         var secNode = (jsonRes["is associated with"])[i]["secondNode"];
@@ -3336,7 +3336,7 @@
                     }
 
                     var nodeContribution = document.createElement('div');
-                    nodeContribution.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ContributionCheckBox"><label for="ContributionCheckBox">Contribution ('+contributionCnt+')</label>';
+                    nodeContribution.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="ContributionCheckBox"><font size="2" for="ContributionCheckBox">Contribution ('+contributionCnt+')</label>';
                     document.getElementById('container').appendChild(nodeContribution);                   
                     jQuery("#ContributionCheckBox").click(function(){
                         jQuery("#ContributionV").click();
@@ -3346,7 +3346,7 @@
                         var text = (jsonRes["contribution"])[i]["labelName"];
                         var title   = text;
                         var node = document.createElement('div');
-                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="contribution' + i + '" name="'+title+'"><label for="contribution' + i + '">'+ title +'</label>';
+                        node.innerHTML = '&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp&nbsp <input type="checkbox" id="contribution' + i + '" name="'+title+'"><font size="2" for="contribution' + i + '">'+ title +'</label>';
                         document.getElementById('container').appendChild(node);
                         var firstNode = (jsonRes["contribution"])[i]["firstNode"];
                         var secNode = (jsonRes["contribution"])[i]["secondNode"];

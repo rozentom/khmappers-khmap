@@ -735,31 +735,7 @@ namespace khmap
                     //BsonArray lst = new BsonArray();
                     //lst.Add(firstNode);
                     //lst.Add(secondNode);
-                    string labelName = "";
-                    if (linkText.Equals(SharedCodedData.minus))
-                    {
-                        linkText = "contribution";
-                        labelName = firstNode + ", " + secondNode + ", -";
-                    }
-                    else if (linkText.Equals(SharedCodedData.minusminus))
-                    {
-                        linkText = "contribution";
-                        labelName = firstNode + ", " + secondNode + ", --";
-                    }
-                    else if (linkText.Equals(SharedCodedData.plus))
-                    {
-                        linkText = "contribution";
-                        labelName = firstNode + ", " + secondNode + ", +";
-                    }
-                    else if (linkText.Equals(SharedCodedData.plusplus))
-                    {
-                        linkText = "contribution";
-                        labelName = firstNode + ", " + secondNode + ", ++";
-                    }
-                    else
-                    {
-                        labelName = firstNode + ", " + secondNode;
-                    }
+                    
                     string firstNodeName = "";
                     if (firstNode.Substring(0, 4).ToLower().Equals("task"))
                     {
@@ -778,6 +754,33 @@ namespace khmap
                     {
                         secNodeName = secondNode.Substring(8);
                     }
+
+                    string labelName = "";
+                    if (linkText.Equals(SharedCodedData.minus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNodeName + ", " + secNodeName + ", -";
+                    }
+                    else if (linkText.Equals(SharedCodedData.minusminus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNodeName + ", " + secNodeName + ", --";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNodeName + ", " + secNodeName + ", +";
+                    }
+                    else if (linkText.Equals(SharedCodedData.plusplus))
+                    {
+                        linkText = "contribution";
+                        labelName = firstNodeName + ", " + secNodeName + ", ++";
+                    }
+                    else
+                    {
+                        labelName = firstNodeName + ", " + secNodeName;
+                    }
+
                     BsonDocument node = new BsonDocument()
                     {
                         {"labelName",labelName },
@@ -811,10 +814,12 @@ namespace khmap
 
                         if (!res.Contains(firstNode) && firstNode.Length >= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
+                            firstNode = firstNode.Substring(taskOrQualityLength + 1);
                             res.Add(firstNode);
                         }
                         if (!res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
+                            secondNode = secondNode.Substring(taskOrQualityLength + 1);
                             res.Add(secondNode);
                         }
                     }
@@ -822,7 +827,8 @@ namespace khmap
                     {
                         if (!res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
-                            res.Add(rule);
+                            string node = rule.Substring(taskOrQualityLength + 1);
+                            res.Add(node);
                         }
                     }
                 }
