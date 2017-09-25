@@ -798,6 +798,7 @@ namespace khmap
         {
             try
             {
+                List<string> nodes = new List<string>();
                 BsonArray res = new BsonArray();
                 foreach (string rule in simpleRules)
                 {
@@ -812,23 +813,29 @@ namespace khmap
                         indexOfSecondNode++;
                         string secondNode = rule.Substring(indexOfSecondNode);
 
-                        if (!res.Contains(firstNode) && firstNode.Length >= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        if (!nodes.Contains(firstNode) && !res.Contains(firstNode) && firstNode.Length >= taskOrQualityLength && firstNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
+                            nodes.Add(firstNode);
                             firstNode = firstNode.Substring(taskOrQualityLength + 1);
                             res.Add(firstNode);
+
                         }
-                        if (!res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        if (!nodes.Contains(secondNode) && !res.Contains(secondNode) && secondNode.Length >= taskOrQualityLength && secondNode.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
+                            nodes.Add(firstNode);
                             secondNode = secondNode.Substring(taskOrQualityLength + 1);
                             res.Add(secondNode);
+
                         }
                     }
                     else
                     {
-                        if (!res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
+                        if (!nodes.Contains(rule) && !res.Contains(rule) && rule.Length >= taskOrQualityLength && rule.ToLower().Substring(0, taskOrQualityLength).Equals(taskOrQuality))
                         {
+                            nodes.Add(rule);
                             string node = rule.Substring(taskOrQualityLength + 1);
                             res.Add(node);
+
                         }
                     }
                 }
