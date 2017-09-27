@@ -232,11 +232,11 @@ namespace khmap.Controllers
                 var map = _mapManager.GetMapById(new ObjectId(id));
                 if (IsValidMap(map) && _mapManager.IsMapOwner(map.Id.ToString(), User.Identity.GetUserId()))
                 {
-                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description, Path = map.Model["path"].ToString() };
+                    var mevm = new MapEditViewModel { Id = map.Id.ToString(), Name = map.Name, Description = map.Description };
                     return View(mevm);
                 }
             }
-            catch (Exception)
+            catch (Exception e)
             {
                 return RedirectToAction("Index", "Home");
             }

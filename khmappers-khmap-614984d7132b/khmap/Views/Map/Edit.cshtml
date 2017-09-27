@@ -31,13 +31,6 @@
         </div>
 
 
-        <div class="form-group">
-            @Html.LabelFor(model => model.Path, htmlAttributes: new { @class = "control-label col-md-2" })
-            <div class="col-md-10">
-                @Html.TextAreaFor(model => model.Path, 3, 0, new Dictionary<string, object>() { { "id", "addGroupName" }, { "class", "form-control" }, { "style", "width:100%;" }, { "data-provide", "typeahead" } })
-                @Html.ValidationMessageFor(model => model.Description, "", new { @class = "text-danger" })
-            </div>
-        </div>
 
 
 
